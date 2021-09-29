@@ -2,6 +2,7 @@
 #define Vcb_h
 
 #include "AnalyzerCore.h"
+#include "TKinFitterDriver.h"
 
 #include "Define_Def.h"
 
@@ -26,6 +27,7 @@ class Vcb : public AnalyzerCore {
   vector<Muon> vec_muon;
   vector<Jet> vec_jet;
 
+  TKinFitterDriver* fitter_driver;
 };
 
 

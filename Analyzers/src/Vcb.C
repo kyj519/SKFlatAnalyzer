@@ -14,6 +14,8 @@ void Vcb::initializeAnalyzer(){
   //jtps.push_back( JetTagging::Parameters(JetTagging::DeepCSV, JetTagging::Medium, JetTagging::comb) );
   mcCorr->SetJetTaggingParameters(jtps);
   
+  fitter_driver = new TKinFitterDriver(DataYear);
+
   return;
 }//void Vcb::initializeAnalyzer()
 
@@ -43,7 +45,6 @@ void Vcb::executeEvent(){
 //////////
 
 void Vcb::executeEventFromParameter(AnalyzerParameter param){
-  //no cut
   FillHist(param.Name+"/NoCut_"+param.Name, 0., 1., 1, 0., 1.);
   
   if(!PassMETFilter()) return;
@@ -72,26 +73,32 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param){
   sort(vec_sel_muon.begin(), vec_sel_muon.end(), PtComparing);
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
 
-  //b-tag
+  //coutn n of btag
   int nbtag = 0;
   vector<bool> vec_btag;
   for(auto& jet : vec_sel_jet) 
     {
       double tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
-      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < taggng_score)
+      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score)
 	{
 	  nbtag++;
 	  vec_btag.push_back(true);
 	}
       else vec_btag.push_back(false);
-	
     }
+
+  Muon muon = vec_sel_muon.at(0);
 
   //baseline selection
   if(vec_sel_muon.size()!=1) return;
   if(vec_sel_jet.size()<4) return;
   if(met.Pt()<MET_PT) return;
-  //if
+  if(nbtag<2) return;
+  FillHist(param.Name+"/BaselineSelection_"+param.Name, 0., 1., 1, 0., 1.);
+
+  //kinematic fitter
+  fitter_driver->Set_Objects(vec_jet, vec_btag, muon, met);
+
   return;
 }//void Vcb::executeEventFromParameter(AnalyzerParameter param)
 
@@ -102,7 +109,7 @@ Vcb::Vcb(){
 }//Vcb::Vcb()
 
 Vcb::~Vcb(){
-
+  delete fitter_driver;
 }//Vcb::~Vcb()
 
 //////////

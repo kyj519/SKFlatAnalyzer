@@ -1,4 +1,4 @@
-all: DataFormats AnalyzerTools GEScaleSyst Analyzers Archive
+all: DataFormats AnalyzerTools GEScaleSyst KinematicFitter Analyzers Archive
 
 DataFormats::
 	(cd DataFormats; make)
@@ -19,6 +19,11 @@ Analyzers::
 	(cd Analyzers; make)
 	(mvexist.sh Analyzers/src/Analyzers_Dict_rdict.pcm lib/)
 	(mvexist.sh Analyzers/libAnalyzers.rootmap lib/)
+
+KinematicFitter::
+	(cd external/KinematicFitter; make)
+	(mvexist.sh external/KinematicFitter/src/KinematicFitter_Dict_rdict.pcm lib/)
+	(mvexist.sh external/KinematicFitter/libKinematicFitter.rootmap lib/)
 
 Archive::
 	(tar -zcf lib/DataFormats.tar.gz DataFormats)
