@@ -35,12 +35,14 @@ clean::
 	(cd DataFormats; make clean)
 	(cd AnalyzerTools; make clean)
 	(cd external/GEScaleSyst; make clean)
+	(cd external/KinematicFitter; make clean)	
 	(cd Analyzers; make clean)
 
 distclean::
 	(cd DataFormats; make distclean)
 	(cd AnalyzerTools; make distclean)
 	(cd external/GEScaleSyst; make distclean)
+	(cd external/KinematicFitter; make distclean)	
 	(cd Analyzers; make distclean)
 
 LibTarFile = tar/lib.tar.gz
