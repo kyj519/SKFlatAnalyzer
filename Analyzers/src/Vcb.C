@@ -1,19 +1,47 @@
 #include "Vcb.h"
 
-void Vcb::initializeAnalyzer(){
+void Vcb::initializeAnalyzer()
+{
   vec_muid = {"POGTight"};
   //vec_muid_sf_key = {""};
   
-  if(DataYear==2017){
-    iso_mu_trig_name = "HLT_IsoMu27_v";
-    trig_safe_pt_cut = 29.;
-  }
+  if(DataYear==2017)
+    {
+      iso_mu_trig_name = "HLT_IsoMu27_v";
+      trig_safe_pt_cut = 29.;
+    }
 
   vector<JetTagging::Parameters> jtps;
   jtps.push_back( JetTagging::Parameters(JetTagging::DeepCSV, JetTagging::Medium, JetTagging::incl, JetTagging::comb) );
   //jtps.push_back( JetTagging::Parameters(JetTagging::DeepCSV, JetTagging::Medium, JetTagging::comb) );
   mcCorr->SetJetTaggingParameters(jtps);
-  
+
+  //Retrieve POG JER
+  std::string jetPtResolutionPath = "";
+  std::string jetPtResolutionSFPath = "";
+  std::string BASE_PATH = std::getenv("SKFlat_WD") + std::string("/data/Run2UltraLegacy_v2/");
+  if(DataYear==2016)
+    {
+      jetPtResolutionPath   = BASE_PATH + "2016/JME/Summer16_25nsV1_MC_PtResolution_AK4PFchs.txt";
+      jetPtResolutionSFPath = BASE_PATH + "2016/JME/Summer16_25nsV1_MC_SF_AK4PFchs.txt";
+    }
+  else if(DataYear==2017)
+    {
+      jetPtResolutionPath   = BASE_PATH + "2017/JME/Fall17_V3_MC_PtResolution_AK4PFchs.txt";
+      jetPtResolutionSFPath = BASE_PATH + "2017/JME/Fall17_V3_MC_SF_AK4PFchs.txt";
+    }
+  else if(DataYear==2018)
+    {
+      jetPtResolutionPath   = BASE_PATH + "2018/JME/Autumn18_V7_MC_PtResolution_AK4PFchs.txt";
+      jetPtResolutionSFPath = BASE_PATH + "2018/JME/Autumn18_V7_MC_SF_AK4PFchs.txt";
+    }
+  else
+    {
+      throw std::runtime_error("no configuration for year");
+    }
+  jet_resolution    = JME::JetResolution(jetPtResolutionPath);
+  jet_resolution_sf = JME::JetResolutionScaleFactor(jetPtResolutionSFPath);
+
   fitter_driver = new TKinFitterDriver(DataYear);
 
   return;
@@ -21,7 +49,8 @@ void Vcb::initializeAnalyzer(){
 
 //////////
 
-void Vcb::executeEvent(){
+void Vcb::executeEvent()
+{
   vec_muon = GetAllMuons();
   vec_jet = GetAllJets();
 
@@ -50,7 +79,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   
   if(!PassMETFilter()) return;
   FillHist(param.Name+"/MetFilter_"+param.Name, 0., 1., 1, 0., 1.);
-
+  
   Event ev = GetEvent();
   Particle met = ev.GetMETVector();
   
@@ -97,9 +126,17 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   
   Muon muon = vec_sel_muon.at(0);
   
+  vector<float> vec_resolution_pt;
+  for(auto& jet : vec_sel_jet)
+    {
+      float resolution_pt = jet_resolution.getResolution({{JME::Binning::JetPt, jet.Pt()}, {JME::Binning::JetEta, jet.Eta()}, {JME::Binning::Rho, Rho}});
+      float resolution_pt_sf = jet_resolution_sf.getScaleFactor({{JME::Binning::JetPt, jet.Pt()},{JME::Binning::JetEta, jet.Eta()}}, Variation::NOMINAL);
+      
+      vec_resolution_pt.push_back(resolution_pt*resolution_pt_sf);
+    }
+
   //kinematic fitter
-  //fitter_driver->Set_Objects(vec_jet, vec_btag, muon, met);
-  fitter_driver->Set_Objects(vec_btag, muon, met);
+  fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, muon, met);
   fitter_driver->Scan();
   
   cout << "Vcb: test" << endl;

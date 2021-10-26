@@ -1,17 +1,18 @@
 #ifndef Vcb_h
 #define Vcb_h
 
-#include "AnalyzerCore.h"
 #include "TKinFitterDriver.h"
+
+#include "AnalyzerCore.h"
+#include "JetMETCorrections/Modules/interface/JetResolution.h"
 
 #include "Define_Def.h"
 
 using namespace std;
 
-class Vcb : public AnalyzerCore {
-  
+class Vcb : public AnalyzerCore 
+{
  public:
-  
   void initializeAnalyzer();
   void executeEventFromParameter(AnalyzerParameter param);
   void executeEvent();
@@ -26,6 +27,9 @@ class Vcb : public AnalyzerCore {
 
   vector<Muon> vec_muon;
   vector<Jet> vec_jet;
+
+  JME::JetResolution jet_resolution;
+  JME::JetResolutionScaleFactor jet_resolution_sf;
 
   TKinFitterDriver* fitter_driver;
 };
