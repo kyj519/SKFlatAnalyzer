@@ -3,7 +3,7 @@
 void Vcb_Mu::initializeAnalyzer()
 {
   vec_mu_id = {"POGTight"};
-  vec_mu_id_sf_key = {"NUM_HighPtID_DEN_TrackerMuons"};//should be checked
+  vec_mu_id_sf_key = {"NUM_TightID_DEN_TrackerMuons"};//should be checked
 
   vec_mu_iso_sf_key = {"NUM_TightRelIso_DEN_TightIDandIPCut"};//should be checked
 
@@ -31,8 +31,9 @@ void Vcb_Mu::initializeAnalyzer()
   
   //Jet Tagging Parameters
   vec_jet_tagging_para.push_back(JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb));//should be checked
+  //vec_jet_tagging_para.push_back(JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::iterativefit, JetTagging::iterativefit));
   mcCorr->SetJetTaggingParameters(vec_jet_tagging_para);
-  
+ 
   //Retrieve POG JER
   std::string jetPtResolutionPath = "";
   std::string jetPtResolutionSFPath = "";
@@ -208,31 +209,29 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
     {
       //lumi
       weight *= weight_norm_1invpb*ev.GetTriggerLumi("Full");
-      cout << "test 0 " << weight << endl;
+      
       //MCweight +1 or -1
       weight *= ev.MCweight();
-      cout << "test 1 " << weight << endl;
+     
       //pileup reweight
       weight *= mcCorr->GetPileUpWeight(nPileUp, 0);
-      cout << "test 2 " << weight << endl;
+     
       //L1 prefire 
       weight *= GetPrefireWeight(0);
-      cout << "test 3 " << weight << endl;
+     
       //SF for muon id
       weight *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muon.Eta(), muon.MiniAODPt());
-      cout << "test 4 " << weight << endl;
+     
       //SF for muon iso
       weight *= mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muon.Eta(), muon.MiniAODPt());
-      cout << "test 5 " << weight << endl;
+     
       //SF for muon trigger effi
       weight *= mcCorr->MuonTrigger_SF(param.Muon_Tight_ID, param.Muon_ID_SF_Key, vec_sel_muon, 0);
-      cout << "test 6 " << weight << endl;
+     
       //SF for b-tagging
       weight *= mcCorr->GetBTaggingReweight_1a(vec_sel_jet, vec_jet_tagging_para.at(0));
-      cout << "test 7 " << weight << endl;
+     
     }//if(!isData)
-
-  cout << "test weight " << weight << endl;
 
   //kinematic fitter
   fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, muon, met);
