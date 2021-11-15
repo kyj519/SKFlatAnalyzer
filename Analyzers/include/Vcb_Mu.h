@@ -5,7 +5,7 @@
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
 
 #include "TKinFitterDriver.h"
-#include "Define_Def.h"
+#include "Vcb_Def.h"
 #include "Results_Container.h"
 
 using namespace std;
@@ -33,6 +33,7 @@ class Vcb_Mu : public AnalyzerCore
 
   vector<Muon> vec_muon;
   vector<Jet> vec_jet;
+  vector<Electron> vec_electron;
 
   JME::JetResolution jet_resolution;
   JME::JetResolutionScaleFactor jet_resolution_sf;

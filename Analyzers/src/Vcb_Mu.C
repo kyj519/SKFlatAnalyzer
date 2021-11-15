@@ -30,8 +30,8 @@ void Vcb_Mu::initializeAnalyzer()
   cout << "[Vcb_Mu::initializeAnalyzer Trigger Safe Pt Cut = " << trig_safe_pt_cut << endl;
   
   //Jet Tagging Parameters
-  vec_jet_tagging_para.push_back(JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb));//should be checked
-  //vec_jet_tagging_para.push_back(JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::iterativefit, JetTagging::iterativefit));
+  //vec_jet_tagging_para.push_back(JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb));//should be checked
+  vec_jet_tagging_para.push_back(JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::iterativefit, JetTagging::iterativefit));
   mcCorr->SetJetTaggingParameters(vec_jet_tagging_para);
  
   //Retrieve POG JER
@@ -79,6 +79,7 @@ void Vcb_Mu::initializeAnalyzer()
 void Vcb_Mu::executeEvent()
 {
   vec_muon = GetAllMuons();
+  vec_electron = GetAllElectrons();
   vec_jet = GetAllJets();
   
   AnalyzerParameter param;
@@ -95,6 +96,8 @@ void Vcb_Mu::executeEvent()
       param.Muon_Tight_ID = vec_mu_id.at(i);
       param.Muon_ID_SF_Key = vec_mu_id_sf_key.at(i);
       param.Muon_ISO_SF_Key = vec_mu_iso_sf_key.at(i);
+
+      param.Electron_Loose_ID = "passLooseID";
 
       param.Jet_ID = "tight";
 
@@ -132,18 +135,22 @@ void Vcb_Mu::executeEvent()
 
 void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 {
+  //no cut
   FillHist(param.Name+"/NoCut_"+param.Name, 0., 1., 1, 0., 1.);
   
+  //met filter
   if(!PassMETFilter()) return;
   FillHist(param.Name+"/MetFilter_"+param.Name, 0., 1., 1, 0., 1.);
   
   Event ev = GetEvent();
   Particle met = ev.GetMETVector();
   
+  //trigger
   if(!ev.PassTrigger(iso_mu_trig_name)) return;
   FillHist(param.Name+"/Trig_"+param.Name, 0., 1., 1, 0., 1.);
   
   vector<Muon> vec_this_muon = vec_muon;
+  vector<Electron> vec_this_electron = vec_electron;
   vector<Jet> vec_this_jet = vec_jet;
   
   //syst basics
@@ -165,8 +172,11 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
     }
   
   vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, MUON_PT, MUON_ETA);
+  vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Loose_ID, ELECTRON_PT, ELECTRON_ETA);
+  
   vector<Jet> vec_sel_jet = SelectJets(vec_this_jet, param.Jet_ID, JET_PT, JET_ETA);
-
+  vec_sel_jet = JetsVetoLeptonInside(vec_sel_jet, vec_sel_electron, vec_sel_muon, DR_LEPTON_VETO);
+  
   //sort
   sort(vec_sel_muon.begin(), vec_sel_muon.end(), PtComparing);
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
@@ -187,9 +197,11 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 
    //baseline selection
   if(vec_sel_muon.size()!=1) return;
+  if(vec_sel_muon.at(0).Pt()<=trig_safe_pt_cut) return;
+  if(vec_sel_electron.size()!=0) return;
   if(vec_sel_jet.size()<4) return;
   if(met.Pt()<MET_PT) return;
-  if(nbtag<2) return;
+  if(nbtag!=2) return;//
   FillHist(param.Name+"/BaselineSelection_"+param.Name, 0., 1., 1, 0., 1.);
   
   Muon muon = vec_sel_muon.at(0);
@@ -224,14 +236,26 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
      
       //SF for muon iso
       weight *= mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muon.Eta(), muon.MiniAODPt());
-     
+
       //SF for muon trigger effi
       weight *= mcCorr->MuonTrigger_SF(param.Muon_Tight_ID, param.Muon_ID_SF_Key, vec_sel_muon, 0);
      
       //SF for b-tagging
-      weight *= mcCorr->GetBTaggingReweight_1a(vec_sel_jet, vec_jet_tagging_para.at(0));
+      weight *= mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0));
      
     }//if(!isData)
+    
+  FillHist(param.Name+"/Met", met.Vect().Mag(), weight, 50, 0, 300);
+  FillHist(param.Name+"/Pileup", nPileUp, weight, 100, 0, 100);
+  FillHist(param.Name+"/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
+  FillHist(param.Name+"/Muon_Eta", muon.Eta(), weight, 50, -5, 5);
+  FillHist(param.Name+"/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
+  FillHist(param.Name+"/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 50, -5, 5);
+  FillHist(param.Name+"/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
+  FillHist(param.Name+"/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 50, -10, 10);
+  FillHist(param.Name+"/N_BJet", nbtag, weight, 10, 0, 10);
+
+  return;
 
   //kinematic fitter
   fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, muon, met);
@@ -252,7 +276,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       float fitted_lep_t_m = results_container.best_fitted_lep_t_mass;
       float fitted_lep_w_m = results_container.best_fitted_lep_w_mass;
 	
-      FillHist(param.Name+"/Chi2", results_container.best_chi2, weight, 40, 0, 3000);
+      FillHist(param.Name+"/Chi2", results_container.best_chi2, weight, 30, 0, 30);
 
       FillHist(param.Name+"/Had_T_M_Initial", chi2, initial_had_t_m, weight, 50, 0, 500, 50, 0, 350);
       FillHist(param.Name+"/Had_W_M_Initial", chi2, initial_had_w_m, weight, 50, 0, 500, 50, 0, 200);
