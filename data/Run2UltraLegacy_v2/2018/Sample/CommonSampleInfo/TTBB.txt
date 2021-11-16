@@ -1,2 +1,2 @@
 # alias PD xsec nmc sumw
-TTBB Tbb_4f_TTToSemiLeptonic_TuneCP5-Powheg-Openloops-Pythia8 1.433 1 1
+TTBB Tbb_4f_TTToSemiLeptonic_TuneCP5-Powheg-Openloops-Pythia8 1.433 10381681 9154905
