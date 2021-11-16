@@ -201,7 +201,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   if(vec_sel_electron.size()!=0) return;
   if(vec_sel_jet.size()<4) return;
   if(met.Pt()<MET_PT) return;
-  if(nbtag!=2) return;//
+  if(nbtag<2) return;//
   FillHist(param.Name+"/BaselineSelection_"+param.Name, 0., 1., 1, 0., 1.);
   
   Muon muon = vec_sel_muon.at(0);
@@ -245,15 +245,34 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
      
     }//if(!isData)
     
-  FillHist(param.Name+"/Met", met.Vect().Mag(), weight, 50, 0, 300);
-  FillHist(param.Name+"/Pileup", nPileUp, weight, 100, 0, 100);
-  FillHist(param.Name+"/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
-  FillHist(param.Name+"/Muon_Eta", muon.Eta(), weight, 50, -5, 5);
-  FillHist(param.Name+"/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
-  FillHist(param.Name+"/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 50, -5, 5);
-  FillHist(param.Name+"/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
-  FillHist(param.Name+"/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 50, -10, 10);
-  FillHist(param.Name+"/N_BJet", nbtag, weight, 10, 0, 10);
+  if(nbtag==2)
+    {
+      FillHist(param.Name+"/2B/Met", met.Vect().Mag(), weight, 50, 0, 300);
+      if(!IsData) FillHist(param.Name+"/2B/N_Vertex", nPileUp, weight, 100, 0, 100);
+      else FillHist(param.Name+"/2B/N_Vertex", nPV, weight, 100, 0, 100);
+      FillHist(param.Name+"/2B/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
+      FillHist(param.Name+"/2B/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/2B/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/2B/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/2B/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/2B/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/2B/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10); 
+      FillHist(param.Name+"/2B/N_BJet", nbtag, weight, 10, 0, 10);
+    }
+  else
+    {
+      FillHist(param.Name+"/3B/Met", met.Vect().Mag(), weight, 50, 0, 300);
+      if(!IsData) FillHist(param.Name+"/3B/N_Vertex", nPileUp, weight, 100, 0, 100);
+      else FillHist(param.Name+"/3B/N_Vertex", nPV, weight, 100, 0, 100);
+      FillHist(param.Name+"/3B/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
+      FillHist(param.Name+"/3B/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/3B/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/3B/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/3B/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/3B/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/3B/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10);
+      FillHist(param.Name+"/3B/N_BJet", nbtag, weight, 10, 0, 10);
+    }
 
   return;
 
