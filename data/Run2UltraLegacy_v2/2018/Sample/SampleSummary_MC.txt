@@ -8,3 +8,5 @@ WJets_MG	WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8	61526.7	83009353	83009353.
 WW_pythia	WW_TuneCP5_13TeV-pythia8	118.7	15670000	15670000.0
 WZ_pythia	WZ_TuneCP5_13TeV-pythia8	47.13	7986000	7986000.0
 ZZ_pythia	ZZ_TuneCP5_13TeV-pythia8	16.523	3907000	3907000.0
+TTLJ_WtoCB_amcatnlo tt012j_Vcb_NLO_CP5_FXFX_RunIIAutumn18 0.1414 230169 85003
+TTBB Tbb_4f_TTToSemiLeptonic_TuneCP5-Powheg-Openloops-Pythia8 1.433 1 1
