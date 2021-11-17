@@ -10,3 +10,4 @@ WZ_pythia	WZ_TuneCP5_13TeV-pythia8	47.13	7986000	7986000.0
 ZZ_pythia	ZZ_TuneCP5_13TeV-pythia8	16.523	3907000	3907000.0
 TTLJ_WtoCB_amcatnlo tt012j_Vcb_NLO_CP5_FXFX_RunIIAutumn18 0.1414 230169 85003
 TTBB Tbb_4f_TTToSemiLeptonic_TuneCP5-Powheg-Openloops-Pythia8 1.433 10381681 9154905
+TTLJ_powheg_Skim     TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8   365.34 495030000       491029124.0
