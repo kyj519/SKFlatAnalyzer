@@ -18,6 +18,6 @@
 #pragma link C++ class SkimTree_Dilepton+;
 #pragma link C++ class SkimTree_Vcb+;
 #pragma link C++ class Vcb_Mu+;
-
+#pragma link C++ class Vcb_El+;
 
 #endif

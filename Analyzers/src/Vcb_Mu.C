@@ -1,32 +1,46 @@
 #include "Vcb_Mu.h"
 
+//////////
+
+Vcb_Mu::Vcb_Mu()
+{
+}//Vcb_Mu::Vcb_Mu()
+
+//////////
+
+Vcb_Mu::~Vcb_Mu()
+{
+  delete fitter_driver;
+}//Vcb_Mu::~Vcb_Mu()
+
+//////////
+
 void Vcb_Mu::initializeAnalyzer()
 {
   vec_mu_id = {"POGTight"};
   vec_mu_id_sf_key = {"NUM_TightID_DEN_TrackerMuons"};//should be checked
-
   vec_mu_iso_sf_key = {"NUM_TightRelIso_DEN_TightIDandIPCut"};//should be checked
 
-  iso_mu_trig_name.clear();
+  vec_mu_trig.clear();
   if(DataYear==2016)
     {
-      iso_mu_trig_name.push_back("HLT_IsoMu24_v");
-      //iso_mu_trig_name.push_back("HLT_IsoTkMu24_v");
+      vec_mu_trig.push_back("HLT_IsoMu24_v");
+      //vec_mu_trig.push_back("HLT_IsoTkMu24_v");
       trig_safe_pt_cut = 26.;
     }  
   else if(DataYear==2017)
     {
-      iso_mu_trig_name.push_back("HLT_IsoMu27_v");
+      vec_mu_trig.push_back("HLT_IsoMu27_v");
       trig_safe_pt_cut = 30.;
     }
   else if(DataYear==2018)
     {
-      iso_mu_trig_name.push_back("HLT_IsoMu24_v");
+      vec_mu_trig.push_back("HLT_IsoMu24_v");
       trig_safe_pt_cut = 26.;
     }
   else std::runtime_error("No trigger configuration for year"); 
     
-  for(auto& trigger_name : iso_mu_trig_name) cout << "[Vcb_Mu::initializeAnalyzer] Iso Muon Trigger Name = " << trigger_name << endl;
+  for(auto& trigger_name : vec_mu_trig) cout << "[Vcb_Mu::initializeAnalyzer] Iso Muon Trigger Name = " << trigger_name << endl;
   cout << "[Vcb_Mu::initializeAnalyzer Trigger Safe Pt Cut = " << trig_safe_pt_cut << endl;
   
   //Jet Tagging Parameters
@@ -146,7 +160,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   Particle met = ev.GetMETVector();
   
   //trigger
-  if(!ev.PassTrigger(iso_mu_trig_name)) return;
+  if(!ev.PassTrigger(vec_mu_trig)) return;
   FillHist(param.Name+"/Trig_"+param.Name, 0., 1., 1, 0., 1.);
   
   vector<Muon> vec_this_muon = vec_muon;
@@ -178,43 +192,33 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   vec_sel_jet = JetsVetoLeptonInside(vec_sel_jet, vec_sel_electron, vec_sel_muon, DR_LEPTON_VETO);
   
   //sort
-  sort(vec_sel_muon.begin(), vec_sel_muon.end(), PtComparing);
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
 
   //n of btag
   int nbtag = 0;
   vector<bool> vec_btag;
-   for(auto& jet : vec_sel_jet) 
-     {
-       double tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
-       if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score)
+  for(auto& jet : vec_sel_jet) 
+    {
+      float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
+      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score)
    	{
    	  nbtag++;
    	  vec_btag.push_back(true);
    	}
-       else vec_btag.push_back(false);
-     }
-
-   //baseline selection
+      else vec_btag.push_back(false);
+    }
+  
+  //baseline selection
+  if(met.Pt()<MET_PT) return;
   if(vec_sel_muon.size()!=1) return;
   if(vec_sel_muon.at(0).Pt()<=trig_safe_pt_cut) return;
   if(vec_sel_electron.size()!=0) return;
   if(vec_sel_jet.size()<4) return;
-  if(met.Pt()<MET_PT) return;
-  if(nbtag<2) return;//
+  if(nbtag<2) return;
   FillHist(param.Name+"/BaselineSelection_"+param.Name, 0., 1., 1, 0., 1.);
-  
+
   Muon muon = vec_sel_muon.at(0);
   
-  vector<float> vec_resolution_pt;
-  for(auto& jet : vec_sel_jet)
-    {
-      float resolution_pt = jet_resolution.getResolution({{JME::Binning::JetPt, jet.Pt()}, {JME::Binning::JetEta, jet.Eta()}, {JME::Binning::Rho, Rho}});
-      float resolution_pt_sf = jet_resolution_sf.getScaleFactor({{JME::Binning::JetPt, jet.Pt()},{JME::Binning::JetEta, jet.Eta()}}, Variation::NOMINAL);
-      
-      vec_resolution_pt.push_back(resolution_pt*resolution_pt_sf);
-    }
-
   //caculate weight
   float weight = 1.;
   if(!IsData)
@@ -230,6 +234,9 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
      
       //L1 prefire 
       weight *= GetPrefireWeight(0);
+
+      //SF for muon trigger effi
+      weight *= mcCorr->MuonTrigger_SF(param.Muon_Tight_ID, param.Muon_ID_SF_Key, vec_sel_muon, 0);
      
       //SF for muon id
       weight *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muon.Eta(), muon.MiniAODPt());
@@ -237,9 +244,6 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       //SF for muon iso
       weight *= mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muon.Eta(), muon.MiniAODPt());
 
-      //SF for muon trigger effi
-      weight *= mcCorr->MuonTrigger_SF(param.Muon_Tight_ID, param.Muon_ID_SF_Key, vec_sel_muon, 0);
-     
       //SF for b-tagging
       weight *= mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0));
      
@@ -247,36 +251,43 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
     
   if(nbtag==2)
     {
-      FillHist(param.Name+"/2B/Met", met.Vect().Mag(), weight, 50, 0, 300);
-      if(!IsData) FillHist(param.Name+"/2B/N_Vertex", nPileUp, weight, 100, 0, 100);
-      else FillHist(param.Name+"/2B/N_Vertex", nPV, weight, 100, 0, 100);
-      FillHist(param.Name+"/2B/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
-      FillHist(param.Name+"/2B/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/2B/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/2B/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/2B/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/2B/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/2B/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10); 
-      FillHist(param.Name+"/2B/N_BJet", nbtag, weight, 10, 0, 10);
+      FillHist(param.Name+"/TwoB/Met", met.Vect().Mag(), weight, 50, 0, 300);
+      FillHist(param.Name+"/TwoB/N_Vertex", nPV, weight, 100, 0, 100);
+      FillHist(param.Name+"/TwoB/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
+      FillHist(param.Name+"/TwoB/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/TwoB/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/TwoB/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/TwoB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/TwoB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/TwoB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10); 
+      FillHist(param.Name+"/TwoB/N_BJet", nbtag, weight, 10, 0, 10);
     }
   else
     {
-      FillHist(param.Name+"/3B/Met", met.Vect().Mag(), weight, 50, 0, 300);
-      if(!IsData) FillHist(param.Name+"/3B/N_Vertex", nPileUp, weight, 100, 0, 100);
-      else FillHist(param.Name+"/3B/N_Vertex", nPV, weight, 100, 0, 100);
-      FillHist(param.Name+"/3B/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
-      FillHist(param.Name+"/3B/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/3B/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/3B/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/3B/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/3B/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/3B/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10);
-      FillHist(param.Name+"/3B/N_BJet", nbtag, weight, 10, 0, 10);
+      FillHist(param.Name+"/ThreeB/Met", met.Vect().Mag(), weight, 50, 0, 300);
+      FillHist(param.Name+"/ThreeB/N_Vertex", nPV, weight, 100, 0, 100);
+      FillHist(param.Name+"/ThreeB/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
+      FillHist(param.Name+"/ThreeB/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/ThreeB/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/ThreeB/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/ThreeB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
+      FillHist(param.Name+"/ThreeB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
+      FillHist(param.Name+"/ThreeB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10);
+      FillHist(param.Name+"/ThreeB/N_BJet", nbtag, weight, 10, 0, 10);
     }
 
   return;
 
   //kinematic fitter
+  vector<float> vec_resolution_pt;
+  for(auto& jet : vec_sel_jet)
+    {
+      float resolution_pt = jet_resolution.getResolution({{JME::Binning::JetPt, jet.Pt()}, {JME::Binning::JetEta, jet.Eta()}, {JME::Binning::Rho, Rho}});
+      float resolution_pt_sf = jet_resolution_sf.getScaleFactor({{JME::Binning::JetPt, jet.Pt()},{JME::Binning::JetEta, jet.Eta()}}, Variation::NOMINAL);
+
+      vec_resolution_pt.push_back(resolution_pt*resolution_pt_sf);
+    }
+
   fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, muon, met);
   fitter_driver->Scan();
   if(fitter_driver->Check_Status()==true)
@@ -346,17 +357,6 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   
   return;
 }//void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
-
-//////////
-
-Vcb_Mu::Vcb_Mu()
-{
-}//Vcb_Mu::Vcb_Mu()
-
-Vcb_Mu::~Vcb_Mu()
-{
-  delete fitter_driver;
-}//Vcb_Mu::~Vcb_Mu()
 
 //////////
 

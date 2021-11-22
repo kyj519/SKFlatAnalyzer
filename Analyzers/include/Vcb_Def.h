@@ -13,4 +13,18 @@ const float DR_LEPTON_VETO = 0.3;
 
 const float MET_PT = 20.;
 
+//selection variables for making SkimTree.
+//to veto events with at least two tight leptons
+const float MUON_PT_SKIM = 30;
+const float MUON_ETA_SKIM = 2.2;
+
+const float ELECTRON_PT_SKIM = 30.;
+const float ELECTRON_ETA_SKIM = 2.2;
+
+const float JET_PT_SKIM = 20.;
+const float JET_ETA_SKIM = 2.7;
+const float DR_LEPTON_VETO_SKIM = 0.2;
+
+const float MET_PT_SKIM = 10.;
+
 #endif /* Vcb_Def_h */
