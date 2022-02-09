@@ -27,14 +27,26 @@ void SkimTree_Vcb::initializeAnalyzer()
   if(DataYear==2016)
     {
       vec_single_muon_trigger = {"HLT_IsoMu24_v"};
+      mu_trig_safe_pt_cut = 26.;
+
+      vec_single_electron_trigger = {"HLT_Ele27_WPTight_Gsf_v"};
+      el_trig_safe_pt_cut = 30;
     }
   else if(DataYear==2017)
     {
       vec_single_muon_trigger = {"HLT_IsoMu27_v"};
+      mu_trig_safe_pt_cut = 30.;
+      
+      vec_single_electron_trigger = {"HLT_Ele35_WPTight_Gsf_v"};
+      el_trig_safe_pt_cut = 37.;
     }
   else if(DataYear==2018)
     {
       vec_single_muon_trigger = {"HLT_IsoMu24_v"};
+      mu_trig_safe_pt_cut = 26.;
+      
+      vec_single_electron_trigger = {"HLT_Ele32_WPTight_Gsf_v"};
+      el_trig_safe_pt_cut = 35.;
     }
   else std::runtime_error("No trigger configuration for year");
     
@@ -65,8 +77,8 @@ void SkimTree_Vcb::executeEvent()
   vec_electron = GetAllElectrons();
   vec_jet = GetAllJets();
  
-  vector<Muon> vec_sel_muon = SelectMuons(vec_muon, "POGTight", MUON_PT_SKIM, MUON_ETA_SKIM);
-  vector<Electron> vec_sel_electron = SelectElectrons(vec_electron, "passTightID", ELECTRON_PT_SKIM, ELECTRON_ETA_SKIM);
+  vector<Muon> vec_sel_muon = SelectMuons(vec_muon, "POGTightWithTightIso", MUON_PT_SKIM, MUON_ETA_SKIM);
+  vector<Electron> vec_sel_electron = SelectElectrons(vec_electron, "passLooseID", ELECTRON_PT_SKIM, ELECTRON_ETA_SKIM);
   vector<Jet> vec_sel_jet = SelectJets(vec_jet, "tight", JET_PT_SKIM, JET_ETA_SKIM);
 
   //n of btag
@@ -74,13 +86,12 @@ void SkimTree_Vcb::executeEvent()
   for(auto& jet : vec_sel_jet)
     {
       float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
-      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Loose) < tagging_score) nbtag++;
+      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score) nbtag++;
     }
   
   //pre selection
   if(met.Pt()<MET_PT_SKIM) return;
-  if(1<vec_sel_muon.size()) return;
-  if(2<vec_sel_electron.size()) return;
+  if(vec_sel_muon.size()+vec_sel_electron.size()!=1) return;
   if(vec_sel_jet.size()<4) return;
   if(nbtag<2) return;
 

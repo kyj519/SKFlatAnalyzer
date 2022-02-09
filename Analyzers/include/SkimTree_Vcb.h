@@ -24,6 +24,9 @@ class SkimTree_Vcb : public AnalyzerCore
   vector<TString> vec_single_muon_trigger;
   vector<TString> vec_single_electron_trigger;
 
+  float mu_trig_safe_pt_cut;
+  float el_trig_safe_pt_cut;
+
   vector<Muon> vec_muon;
   vector<Electron> vec_electron;
   vector<Jet> vec_jet;

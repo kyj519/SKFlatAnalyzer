@@ -21,11 +21,13 @@ class Vcb_El : public AnalyzerCore
   void executeEventFromParameter(AnalyzerParameter param);
   
  protected:
+  bool run_debug;
   bool run_syst;
 
   vector<TString> vec_el_id;
   vector<TString> vec_el_id_sf_key;
   vector<TString> vec_el_trig;
+  TString el_trig;
   float trig_safe_pt_cut;
 
   vector<JetTagging::Parameters> vec_jet_tagging_para;

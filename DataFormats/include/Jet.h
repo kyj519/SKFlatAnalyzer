@@ -41,6 +41,10 @@ public:
 
   double GetTaggerResult(JetTagging::Tagger tg) const;
 
+  void SetGenHFHadronMatcher(int GenHFHadronMatcher_flavour, int GenHFHadronMatcher_origin);
+  inline int GenHFHadronMatcherFlavour(){ return j_GenHFHadronMatcher_flavour; }
+  inline int GenHFHadronMatcherOrigin(){ return j_GenHFHadronMatcher_origin; }
+  
 private:
 
   double  j_area;
@@ -71,7 +75,9 @@ private:
   double j_Res_up;
   double j_Res_down;
   bool j_tightJetID, j_tightLepVetoJetID;
-
+  int j_GenHFHadronMatcher_flavour;
+  int j_GenHFHadronMatcher_origin;
+  
   ClassDef(Jet,1)
 };
 

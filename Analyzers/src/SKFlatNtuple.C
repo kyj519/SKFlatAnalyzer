@@ -150,6 +150,8 @@ void SKFlatNtuple::Init()
   jet_smearedResDown = 0;
   jet_JECL1FastJet = 0;
   jet_JECFull = 0;
+  jet_GenHFHadronMatcher_flavour = 0;
+  jet_GenHFHadronMatcher_origin = 0;
   fatjet_pt = 0;
   fatjet_eta = 0;
   fatjet_phi = 0;
@@ -497,6 +499,8 @@ void SKFlatNtuple::Init()
   fChain->SetBranchAddress("jet_smearedResDown", &jet_smearedResDown, &b_jet_smearedResDown);
   fChain->SetBranchAddress("jet_JECL1FastJet", &jet_JECL1FastJet, &b_jet_JECL1FastJet);
   fChain->SetBranchAddress("jet_JECFull", &jet_JECFull, &b_jet_JECFull);
+  fChain->SetBranchAddress("jet_GenHFHadronMatcher_flavour", &jet_GenHFHadronMatcher_flavour, &b_jet_GenHFHadronMatcher_flavour);
+  fChain->SetBranchAddress("jet_GenHFHadronMatcher_origin", &jet_GenHFHadronMatcher_origin, &b_jet_GenHFHadronMatcher_origin);
   fChain->SetBranchAddress("fatjet_pt", &fatjet_pt, &b_fatjet_pt);
   fChain->SetBranchAddress("fatjet_eta", &fatjet_eta, &b_fatjet_eta);
   fChain->SetBranchAddress("fatjet_phi", &fatjet_phi, &b_fatjet_phi);

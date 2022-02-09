@@ -32,6 +32,8 @@ Jet::Jet() : Particle() {
   j_Res_down = 1.;
   j_tightJetID=false;
   j_tightLepVetoJetID=false;
+  j_GenHFHadronMatcher_flavour = -999;
+  j_GenHFHadronMatcher_origin = -999;
 }
 
 Jet::~Jet(){
@@ -89,6 +91,11 @@ void Jet::SetTightJetID(double b){
 }
 void Jet::SetTightLepVetoJetID(double b){
   j_tightLepVetoJetID = b;
+}
+
+void Jet::SetGenHFHadronMatcher(int GenHFHadronMatcher_flavour, int GenHFHadronMatcher_origin){
+  j_GenHFHadronMatcher_flavour = GenHFHadronMatcher_flavour;
+  j_GenHFHadronMatcher_origin = GenHFHadronMatcher_origin; 
 }
 
 bool Jet::PassID(TString ID) const {

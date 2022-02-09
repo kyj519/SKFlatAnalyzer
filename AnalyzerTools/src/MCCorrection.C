@@ -352,65 +352,74 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   eta = fabs(eta);
 
   //==== 2016
-  if(DataYear==2016){
-    if(trig=="IsoMu24"){
-      if(pt<26.) return 1.; //FIXME
-      if(eta>=2.4) eta = 2.39;
+  if(DataYear==2016)
+    {
+      if(trig=="IsoMu24")
+	{
+	  if(pt<26.) return 1.; //FIXME
+	  if(eta>=2.4) eta = 2.39;
+	  
+	  if(pt>500.) pt = 499.;
+	}
+      else if(trig=="Mu50")
+	{
+	  if(pt<52.) return 1.; //FIXME
+	  if(eta>=2.4) eta = 2.39;
 
-      if(pt>500.) pt = 499.;
+	  if(pt>1000.) pt = 999.;
+	}
+      else
+	{
+	}
     }
-    else if(trig=="Mu50"){
-      if(pt<52.) return 1.; //FIXME
-      if(eta>=2.4) eta = 2.39;
-
-      if(pt>1000.) pt = 999.;
-    }
+  else if(DataYear==2017)
+    {
+      if(trig=="IsoMu27")
+	{
+	  //==== FIXME MiniAODPt Pt
+	  //==== FIXME 28.9918  29.0363
+	  //==== FIXME This event pass pt>29GeV cut, but MiniAOD pt < 29 GeV
+	  //==== FIXME So when I return 0., SF goes nan.. let's return 1 for now..
+	  if(pt<29.) return 1.; //FIXME
+	  if(eta>=2.4) eta = 2.39;
+	  
+	  if(pt>1200.) pt = 1199.;
+	}
+      else if(trig=="Mu50")
+	{
+	  if(pt<52.) return 1.; //FIXME
+	  if(eta>=2.4) eta = 2.39;
+	  
+	  if(pt>1000.) pt = 999.;
+	}
     else{
-
     }
-  }
-  else if(DataYear==2017){
-    if(trig=="IsoMu27"){
-      //==== FIXME MiniAODPt Pt
-      //==== FIXME 28.9918  29.0363
-      //==== FIXME This event pass pt>29GeV cut, but MiniAOD pt < 29 GeV
-      //==== FIXME So when I return 0., SF goes nan.. let's return 1 for now..
-      if(pt<29.) return 1.; //FIXME
-      if(eta>=2.4) eta = 2.39;
-
-      if(pt>1200.) pt = 1199.;
     }
-    else if(trig=="Mu50"){
-      if(pt<52.) return 1.; //FIXME
-      if(eta>=2.4) eta = 2.39;
-
-      if(pt>1000.) pt = 999.;
+  else if(DataYear==2018)
+    {
+      if(trig=="IsoMu24")
+	{
+	  if(2.4<=eta) eta = 2.39;
+	  
+	  if(pt<26) pt = 26.1;
+	  if(200.<pt) pt = 119.9;
+	}
+      else if(trig=="Mu50")
+	{
+	  if(pt<52.) return 1.; //FIXME
+	  if(eta>=2.4) eta = 2.39;
+	  
+	  if(pt>1000.) pt = 999.;
+	}
+      else
+	{
+	}
     }
-    else{
-
+  else
+    {
+      cerr << "[MCCorrection::MuonTrigger_Eff] Wrong year : " << DataYear << endl;
+      exit(ENODATA);
     }
-  }
-  else if(DataYear==2018){
-    if(trig=="IsoMu24"){
-      if(pt<26.) return 1.; //FIXME
-      if(eta>=2.4) eta = 2.39;
-
-      if(pt>1200.) pt = 1199.;
-    }
-    else if(trig=="Mu50"){
-      if(pt<52.) return 1.; //FIXME
-      if(eta>=2.4) eta = 2.39;
-
-      if(pt>1000.) pt = 999.;
-    }
-    else{
-
-    }
-  }
-  else{
-    cerr << "[MCCorrection::MuonTrigger_Eff] Wrong year : " << DataYear << endl;
-    exit(ENODATA);
-  }
 
   TString histkey = "Trigger_Eff_DATA_"+trig+"_"+ID;
   if(DataOrMC==1) histkey = "Trigger_Eff_MC_"+trig+"_"+ID;
@@ -424,7 +433,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
     }
   }
 
-  int this_bin = this_hist->FindBin(pt,eta);
+  int this_bin = this_hist->FindBin(eta, pt);
 
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
@@ -457,7 +466,8 @@ double MCCorrection::MuonTrigger_SF(TString ID, TString trig, const std::vector<
     eff_MC = 1.-eff_MC;
 
     value = eff_DATA/eff_MC;
-
+    
+    //cout << "MCCorrection::MuonTrigger_SF " << eff_DATA << " " << eff_MC << " " << value << endl;
 /*
     if(eff_DATA==0||eff_MC==0){
       cout << "==== Zero Trigger Eff ====" << endl;
@@ -603,8 +613,8 @@ double MCCorrection::ElectronReco_SF(double sceta, double pt, int sys){
 
 }
 
-double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC, double sceta, double pt, int sys){
-
+double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC, double sceta, double pt, int sys)
+{
   if(ID=="Default") return 1.;
   if(trig=="Default") return 1.;
 
@@ -614,81 +624,57 @@ double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC,
 
   double value = 1.;
   double error = 0.;
-
-  if(trig=="WREGammaTrigger"){
-
-    if(pt<50.) pt = 50.;
-    if(pt>=500.) pt = 499.;
-
-    if(sceta<-2.5) sceta = -2.5;
-    if(sceta>=2.5) sceta = 2.49;
-
-    TString etaregion = "Barrel";
-    if(fabs(sceta) > 1.566) etaregion = "EndCap";
-
-    TString histkey = "Trigger_Eff_DATA_"+trig+"_"+ID+"_"+etaregion;
-    if(DataOrMC==1) histkey = "Trigger_Eff_MC_"+trig+"_"+ID+"_"+etaregion;
-    //cout << "[MCCorrection::ElectronTrigger_Eff] histkey = " << histkey << endl;
-    TH2F *this_hist = map_hist_Electron[histkey];
-    if(!this_hist){
-      if(IgnoreNoHist) return 1.;
-      else{
-        cerr << "[MCCorrection::ElectronTrigger_Eff] No "<<histkey<<endl;
-        exit(ENODATA);
-      }
-    }
-
-    int this_bin = this_hist->FindBin(sceta, pt);
-
-    value = this_hist->GetBinContent(this_bin);
-    error = this_hist->GetBinError(this_bin);
-
-  }
-
-  //cout << "[MCCorrection::ElectronTrigger_Eff] value = " << value << endl;
+  
+  //cout << "[MCCorrection::ElectronTrigger_SF] value = " << value << endl;
 
   return value+double(sys)*error;
+}//double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC, double sceta, double pt, int sys)
 
-}
+//////////
 
-double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron>& electrons, int sys){
-
+double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron>& electrons, int sys)
+{
   if(ID=="Default") return 1.;
   if(trig=="Default") return 1.;
-
+  
   double value = 1.;
+  double error = 0.;
+  
+  //single electron trigger eff sf for Vcb  analysis
+  if(trig=="Ele27"||trig=="Ele35"||trig=="Ele32")
+    {      
+      TString histkey = "Trigger_SF_" + trig;
+      TH2F* this_hist = map_hist_Electron[histkey];
+      if(!this_hist)
+        {
+          if(IgnoreNoHist) return 1.;
+          else
+            {
+              cerr << "[MCCorrection::ElectronTrigger_SF] No "<< histkey << endl;
+              exit(ENODATA);
+            }
+        }
 
-  if(trig=="WREGammaTrigger"){
+      float sceta = electrons[0].scEta();
+      float pt = electrons[0].UncorrPt();
 
-    double eff_DATA = 1.;
-    double eff_MC = 1.;
+      if(DataYear==2018)
+	{
+	  if(sceta<-2.5) sceta = -2.49;
+	  if(2.5<sceta) sceta = 2.49;
+          
+	  if(pt<35) pt = 35.1;
+	  if(200<pt) pt = 199.;
+	}
 
-    for(unsigned int i=0; i<electrons.size(); i++){
-      eff_DATA *= ( 1.-ElectronTrigger_Eff(ID, trig, 0, electrons.at(i).scEta(), electrons.at(i).Pt(), sys) );
-      eff_MC   *= ( 1.-ElectronTrigger_Eff(ID, trig, 1, electrons.at(i).scEta(), electrons.at(i).Pt(), -sys) );
+      int this_bin = this_hist->FindBin(sceta, pt);
+
+      value = this_hist->GetBinContent(this_bin);
+      error = this_hist->GetBinError(this_bin);
     }
-
-    eff_DATA = 1.-eff_DATA;
-    eff_MC = 1.-eff_MC;
-
-    value = eff_DATA/eff_MC;
-    if(IsFastSim) value = eff_DATA;
-
-
-/*
-    if(eff_DATA==0||eff_MC==0){
-      cout << "==== Zero Trigger Eff ====" << endl;
-      for(unsigned int i=0;i<electrons.size();i++){
-        cout << electrons.at(i).Pt() << "\t" << electrons.at(i).Pt() << endl;
-      }
-    }
-*/
-
-  }
-
-  return value;
-
-}
+  
+  return value+double(sys)*error;
+}//double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron>& electrons, int sys)
 
 double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron *>& electrons, int sys){
 

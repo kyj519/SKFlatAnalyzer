@@ -147,6 +147,8 @@ public :
    vector<float>   *jet_smearedResDown;
    vector<float>   *jet_JECL1FastJet;
    vector<float>   *jet_JECFull;
+   vector<int>     *jet_GenHFHadronMatcher_flavour;
+   vector<int>     *jet_GenHFHadronMatcher_origin;
    vector<float>   *fatjet_pt;
    vector<float>   *fatjet_eta;
    vector<float>   *fatjet_phi;
@@ -516,6 +518,8 @@ public :
    TBranch        *b_jet_smearedResDown;   //!
    TBranch        *b_jet_JECL1FastJet;   //!
    TBranch        *b_jet_JECFull;   //!
+   TBranch        *b_jet_GenHFHadronMatcher_flavour; //!
+   TBranch        *b_jet_GenHFHadronMatcher_origin; //!
    TBranch        *b_fatjet_pt;   //!
    TBranch        *b_fatjet_eta;   //!
    TBranch        *b_fatjet_phi;   //!
