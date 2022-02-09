@@ -261,6 +261,12 @@ double MCCorrection::MuonID_SF(TString ID, double eta, double pt, int sys){
     if(eta>=2.4) eta = 2.39;
     if(eta<-2.4) eta = -2.4;
   }
+  else if(ID=="NUM_LooseID_DEN_TrackerMuons"){
+    if(pt<15.) pt = 15.;
+    if(pt>=120) pt = 119.9;
+    if(eta>=2.4) eta = 2.39;
+    if(eta < -2.4) eta = -2.4; 
+  }
 
   TH2F *this_hist = map_hist_Muon["ID_SF_"+ID];
   if(!this_hist){
@@ -277,7 +283,7 @@ double MCCorrection::MuonID_SF(TString ID, double eta, double pt, int sys){
     this_bin = this_hist->FindBin(eta,pt);
   }
   else{
-    this_bin = this_hist->FindBin(pt,eta);
+    this_bin = this_hist->FindBin(eta,pt);
   }
 
   value = this_hist->GetBinContent(this_bin);
