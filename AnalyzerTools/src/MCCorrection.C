@@ -304,11 +304,9 @@ double MCCorrection::MuonISO_SF(TString ID, double eta, double pt, int sys){
   double value = 1.;
   double error = 0.;
 
-  if(DataYear!=2016){
-    eta = fabs(eta);
-  }
+  eta = fabs(eta);
 
-  if(ID=="NUM_TightRelIso_DEN_TightIDandIPCut" || ID=="NUM_LooseRelTkIso_DEN_HighPtIDandIPCut"){
+  if(ID=="NUM_TightRelIso_DEN_TightIDandIPCut" || ID=="NUM_LooseRelTkIso_DEN_HighPtIDandIPCut" || ID == "NUM_LooseRelIso_DEN_LooseID"){
     //==== boundaries
     if(pt<20.) pt = 20.;
     if(pt>=120.) pt = 119.;
@@ -331,7 +329,7 @@ double MCCorrection::MuonISO_SF(TString ID, double eta, double pt, int sys){
     this_bin = this_hist->FindBin(eta,pt);
   }
   else{
-    this_bin = this_hist->FindBin(pt,eta);
+    this_bin = this_hist->FindBin(eta,pt);
   }
 
   value = this_hist->GetBinContent(this_bin);
@@ -366,7 +364,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
       if(pt<26.) return 1.; //FIXME
       if(eta>=2.4) eta = 2.39;
 
-      if(pt>500.) pt = 499.;
+      if(pt>200.) pt = 199.9;
     }
     else if(trig=="Mu50"){
       if(pt<52.) return 1.; //FIXME
@@ -387,7 +385,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
       if(pt<29.) return 1.; //FIXME
       if(eta>=2.4) eta = 2.39;
 
-      if(pt>1200.) pt = 1199.;
+      if(pt>200.) pt = 199.9;
     }
     else if(trig=="Mu50"){
       if(pt<52.) return 1.; //FIXME
@@ -404,7 +402,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
       if(pt<26.) return 1.; //FIXME
       if(eta>=2.4) eta = 2.39;
 
-      if(pt>1200.) pt = 1199.;
+      if(pt>200.) pt = 199.;
     }
     else if(trig=="Mu50"){
       if(pt<52.) return 1.; //FIXME
@@ -433,7 +431,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
     }
   }
 
-  int this_bin = this_hist->FindBin(pt,eta);
+  int this_bin = this_hist->FindBin(eta,pt);
 
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
