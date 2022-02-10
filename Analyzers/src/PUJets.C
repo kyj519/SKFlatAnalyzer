@@ -9,21 +9,24 @@ PUJets::~PUJets(){
 }
 
 void PUJets::initializeAnalyzer(){
-	MuonIDs = {"POGTight"};
+	MuonIDs = {"POGLooseWithRelIso04","POGTight"};
   ElectronIDs = {"passLooseID","passTightID"};
-	MuonIDSFKeys = {"NUM_TightID_DEN_genTracks"};
+	MuonIDSFKeys = {"NUM_LooseID_DEN_TrackerMuons"};
   MuonISOSFKeys = {"NUM_TightRelIso_DEN_TightIDandIPCut"};
-  MuonTrigSFKeys = {"IsoMu24"};
+  
   if(DataYear==2016){
     IsoMuTriggerName = "HLT_IsoMu24_v";
+    MuonTrigSFKeys = {"IsoMu24"};
     TriggerSafePtCut = 26.;
   }
   else if(DataYear==2017){
     IsoMuTriggerName = "HLT_IsoMu27_v";
+    MuonTrigSFKeys = {"IsoMu27"};
     TriggerSafePtCut = 29.;
   }
 	else if(DataYear==2018){
     IsoMuTriggerName = "HLT_IsoMu24_v";
+    MuonTrigSFKeys = {"IsoMu24"};
     TriggerSafePtCut = 26.;
   }
 }
@@ -35,26 +38,23 @@ void PUJets::executeEvent(){
   weight_Prefire = GetPrefireWeight(0);
   AnalyzerParameter param;
 
-  for(unsigned int it_MuonID=0; it_MuonID<MuonIDs.size(); it_MuonID++){
+  TString MuonID = MuonIDs.at(0);
+  TString MuonIDSFKey = MuonIDSFKeys.at(0);
+  TString MuonTrigSFKey = MuonTrigSFKeys.at(0);
+  TString MuonISOSFKey = MuonISOSFKeys.at(0);
+  param.Clear();
+  param.syst_ = AnalyzerParameter::Central;
+  param.Name = MuonID+"_"+"Central";
 
-    TString MuonID = MuonIDs.at(it_MuonID);
-    TString MuonIDSFKey = MuonIDSFKeys.at(it_MuonID);
-    TString MuonTrigSFKey = MuonTrigSFKeys.at(0);
-    TString MuonISOSFKey = MuonISOSFKeys.at(0);
-    param.Clear();
-    param.syst_ = AnalyzerParameter::Central;
-    param.Name = MuonID+"_"+"Central";
+  param.Muon_Loose_ID = MuonID;
+  param.Muon_Tight_ID = MuonIDs.at(1);
+  param.Muon_ID_SF_Key = MuonIDSFKey;
+  param.Muon_Trigger_SF_Key = MuonTrigSFKey;
+  param.Muon_ISO_SF_Key = MuonISOSFKey;
+  param.Electron_Loose_ID = ElectronIDs.at(0);
+  param.Jet_ID = "tight";
 
-
-    param.Muon_Tight_ID = MuonID;
-    param.Muon_ID_SF_Key = MuonIDSFKey;
-    param.Muon_Trigger_SF_Key = MuonTrigSFKey;
-    param.Muon_ISO_SF_Key = MuonISOSFKey;
-    param.Electron_Loose_ID = ElectronIDs.at(0);
-    param.Jet_ID = "tight";
-	//param.Ele
-
-    executeEventFromParameter(param);
+  executeEventFromParameter(param);
 
 
     if(RunSyst){
@@ -68,8 +68,7 @@ void PUJets::executeEvent(){
         executeEventFromParameter(param);
       }
 
-    }
-  }
+    } 
 }
 
 void PUJets::executeEventFromParameter(AnalyzerParameter param){
@@ -83,11 +82,11 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
 	vector<Jet> AllJets = vec_jet;
 
 
-	vector<Muon> muons = SelectMuons(AllMuons, param.Muon_Tight_ID, 30., 2.4);
+	vector<Muon> muons = SelectMuons(AllMuons, param.Muon_Loose_ID, 30., 2.4);
   vector<Electron> electrons = SelectElectrons(AllElectrons, param.Electron_Loose_ID ,30. ,2.5);
 	vector<Jet> jets_unVeto = SelectJets(AllJets, param.Jet_ID, 15, 4.7);
   vector<Jet> jets = JetsVetoLeptonInside(jets_unVeto,electrons,muons,0.4);
-	
+
 	std::sort(muons.begin(),muons.end(),PtComparing);
 	std::sort(jets.begin(),jets.end(),PtComparing);
 
@@ -96,7 +95,7 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
   if( muons.at(0).Pt() <= TriggerSafePtCut ) return;
 	Particle ZCand = muons.at(0) + muons.at(1);
   Particle ZCand_reverse = Particle(-1.*ZCand.Px(),-1.*ZCand.Py(),-1.*ZCand.Pz(),ZCand.E());
-
+ 
 
 	double ZPt = ZCand.Pt();
   double JetPt = jets.at(0).Pt();
@@ -108,58 +107,39 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
 
   if(!IsData){
       //lumi
-    float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
+    double lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
     weight *= lumi_weight;
     if(run_debug == true) cout << "lumiw" << lumi_weight <<endl;
 
     //MCweight +1 or -1
-    float mc_weight = ev.MCweight();
+    double mc_weight = ev.MCweight();
     if(run_debug == true) cout << "mcw" << mc_weight <<endl;
     weight *= mc_weight;
 
 
     //pileup reweight
-    float pileup_weight = mcCorr->GetPileUpWeight(nPileUp, 0);
+    double pileup_weight = mcCorr->GetPileUpWeight(nPileUp, 0);
     if(run_debug == true) cout << "puw" << pileup_weight <<endl;
     weight *= pileup_weight;
 
     //L1 prefire
-    float prefire_weight = GetPrefireWeight(0);
+    double prefire_weight = GetPrefireWeight(0);
     if(run_debug == true) cout << "l1W" << prefire_weight <<endl;
     weight *= prefire_weight;
 
-    /*float muon_trig_sf = mcCorr->MuonTrigger_SF(param.Muon_Tight_ID,param.Muon_Trigger_SF_Key,muons,0);
+    double muon_trig_sf = mcCorr->MuonTrigger_SF(param.Muon_Tight_ID,param.Muon_Trigger_SF_Key,muons,0);
     if(run_debug == true) cout << "trigW" << muon_trig_sf <<endl;
     weight *= muon_trig_sf;
 
     for(int i = 0; i<muons.size();i++){
-      float muon_ID_sf = mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muons.at(i).Eta(), muons.at(i).MiniAODPt());
-      if(run_debug == true) cout << "idw" << muon_ID_sf <<endl;
-      float muon_ISO_sf = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muons.at(i).Eta(),muons.at(i).MiniAODPt());
-      if(run_debug == true) cout << "isow" << muon_ISO_sf <<endl;
-      weight *= (muon_ID_sf*muon_ISO_sf);   
+      double muon_ISO_sf = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muons.at(i).Eta(), muons.at(i).MiniAODPt(),0);
+      if(run_debug == true) cout << "iso w" << muon_ISO_sf <<endl;
+      weight *= muon_ISO_sf;  
     }
 
     
     
-    //SF for electron trigger effi
-    float sf_el_trig_effi =  mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, el_trig, vec_sel_electron, 0);
-    weight *= sf_el_trig_effi;
 
-    if(run_debug) cout << "E Trig SF = " << electron.scEta() << "\t" << electron.UncorrPt() << "\t" << sf_el_trig_effi << endl;
-
-    //SF for electron ID eff
-    float sf_el_id_effi = mcCorr->ElectronID_SF(param.Electron_Tight_ID, electron.scEta(), electron.UncorrPt(), 0);
-    weight *= sf_el_id_effi;
-
-    if(run_debug) cout << "E ID SF = " << sf_el_id_effi << endl;
-
-    //SF for electron Reco eff
-    float sf_el_reco_effi = mcCorr->ElectronReco_SF(electron.scEta(), electron.UncorrPt(), 0);
-    weight *= sf_el_reco_effi;
-
-    if(run_debug) cout << "E Reco SF = " << sf_el_reco_effi << endl;
-    */
 
   }
 
@@ -171,10 +151,10 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
   if((ZPt/JetPt)<0.5) trigger = false;
   if(trigger == true){
     FillHist(param.Name+"/dPhi_region1/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-    FillHist(param.Name+"/dPhi_region1/ZMass/",ZCand.M(),weight,50,70,110);
+    FillHist(param.Name+"/dPhi_region1/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
   }
   else{
     FillHist(param.Name+"/dPhi_region2/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-    FillHist(param.Name+"/dPhi_region2/ZMass/",ZCand.M(),weight,50,70,110);
+    FillHist(param.Name+"/dPhi_region2/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
   }
 }
