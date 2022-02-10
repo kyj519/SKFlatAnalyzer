@@ -106,6 +106,8 @@ bool Muon::PassID(TString ID) const {
   if(ID=="POGHighPtWithLooseTrkIso") return Pass_POGHighPtWithLooseTrkIso();
   //==== Customized
   if(ID=="TEST") return Pass_TESTID();
+  if(ID=="POGLooseWithRelIso04") return Pass_POGLooseWithRelIso04();
+
 
   //==== No cut
   if(ID=="NOCUT") return true;
@@ -115,6 +117,11 @@ bool Muon::PassID(TString ID) const {
 
   return false;
 
+}
+bool Muon::Pass_POGLooseWithRelIso04() const {
+  if(!(isPOGLoose())) return false;
+  if(!(RelIso()<0.4)) return false;
+  return true;
 }
 bool Muon::Pass_POGTightWithTightIso() const {
   if(!( isPOGTight() )) return false;
