@@ -102,7 +102,7 @@ public:
   bool PassID(TString ID) const;
   bool Pass_POGTightWithTightIso() const;
   bool Pass_POGHighPtWithLooseTrkIso() const;
-  bool Pass_POGLooseWithRelIso04() const;
+  bool Pass_POGLooseWithMediumRelIso() const;
   bool Pass_TESTID() const;
   
   void SetTrackerLayers(int n);
