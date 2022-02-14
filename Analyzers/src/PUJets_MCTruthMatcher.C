@@ -1,14 +1,14 @@
-#include "PUJets.h"
-
-PUJets::PUJets(){
-
-}
-
-PUJets::~PUJets(){
+#include "PUJets_MCTruthMatcher.h"
+#include "string"
+PUJets_MCTruthMatcher::PUJets_MCTruthMatcher(){
 
 }
 
-void PUJets::initializeAnalyzer(){
+PUJets_MCTruthMatcher::~PUJets_MCTruthMatcher(){
+
+}
+
+void PUJets_MCTruthMatcher::initializeAnalyzer(){
 	MuonIDs = {"POGLooseWithMediumRelIso","POGTightWithTightIso"};
   ElectronIDs = {"passLooseID","passTightID"};
 	MuonIDSFKeys = {"NUM_TightID_DEN_TrackerMuons"};
@@ -30,10 +30,11 @@ void PUJets::initializeAnalyzer(){
   }
 }
 
-void PUJets::executeEvent(){
+void PUJets_MCTruthMatcher::executeEvent(){
 	vec_electron = GetAllElectrons();
 	vec_muon = GetAllMuons();
 	vec_jet = GetAllJets();
+  vec_gens = GetGens();
   weight_Prefire = GetPrefireWeight(0);
   AnalyzerParameter param;
 
@@ -70,8 +71,10 @@ void PUJets::executeEvent(){
     } 
 }
 
-void PUJets::executeEventFromParameter(AnalyzerParameter param){
-	Event ev = GetEvent();
+void PUJets_MCTruthMatcher::executeEventFromParameter(AnalyzerParameter param){
+	if(IsDATA) return;
+  Event ev = GetEvent();
+  
 	if(!(PassMETFilter())) return;
  	Particle met = ev.GetMETVector();
 	if(!ev.PassTrigger(IsoMuTriggerName)) return;
@@ -102,9 +105,9 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
 	Particle ZCand = muons_tight.at(0) + muons_tight.at(1);
   Particle ZCand_reverse = Particle(-1.*ZCand.Px(),-1.*ZCand.Py(),-1.*ZCand.Pz(),ZCand.E());
   if(ZCand.M()<50) return;
-
+   
  
-  bool run_debug = true;
+  bool run_debug = false;
   double weight = 1.;  
 
   if(!IsData){
@@ -146,7 +149,6 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
 
   }
 
-
   FillHist(param.Name+"/ZMass",ZCand.M(),weight,50,70,110);
   
   if(jets.size() != 1) return;	
@@ -157,13 +159,60 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
   if(jets.at(0).Pt() < 10 || jets.at(0).Pt() >= 50) return;
   if((ZPt/JetPt)>1.5) return;
   if((ZPt/JetPt)<0.5) toggle = false;
+  vector<double> dR_treshold = {0.1,0.15,0.2,0.3,0.4,0.5};
+  double best_dR_idx = GetGenMatchedJet(jets.at(0),vec_gens);
+  bool isISR = false;
+  double dR = 999.;
+  if(best_dR_idx != -999) dR = vec_gens.at(best_dR_idx).DeltaR(jets.at(0));
   
-  if(toggle == true){
-    FillHist(param.Name+"/dPhi_region1/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-    FillHist(param.Name+"/dPhi_region1/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+
+
+  for(unsigned int i = 0; i < dR_treshold.size(); i++){
+    if(!isISR) isISR = false;
+    else if(dR<dR_treshold.at(i)) isISR = true;
+
+    if(toggle){
+      if(isISR){
+        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+      }
+      else{
+        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+      }
+    }
+    else{
+      if(isISR){
+        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+      }
+      else{
+        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+      }
+    }
   }
-  else{
-    FillHist(param.Name+"/dPhi_region2/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-    FillHist(param.Name+"/dPhi_region2/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+  
+
+}
+
+int PUJets_MCTruthMatcher::GetGenMatchedJet(const Jet& jet, const std::vector<Gen>& gens){
+  vector<unsigned int> gluon_from_isr_idx;
+  unsigned int best_dR_idx = 0;
+  double min_dR = 999.;
+  for(unsigned int i = 0; i < gens.size(); i++){
+    if(gens.at(i).PID() == 21 && gens.at(i).MotherIndex()<2) gluon_from_isr_idx.push_back(i);
   }
+  if(gluon_from_isr_idx.size() == 0) return -999;
+  cout << "at least arr fiiled" << endl;
+  for(unsigned int i = 0; i < gluon_from_isr_idx.size(); i++){
+    if(gens.at(gluon_from_isr_idx.at(i)).DeltaR(jet) < min_dR){
+      min_dR = gens.at(gluon_from_isr_idx.at(i)).DeltaR(jet);
+      best_dR_idx = gluon_from_isr_idx.at(i); 
+    }
+  }
+  cout << "min_dR=" << min_dR << endl;
+  cout << "bestidx=" << best_dR_idx << endl;
+  if(min_dR == 999.) return -999;
+  return best_dR_idx;
 }

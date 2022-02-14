@@ -13,21 +13,23 @@ void SkimTree_PUJets::initializeAnalyzer(){
   cout << "[SkimTree_Dilepton::initializeAnalyzer()] gDirectory = " << gDirectory->GetName() << endl;
   newtree = fChain->CloneTree(0);
 
-	MuonIDs = {"POGLooseWithRelIso04","POGTight"};
+  MuonIDs = {"POGLooseWithMediumRelIso","POGTightWithTightIso"};
   ElectronIDs = {"passLooseID","passTightID"};
-	MuonIDSFKeys = {"NUM_LooseID_DEN_TrackerMuons"};
+	MuonIDSFKeys = {"NUM_TightID_DEN_TrackerMuons"};
   MuonISOSFKeys = {"NUM_TightRelIso_DEN_TightIDandIPCut"};
-  MuonTrigSFKeys = {"IsoMu24"};
   if(DataYear==2016){
     IsoMuTriggerName = "HLT_IsoMu24_v";
+    MuonTrigSFKeys = {"IsoMu24"};
     TriggerSafePtCut = 26.;
   }
   else if(DataYear==2017){
     IsoMuTriggerName = "HLT_IsoMu27_v";
+    MuonTrigSFKeys = {"IsoMu27"};
     TriggerSafePtCut = 29.;
   }
 	else if(DataYear==2018){
     IsoMuTriggerName = "HLT_IsoMu24_v";
+    MuonTrigSFKeys = {"IsoMu24"};
     TriggerSafePtCut = 26.;
   }
 }
@@ -56,11 +58,10 @@ void SkimTree_PUJets::executeEvent(){
   param.Jet_ID = "tight";
 
   executeEventFromParameter(param);
-
 }
 
 void SkimTree_PUJets::executeEventFromParameter(AnalyzerParameter param){
-	Event ev = GetEvent();
+Event ev = GetEvent();
 	if(!(PassMETFilter())) return;
  	Particle met = ev.GetMETVector();
 	if(!ev.PassTrigger(IsoMuTriggerName)) return;
@@ -70,17 +71,30 @@ void SkimTree_PUJets::executeEventFromParameter(AnalyzerParameter param){
 	vector<Jet> AllJets = vec_jet;
 
 
-	vector<Muon> muons = SelectMuons(AllMuons, param.Muon_Loose_ID, 30., 2.4);
-  vector<Electron> electrons = SelectElectrons(AllElectrons, param.Electron_Loose_ID ,30. ,2.5);
+	vector<Muon> muons = SelectMuons(AllMuons, param.Muon_Loose_ID, 15., 2.4);
+  vector<Electron> electrons = SelectElectrons(AllElectrons, param.Electron_Loose_ID ,15. ,2.5);
 	vector<Jet> jets_unVeto = SelectJets(AllJets, param.Jet_ID, 15, 4.7);
+
+  //----baseline selection----
+  if(!((muons.size() == 2 && electrons.size() == 0) || (muons.size() == 0 && electrons.size() == 2)))  return;
+
+  //----Jet Cleaning----
   vector<Jet> jets = JetsVetoLeptonInside(jets_unVeto,electrons,muons,0.4);
 
 	std::sort(muons.begin(),muons.end(),PtComparing);
 	std::sort(jets.begin(),jets.end(),PtComparing);
 
-	if(muons.size() != 2) return;
-  if(jets.size() != 1) return;
-  if( muons.at(0).Pt() <= TriggerSafePtCut ) return;
+  //----Tight Muon Selection----
+
+  vector<Muon> muons_tight = SelectMuons(muons, param.Muon_Tight_ID, TriggerSafePtCut, 2.4);
+  if(muons_tight.size() != 2) return;
+  if((muons_tight.at(0).Charge()+muons_tight.at(1).Charge()) != 0) return;
+	Particle ZCand = muons_tight.at(0) + muons_tight.at(1);
+  if(ZCand.M()<50) return;
+  
+  if(jets.size() != 1) return;	
+
+
 
 	if(newtree->Fill()<0) exit(EIO);
 

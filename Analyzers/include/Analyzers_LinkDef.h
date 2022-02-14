@@ -18,5 +18,6 @@
 #pragma link C++ class SkimTree_Dilepton+;
 #pragma link C++ class PUJets+;
 #pragma link C++ class SkimTree_PUJets+;
+#pragma link C++ class PUJets_MCTruthMatcher+;
 
 #endif
