@@ -12,7 +12,9 @@ public:
 
   void executeEventFromParameter(AnalyzerParameter param);
   void executeEvent();
-  int GetGenMatchedJet(const Jet& jet, const std::vector<Gen>& gens);
+  std::pair<unsigned int,bool> GetGenMatchedJet(const Jet& jet, const std::vector<Gen>& gens);
+  unsigned int getBinID(const double eta, const double Pt);
+  vector<TString> getHistKey(bool isISR, bool pt_balanced, unsigned int binID, int PUID);
 
   bool RunSyst;
   bool RunNewPDF;

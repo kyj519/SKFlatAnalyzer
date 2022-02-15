@@ -136,7 +136,7 @@ void PUJets_MCTruthMatcher::executeEventFromParameter(AnalyzerParameter param){
     if(run_debug == true) cout << "trigW" << muon_trig_sf <<endl;
     weight *= muon_trig_sf;
 
-    for(int i = 0; i<muons.size();i++){
+    for(unsigned int i = 0; i<muons.size();i++){
       double muon_ISO_sf = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muons.at(i).Eta(), muons.at(i).MiniAODPt(),0);
       double muon_ID_sf = mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muons.at(i).Eta(), muons.at(i).Pt(), 0);
       if(run_debug == true) cout << "iso w" << muon_ISO_sf <<endl;
@@ -160,59 +160,176 @@ void PUJets_MCTruthMatcher::executeEventFromParameter(AnalyzerParameter param){
   if((ZPt/JetPt)>1.5) return;
   if((ZPt/JetPt)<0.5) toggle = false;
   vector<double> dR_treshold = {0.1,0.15,0.2,0.3,0.4,0.5};
-  double best_dR_idx = GetGenMatchedJet(jets.at(0),vec_gens);
-  bool isISR = false;
-  double dR = 999.;
-  if(best_dR_idx != -999) dR = vec_gens.at(best_dR_idx).DeltaR(jets.at(0));
-  
 
+  //unsigned int best_dR_idx = GetGenMatchedJet(jets.at(0),vec_gens).first;
+  bool isISR = GetGenMatchedJet(jets.at(0),vec_gens).second;
+  vector<TString> histIDs = getHistKey(isISR, toggle, getBinID(jets.at(0).Eta(),jets.at(0).Pt()), jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta()));
+  for(unsigned int i = 0; i < histIDs.size(); i++){
+    FillHist(histIDs.at(i),dPhi_1,weight,50,-3.15/4,3.15/4);
+  }
 
-  for(unsigned int i = 0; i < dR_treshold.size(); i++){
-    if(!isISR) isISR = false;
-    else if(dR<dR_treshold.at(i)) isISR = true;
+  /*for(unsigned int i = 0; i < dR_treshold.size(); i++){
+    bool isISR = false;
+    double dR = 999.;
+    if(best_dR_idx != -999){
+      dR = vec_gens.at(best_dR_idx).DeltaR(jets.at(0));
+      isISR = true;
+    } 
+    if(dR>dR_treshold.at(i)) isISR = false;
+    TString passPUID, PUID_str;
+    int PUID = jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta());
+    PUID_str = std::to_string(PUID);
 
     if(toggle){
       if(isISR){
-        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+        FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+PUID_str, dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        if(PUID == 8){
+          FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(3), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 4){
+          FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 2){
+          FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else{
+          FillHist(param.Name+"/pt_balanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(0), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
       }
       else{
-        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region1/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+        FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+PUID_str, dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        if(PUID == 8){
+          FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(3), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 4){
+          FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 2){
+          FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else{
+          FillHist(param.Name+"/pt_balanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(0), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
       }
     }
     else{
       if(isISR){
-        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-        FillHist(param.Name+"_isISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+        FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+PUID_str, dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        if(PUID == 8){
+          FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(3), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 4){
+          FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 2){
+          FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else{
+          FillHist(param.Name+"/pt_unbalanced"+"/isISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(0), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
       }
       else{
-        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-        FillHist(param.Name+"_isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/dPhi_region2/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+        FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+PUID_str, dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        if(PUID == 8){
+          FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(3), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 4){
+          FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+          FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(2), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else if(PUID == 2){
+          FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(1), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
+        else{
+          FillHist(param.Name+"/pt_unbalanced"+"/isNotISR/treshold_"+to_string(dR_treshold.at(i))+"/"+passPUIDs.at(0), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
+        }
       }
     }
-  }
-  
-
+  }*/
 }
 
-int PUJets_MCTruthMatcher::GetGenMatchedJet(const Jet& jet, const std::vector<Gen>& gens){
+
+std::pair<unsigned int,bool> PUJets_MCTruthMatcher::GetGenMatchedJet(const Jet& jet, const std::vector<Gen>& gens){
   vector<unsigned int> gluon_from_isr_idx;
   unsigned int best_dR_idx = 0;
+  const double cone_size = 0.3;
   double min_dR = 999.;
+  std::pair<unsigned int, bool> result;
   for(unsigned int i = 0; i < gens.size(); i++){
     if(gens.at(i).PID() == 21 && gens.at(i).MotherIndex()<2) gluon_from_isr_idx.push_back(i);
   }
-  if(gluon_from_isr_idx.size() == 0) return -999;
-  cout << "at least arr fiiled" << endl;
+  if(gluon_from_isr_idx.size() == 0){
+    result.first = best_dR_idx;
+    result.second = false;
+  }
+  //cout << "at least arr fiiled" << endl;
   for(unsigned int i = 0; i < gluon_from_isr_idx.size(); i++){
     if(gens.at(gluon_from_isr_idx.at(i)).DeltaR(jet) < min_dR){
       min_dR = gens.at(gluon_from_isr_idx.at(i)).DeltaR(jet);
       best_dR_idx = gluon_from_isr_idx.at(i); 
     }
   }
-  cout << "min_dR=" << min_dR << endl;
-  cout << "bestidx=" << best_dR_idx << endl;
-  if(min_dR == 999.) return -999;
-  return best_dR_idx;
+  if(cone_size < gens.at(best_dR_idx).DeltaR(jet)){
+    result.first = best_dR_idx;
+    result.second = false; 
+  }
+  else{
+    result.first = best_dR_idx;
+    result.second = true; 
+  }
+  return result;
 }
+
+unsigned int PUJets_MCTruthMatcher::getBinID(const double eta, const double Pt){
+  unsigned PtNum = 0;
+  unsigned etaNum = 0;
+  if(10.<=Pt && Pt < 20.) PtNum = 1;
+  else if(20.<=Pt && Pt < 30.) PtNum = 5;
+  else if(30.<=Pt && Pt < 40.) PtNum = 9;
+  else if(40.<=Pt && Pt < 50.) PtNum = 13;
+  if( fabs(eta) < 2.5) etaNum = 0;
+  else if(2.5<=fabs(eta) && fabs(eta) < 2.75) etaNum = 1;
+  else if(2.75<=fabs(eta) && fabs(eta) < 3.0) etaNum = 2;
+  else if(3.0<=fabs(eta) && fabs(eta) < 5.0) etaNum = 3; 
+  unsigned int binID = PtNum + etaNum;
+  return binID;
+}
+
+std::vector<TString> PUJets_MCTruthMatcher::getHistKey(bool isISR, bool pt_balanced, unsigned int binID, int PUID){
+  TString isISRKey,pt_balancedKey,binIDKey,PUIDKey,passPUIDKey;
+  isISRKey = isISR ? "isISR" : "isNotISR";
+  pt_balancedKey = pt_balanced ? "pt_balanced" : "pt_unbalanced";
+  binIDKey = to_string(binID);
+  vector<TString> result;
+  result.push_back("byPUID/" + isISRKey + "/" + pt_balancedKey + "/" + binIDKey);
+  switch(PUID){
+    case 0b111:
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passTight");
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passMedium");
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose");
+      break;
+    case 0b110:
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passMedium");
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose");
+      break;
+    case 0b100:
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose");
+      break;
+    case 0b0:
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/fail");
+      break;
+  }
+  return result;
+}
+
