@@ -132,9 +132,9 @@ int Jet::GetPUID(double Pt, double eta){
   else if(30.<=Pt && Pt < 40.) PtNum = 9;
   else if(40.<=Pt && Pt < 50.) PtNum = 13;
   if( fabs(eta) < 2.5) etaNum = 0;
-  else if(2.5<=fabs(eta) && fabs(eta) < 2.75) PtNum = 1;
-  else if(2.75<=fabs(eta) && fabs(eta) < 3.0) PtNum = 2;
-  else if(3.0<=fabs(eta) && fabs(eta) < 5.0) PtNum = 3; 
+  else if(2.5<=fabs(eta) && fabs(eta) < 2.75) etaNum = 1;
+  else if(2.75<=fabs(eta) && fabs(eta) < 3.0) etaNum = 2;
+  else if(3.0<=fabs(eta) && fabs(eta) < 5.0) etaNum = 3; 
   unsigned int binID = PtNum + etaNum;
   
   double wp[16][3];
@@ -146,9 +146,10 @@ int Jet::GetPUID(double Pt, double eta){
       wp[j][i] = temp[i*16+j];
     }
   }
-  if(j_PileupJetId<wp[binID][2]) return 0;
-  else if(wp[binID][2]<=j_PileupJetId && j_PileupJetId < wp[binID][1]) return 100;
-  else if(wp[binID][1]<=j_PileupJetId && j_PileupJetId < wp[binID][0]) return 110;
-  if(wp[binID][0]<=j_PileupJetId) return 111;
+  
+  if(j_PileupJetId>=wp[binID][0]) return 0b111;
+  else if(j_PileupJetId >= wp[binID][1]) return 0b110;
+  else if(j_PileupJetId >= wp[binID][2]) return 0b100;
+  else return 0b0;
 }
 
