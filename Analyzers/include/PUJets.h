@@ -27,7 +27,8 @@ public:
   vector<Electron> vec_electron;
 
 
-
+  unsigned int getBinID(const double eta, const double Pt);
+  vector<TString> getHistKey(bool isDATA, bool pt_balanced, unsigned int binID, int PUID);
 
   PUJets();
   ~PUJets();

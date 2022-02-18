@@ -133,7 +133,7 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
     if(run_debug == true) cout << "trigW" << muon_trig_sf <<endl;
     weight *= muon_trig_sf;
 
-    for(int i = 0; i<muons.size();i++){
+    for(unsigned int i = 0; i<muons.size();i++){
       double muon_ISO_sf = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muons.at(i).Eta(), muons.at(i).MiniAODPt(),0);
       double muon_ID_sf = mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muons.at(i).Eta(), muons.at(i).Pt(), 0);
       if(run_debug == true) cout << "iso w" << muon_ISO_sf <<endl;
@@ -158,12 +158,50 @@ void PUJets::executeEventFromParameter(AnalyzerParameter param){
   if((ZPt/JetPt)>1.5) return;
   if((ZPt/JetPt)<0.5) toggle = false;
   
-  if(toggle == true){
-    FillHist(param.Name+"/dPhi_region1/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-    FillHist(param.Name+"/dPhi_region1/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+  vector<TString> histIDs = getHistKey(IsDATA, toggle, getBinID(jets.at(0).Eta(),jets.at(0).Pt()), jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta()));
+  for(unsigned int i = 0; i < histIDs.size(); i++){
+    FillHist(histIDs.at(i),dPhi_1,weight,50,-3.15/4,3.15/4);
   }
-  else{
-    FillHist(param.Name+"/dPhi_region2/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())), dPhi_1, weight, 50, -3.15/4., 3.15/4.);
-    FillHist(param.Name+"/dPhi_region2/ZMass/"+std::to_string(jets.at(0).GetPUID(jets.at(0).Pt(),jets.at(0).Eta())),ZCand.M(),weight,50,70,110);
+}
+
+unsigned int PUJets::getBinID(const double eta, const double Pt){
+  unsigned PtNum = 0;
+  unsigned etaNum = 0;
+  if(10.<=Pt && Pt < 20.) PtNum = 1;
+  else if(20.<=Pt && Pt < 30.) PtNum = 5;
+  else if(30.<=Pt && Pt < 40.) PtNum = 9;
+  else if(40.<=Pt && Pt < 50.) PtNum = 13;
+  if( fabs(eta) < 2.5) etaNum = 0;
+  else if(2.5<=fabs(eta) && fabs(eta) < 2.75) etaNum = 1;
+  else if(2.75<=fabs(eta) && fabs(eta) < 3.0) etaNum = 2;
+  else if(3.0<=fabs(eta) && fabs(eta) < 5.0) etaNum = 3; 
+  unsigned int binID = PtNum + etaNum;
+  return binID;
+}
+
+std::vector<TString> PUJets::getHistKey(bool isDATA, bool pt_balanced, unsigned int binID, int PUID){
+  TString isDATAKey,pt_balancedKey,binIDKey,PUIDKey,passPUIDKey;
+  isDATAKey = isDATA ? "isDATA" : "isMC";
+  pt_balancedKey = pt_balanced ? "pt_balanced" : "pt_unbalanced";
+  binIDKey = to_string(binID);
+  vector<TString> result;
+  result.push_back(isDATAKey + "/byPUID/" + pt_balancedKey + "/" + binIDKey);
+  switch(PUID){
+    case 0b111:
+      result.push_back(isDATAKey + "/byPassPUID/" + pt_balancedKey + "/passTight"+ "/" + binIDKey);
+      result.push_back(isDATAKey + "/byPassPUID/" + pt_balancedKey + "/passMedium"+ "/" + binIDKey);
+      result.push_back(isDATAKey + "/byPassPUID/" + pt_balancedKey + "/passLoose"+ "/" + binIDKey);
+      break;
+    case 0b110:
+      result.push_back(isDATAKey + "/byPassPUID/" + pt_balancedKey + "/passMedium"+ "/" + binIDKey);
+      result.push_back(isDATAKey + "/byPassPUID/" + pt_balancedKey + "/passLoose"+ "/" + binIDKey);
+      break;
+    case 0b100:
+      result.push_back(isDATAKey + "/byPassPUID/" + pt_balancedKey + "/passLoose"+ "/" + binIDKey);
+      break;
+    case 0b0:
+      result.push_back(isDATAKey + "/byPassPUID/" + pt_balancedKey + "/fail"+ "/" + binIDKey);
+      break;
   }
+  return result;
 }

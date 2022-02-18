@@ -315,19 +315,19 @@ std::vector<TString> PUJets_MCTruthMatcher::getHistKey(bool isISR, bool pt_balan
   result.push_back("byPUID/" + isISRKey + "/" + pt_balancedKey + "/" + binIDKey);
   switch(PUID){
     case 0b111:
-      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passTight");
-      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passMedium");
-      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose");
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passTight"+ "/" + binIDKey);
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passMedium"+ "/" + binIDKey);
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose"+ "/" + binIDKey);
       break;
     case 0b110:
-      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passMedium");
-      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose");
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passMedium"+ "/" + binIDKey);
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose"+ "/" + binIDKey);
       break;
     case 0b100:
-      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose");
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/passLoose"+ "/" + binIDKey);
       break;
     case 0b0:
-      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/fail");
+      result.push_back("byPassPUID/" + isISRKey + "/" + pt_balancedKey + "/fail"+ "/" + binIDKey);
       break;
   }
   return result;
