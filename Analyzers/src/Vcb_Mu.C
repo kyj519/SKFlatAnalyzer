@@ -4,6 +4,7 @@
 
 Vcb_Mu::Vcb_Mu()
 {
+  result_tree = NULL;
 }//Vcb_Mu::Vcb_Mu()
 
 //////////
@@ -11,6 +12,9 @@ Vcb_Mu::Vcb_Mu()
 Vcb_Mu::~Vcb_Mu()
 {
   delete fitter_driver;
+
+  outfile->cd();
+  result_tree->Write();
 }//Vcb_Mu::~Vcb_Mu()
 
 //////////
@@ -94,6 +98,16 @@ void Vcb_Mu::initializeAnalyzer()
 
   fitter_driver = new TKinFitterDriver(DataYear, rm_wm_constraint);
   
+  result_tree = new TTree("Result_Tree", "Result_Tree");
+  result_tree->Branch("weight", &weight);
+  result_tree->Branch("chi2", &chi2);
+  result_tree->Branch("bvsc_w_u", &bvsc_w_u);
+  result_tree->Branch("cvsb_w_u", &cvsb_w_u);
+  result_tree->Branch("cvsl_w_u", &cvsl_w_u);
+  result_tree->Branch("bvsc_w_d", &bvsc_w_d);
+  result_tree->Branch("cvsb_w_d", &cvsb_w_d);
+  result_tree->Branch("cvsl_w_d", &cvsl_w_d);
+
   return;
 }//void Vcb_Mu::initializeAnalyzer()
 
@@ -236,7 +250,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   Muon muon = vec_sel_muon.at(0);
   
   //caculate weight
-  float weight = 1.;
+  weight = 1.;
   if(!IsData)
     {
       //lumi
@@ -335,7 +349,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       float matched_jet_dr[4];
       Gen_Match_TT(vec_sel_jet_match, vec_gen, vec_hf_flavour, vec_hf_origin, vec_jer_match, index_gen, index_matched_jet, surely_matched, matched_jet_dr);
       
-      //PrintGen(vec_gen);
+      PrintGen(vec_gen);
       
       //if all four jets are successfully match
       if(index_matched_jet[0]!=-999 && index_matched_jet[1]!=-999 && index_matched_jet[2]!=-999 && index_matched_jet[3]!=-999)
@@ -392,7 +406,6 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   fitter_driver->Scan();
   bool chk_fitter_status = fitter_driver->Check_Status();
   bool fitter_correct = false;
-  float chi2 = 999;
   if(chk_fitter_status)
     {
       FillHist(param.Name+"/Fitter_Succeeded", 0., weight, 1, 0., 1.);
@@ -493,13 +506,15 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	}
       
       /* Template */
-      float bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
-      float cvsb_w_u = Get_CvsB(jet_w_u);
-      float cvsl_w_u = Get_CvsL(jet_w_u);
+      bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_u = Get_CvsB(jet_w_u);
+      cvsl_w_u = Get_CvsL(jet_w_u);
       
-      float bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
-      float cvsb_w_d = Get_CvsB(jet_w_d);
-      float cvsl_w_d = Get_CvsL(jet_w_d);
+      bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_d = Get_CvsB(jet_w_d);
+      cvsl_w_d = Get_CvsL(jet_w_d);
+
+      result_tree->Fill();
 
       FillHist(param.Name+"/B_vs_C_W_U", bvsc_w_u, weight, 10, 0, 1);
       FillHist(param.Name+"/C_vs_B_W_U", cvsb_w_u, weight, 10, 0, 1);
@@ -642,15 +657,24 @@ void Vcb_Mu::Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen
       if(m_index==index_last_at && pid==-5) index_first_ab = i;
     }
  
+  //W+ decays hadronically
   if(selected_w==1)
     {
       index_gen[0] = index_first_b;
       index_gen[3] = index_first_ab;
     }
-  else
+  //W- decays hadronically
+  else if(selected_w==-1)
     {
       index_gen[0] = index_first_ab;
       index_gen[3] = index_first_b;
+    }
+  //no W decays hadronically
+  else 
+    {
+      if(run_debug) cout << "Can't find hadronically decayed W" << endl;
+
+      return;
     }
 
   for(unsigned int i=0; i<vec_jet.size(); i++)
@@ -783,6 +807,7 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
   
   int selected_w = -999;
 
+  //scan gen to find W
   for(unsigned int i=0; i<vec_gen.size(); i++)
     {
       Gen gen = vec_gen.at(i);
@@ -809,7 +834,10 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
 	}
     }
   
+  
+
   int index_had_w[2];
+  //W+ decay hadronically
   if(Abs(vec_gen.at(index_d0_w).PID())<10)
     {
       index_gen[0] = index_d0_w;
@@ -820,17 +848,25 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
       
       selected_w = 1;//mean W+ decayed hadronically
     }
-  else
+  //W- decay hadronically
+  else if(Abs(vec_gen.at(index_d0_aw).PID()<10))
     {
       index_gen[0] = index_d0_aw;
       index_gen[1] = index_d1_aw;
-
+      
       index_had_w[0] = index_d0_aw;
       index_had_w[1] = index_d1_aw;
    
       selected_w = -1;//mean W- decayed hadronically
     }
+  //no W decays hadronically
+  else 
+    {
+      if(run_debug) cout << "No W decays hadronically" << endl;
 
+      return -999;
+    }
+  
   //calculate del_r for W
   vector<float> vec_dr[2];
   vector<bool> vec_chk_pt_diff[2];

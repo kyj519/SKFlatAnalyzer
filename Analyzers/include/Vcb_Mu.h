@@ -46,6 +46,20 @@ class Vcb_Mu : public AnalyzerCore
   
   float weight_prefire;
 
+  float weight;
+
+  float chi2;
+  
+  float bvsc_w_u;
+  float cvsb_w_u;
+  float cvsl_w_u;
+
+  float bvsc_w_d;
+  float cvsb_w_d;
+  float cvsl_w_d;
+
+  TTree* result_tree;
+
   int Chk_Included(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_matched, const int index_matched_jet[4]);
   bool Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2]);
   void Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[2], float dr_return[2]);
