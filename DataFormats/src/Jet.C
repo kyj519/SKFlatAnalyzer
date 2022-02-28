@@ -97,7 +97,7 @@ bool Jet::PassID(TString ID) const {
   if(ID=="tightLepVeto") return Pass_tightLepVetoJetID();
 
   cout << "[Jet::PassID] No id : " << ID << endl;
-  exit(EXIT_FAILURE);
+  exit(ENODATA);
 
   return false;
 
@@ -122,5 +122,34 @@ double Jet::GetTaggerResult(JetTagging::Tagger tg) const {
     cout << "[Jet::GetTaggerResult] ERROR; Wrong tagger : " << tg << endl;
     return -999;
   }
+}
+
+int Jet::GetPUID(double Pt, double eta){
+  unsigned PtNum = 0;
+  unsigned etaNum = 0;
+  if(10.<=Pt && Pt < 20.) PtNum = 1;
+  else if(20.<=Pt && Pt < 30.) PtNum = 5;
+  else if(30.<=Pt && Pt < 40.) PtNum = 9;
+  else if(40.<=Pt && Pt < 50.) PtNum = 13;
+  if( fabs(eta) < 2.5) etaNum = 0;
+  else if(2.5<=fabs(eta) && fabs(eta) < 2.75) etaNum = 1;
+  else if(2.75<=fabs(eta) && fabs(eta) < 3.0) etaNum = 2;
+  else if(3.0<=fabs(eta) && fabs(eta) < 5.0) etaNum = 3; 
+  unsigned int binID = PtNum + etaNum;
+  
+  double wp[16][3];
+  double temp[48] = {0.77,0.38,-0.31,-0.21,0.90,0.60,-0.12,-0.13,0.96,0.82,0.20,0.09,0.98,0.92,0.47,0.29
+                    ,0.26,-0.33,-0.54,-0.37,0.68,-0.04,-0.43,-0.30,0.90,0.36,-0.16,-0.09,0.96,0.61,0.14,0.12
+                    ,-0.95,-0.72,-0.68,-0.47,-0.88,-0.55,-0.60,-0.43,-0.63,-0.18,-0.43,-0.24,-0.19,0.22,-0.13,-0.03};
+  for(unsigned int i = 0; i < 3; i++){
+    for(unsigned int j = 0; j < 16; j++){
+      wp[j][i] = temp[i*16+j];
+    }
+  }
+  
+  if(j_PileupJetId>=wp[binID][0]) return 0b111;
+  else if(j_PileupJetId >= wp[binID][1]) return 0b110;
+  else if(j_PileupJetId >= wp[binID][2]) return 0b100;
+  else return 0b0;
 }
 

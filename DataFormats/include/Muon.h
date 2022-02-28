@@ -102,10 +102,17 @@ public:
   bool PassID(TString ID) const;
   bool Pass_POGTightWithTightIso() const;
   bool Pass_POGHighPtWithLooseTrkIso() const;
+  bool Pass_POGLooseWithMediumRelIso() const;
   bool Pass_TESTID() const;
   
   void SetTrackerLayers(int n);
   inline int TrackerLayers() const { return j_trackerLayers; }
+
+  void SetFilterBits(ULong64_t filterbits){ j_filterbits=filterbits; }
+  void SetPathBits(ULong64_t pathbits){ j_pathbits=pathbits; }
+  bool PassFilter(TString filter) const;
+  bool PassPath(TString path) const;
+
 
 private:
 
@@ -118,6 +125,9 @@ private:
   double j_TunePPtError;
   double j_MVA, j_lowptMVA, j_softMVA;
   int j_trackerLayers;
+
+  ULong64_t j_filterbits;
+  ULong64_t j_pathbits;
 
   ClassDef(Muon,1);
 };

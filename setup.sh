@@ -3,15 +3,15 @@ export SKFlat_LIB_PATH=$SKFlat_WD/lib/
 mkdir -p $SKFlat_LIB_PATH
 mkdir -p $SKFlat_WD/tar
 
-export SKFlatV="Run2Legacy_v4"
+export SKFlatV="Run2UltraLegacy_v2"
 mkdir -p $SKFlat_WD/data/$SKFlatV
 export DATA_DIR=$SKFlat_WD/data/$SKFlatV
 
 #### use cvmfs for root ####
 export CMS_PATH=/cvmfs/cms.cern.ch
 source $CMS_PATH/cmsset_default.sh
-export SCRAM_ARCH=slc7_amd64_gcc700
-export cmsswrel='cmssw-patch/CMSSW_10_4_0_patch1'
+export SCRAM_ARCH=slc7_amd64_gcc900
+export cmsswrel='cmssw/CMSSW_11_3_0'
 cd /cvmfs/cms.cern.ch/$SCRAM_ARCH/cms/$cmsswrel/src
 echo "@@@@ SCRAM_ARCH = "$SCRAM_ARCH
 echo "@@@@ cmsswrel = "$cmsswrel
@@ -65,9 +65,9 @@ python python/PrintToDoLists.py
 source $SKFlat_WD/tmp/ToDoLists.sh
 rm $SKFlat_WD/tmp/ToDoLists.sh
 
-## Log Dir ##
-echo "* Your Log Directory Usage"
-du -sh $SKFlatRunlogDir
-echo "-----------------------------------------------------------------"
 CurrentGitBranch=`git branch | grep \* | cut -d ' ' -f2`
 printf "> Current SKFlatAnalyzer branch : "${BRed}$CurrentGitBranch${Color_Off}"\n"
+echo "-----------------------------------------------------------------"
+## Log Dir ##
+echo "* Your Log Directory Usage (ctrl+c to skip)"
+du -sh $SKFlatRunlogDir
