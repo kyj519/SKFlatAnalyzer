@@ -17,6 +17,7 @@
 #pragma link C++ class MeasureJetTaggingEfficiency+;
 #pragma link C++ class SkimTree_Dilepton+;
 #pragma link C++ class PUJets+;
+#pragma link C++ class PUJets_jer+;
 #pragma link C++ class SkimTree_PUJets+;
 #pragma link C++ class PUJets_MCTruthMatcher+;
 
