@@ -1,0 +1,30 @@
+[ libAnalyzers.so libAnalyzerTools.so libGEScaleSyst.so libDataFormats.so libTree.so libCondFormatsJetMETObjects.so libJetMETCorrectionsModules.so ]
+# List of selected classes
+class AnalyzerCore
+class ExampleRun
+class GetEffLumi
+class MeasureJetTaggingEfficiency
+class PUJets
+class PUJets_MCTruthMatcher
+class PUJets_jer
+class SKFlatNtuple
+class SKFlatValidation
+class SkimTree_Dilepton
+class SkimTree_HNFake
+class SkimTree_LRSMHighPt
+class SkimTree_PUJets
+class SkimTree_SS2lOR3l
+header AnalyzerCore.h
+header ExampleRun.h
+header GetEffLumi.h
+header MeasureJetTaggingEfficiency.h
+header PUJets.h
+header PUJets_MCTruthMatcher.h
+header PUJets_jer.h
+header SKFlatNtuple.h
+header SKFlatValidation.h
+header SkimTree_Dilepton.h
+header SkimTree_HNFake.h
+header SkimTree_LRSMHighPt.h
+header SkimTree_PUJets.h
+header SkimTree_SS2lOR3l.h
