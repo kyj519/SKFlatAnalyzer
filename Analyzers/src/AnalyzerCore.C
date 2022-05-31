@@ -383,6 +383,7 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
 
     jet.SetArea(jet_area->at(i));
     jet.SetGenFlavours(jet_partonFlavour->at(i), jet_hadronFlavour->at(i));
+    
     std::vector<double> tvs = {
       jet_CSVv2->at(i),
       jet_DeepCSV->at(i),
@@ -404,7 +405,8 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     jet.SetTightJetID(jet_tightJetID->at(i));
     jet.SetTightLepVetoJetID(jet_tightLepVetoJetID->at(i));
     jet.SetGenHFHadronMatcher(jet_GenHFHadronMatcher_flavour->at(i), jet_GenHFHadronMatcher_origin->at(i));
-
+    jet.SetBJetRegressionNN(jet_bjet_regression_nn_corr->at(i), jet_bjet_regression_nn_res->at(i), jet_cjet_regression_nn_corr->at(i), jet_cjet_regression_nn_res->at(i));
+    
     out.push_back(jet);
   }
 

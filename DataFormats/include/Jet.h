@@ -45,6 +45,9 @@ public:
   inline int GenHFHadronMatcherFlavour(){ return j_GenHFHadronMatcher_flavour; }
   inline int GenHFHadronMatcherOrigin(){ return j_GenHFHadronMatcher_origin; }
   
+  void SetBJetRegressionNN(double bjet_corr, double bjet_res, double cjet_corr, double cjet_res);
+  double GetBJetRegressionNN(TString type);
+
 private:
 
   double  j_area;
@@ -77,6 +80,10 @@ private:
   bool j_tightJetID, j_tightLepVetoJetID;
   int j_GenHFHadronMatcher_flavour;
   int j_GenHFHadronMatcher_origin;
+  double j_bjet_regression_nn_corr;
+  double j_bjet_regression_nn_res;
+  double j_cjet_regression_nn_corr;
+  double j_cjet_regression_nn_res;
   
   ClassDef(Jet,1)
 };

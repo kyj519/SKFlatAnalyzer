@@ -1,6 +1,11 @@
 #ifndef Vcb_Def_h
 #define Vcb_Def_h
 
+const float T_MASS = 172.5;
+const float T_WIDTH = 1.5;
+const float W_MASS = 80.379;
+const float W_WIDTH = 2.085;
+
 const float MUON_PT = 20.;
 const float MUON_PT_VETO = 15.;
 const float MUON_ETA = 2.4;
