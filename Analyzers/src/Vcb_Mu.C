@@ -136,11 +136,14 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
       permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
       permutation_tree_correct->Branch("neutrino_pz_sol", &neutrino_pz_sol);
+      permutation_tree_correct->Branch("neutrino_pz_sol_unrebal", &neutrino_pz_sol_unrebal);
+      permutation_tree_correct->Branch("chk_real_neu_pz", &chk_real_neu_pz);
       permutation_tree_correct->Branch("mt_gen", &mt_gen);
       permutation_tree_correct->Branch("mt_met", &mt_met);
       permutation_tree_correct->Branch("mt_met_rebalance", &mt_met_rebalance);
       permutation_tree_correct->Branch("weight", &weight);
       permutation_tree_correct->Branch("n_jets", &n_sel_jet);
+      permutation_tree_correct->Branch("chk_jet_permutation_match", &chk_jet_permutation_match);
       permutation_tree_correct->Branch("had_t_b_pt", &had_t_b_pt);
       permutation_tree_correct->Branch("w_u_pt", &w_u_pt);
       permutation_tree_correct->Branch("w_d_pt", &w_d_pt);
@@ -149,7 +152,26 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_correct->Branch("lep_t_b_bscore", &lep_t_b_bscore);
       permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
       permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
-      permutation_tree_correct->Branch("tt_delta_phi", &tt_delta_phi);
+      permutation_tree_correct->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
+      permutation_tree_correct->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
+      permutation_tree_correct->Branch("del_phi_lep_neu", &del_phi_lep_neu);
+      permutation_tree_correct->Branch("del_phi_lep_w_lep_t_b", &del_phi_lep_w_lep_t_b);
+      permutation_tree_correct->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+      permutation_tree_correct->Branch("del_eta_w_u_w_d", &del_eta_w_u_w_d);
+      permutation_tree_correct->Branch("del_eta_had_w_had_t_b", &del_eta_had_w_had_t_b);
+      permutation_tree_correct->Branch("del_eta_lep_neu", &del_eta_lep_neu);
+      permutation_tree_correct->Branch("del_eta_lep_w_lep_t_b", &del_eta_lep_w_lep_t_b);
+      permutation_tree_correct->Branch("del_eta_had_t_lep_t", &del_eta_had_t_lep_t);
+      permutation_tree_correct->Branch("del_r_w_u_w_d", &del_r_w_u_w_d);
+      permutation_tree_correct->Branch("del_r_had_w_had_t_b", &del_r_had_w_had_t_b);
+      permutation_tree_correct->Branch("del_r_lep_neu", &del_r_lep_neu);
+      permutation_tree_correct->Branch("del_r_lep_w_lep_t_b", &del_r_lep_w_lep_t_b);
+      permutation_tree_correct->Branch("del_r_had_t_lep_t", &del_r_had_t_lep_t);
+      permutation_tree_correct->Branch("theta_w_u_w_d", &theta_w_u_w_d);
+      permutation_tree_correct->Branch("theta_had_w_had_t_b", &theta_had_w_had_t_b);
+      permutation_tree_correct->Branch("theta_lep_neu", &theta_lep_neu);
+      permutation_tree_correct->Branch("theta_lep_w_lep_t_b", &theta_lep_w_lep_t_b);
+      permutation_tree_correct->Branch("theta_had_t_lep_t", &theta_had_t_lep_t);
       permutation_tree_correct->Branch("had_t_mass", &had_t_mass);
       permutation_tree_correct->Branch("had_w_mass", &had_w_mass);
       permutation_tree_correct->Branch("lep_t_mass", &lep_t_mass);
@@ -175,10 +197,13 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
       permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
       permutation_tree_wrong->Branch("neutrino_pz_sol", &neutrino_pz_sol);
+      permutation_tree_wrong->Branch("neutrino_pz_sol_unrebal", &neutrino_pz_sol_unrebal);
+      permutation_tree_wrong->Branch("chk_real_neu_pz", &chk_real_neu_pz);
       permutation_tree_wrong->Branch("mt_gen", &mt_gen);
       permutation_tree_wrong->Branch("mt_met", &mt_met);
       permutation_tree_wrong->Branch("mt_met_rebalance", &mt_met_rebalance);
       permutation_tree_wrong->Branch("n_jets", &n_sel_jet);
+      permutation_tree_wrong->Branch("chk_jet_permutation_match", &chk_jet_permutation_match);
       permutation_tree_wrong->Branch("had_t_b_pt", &had_t_b_pt);
       permutation_tree_wrong->Branch("w_u_pt", &w_u_pt);
       permutation_tree_wrong->Branch("w_d_pt", &w_d_pt);
@@ -187,7 +212,26 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_wrong->Branch("lep_t_b_bscore", &lep_t_b_bscore);
       permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
       permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
-      permutation_tree_wrong->Branch("tt_delta_phi", &tt_delta_phi);
+      permutation_tree_wrong->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
+      permutation_tree_wrong->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
+      permutation_tree_wrong->Branch("del_phi_lep_neu", &del_phi_lep_neu);
+      permutation_tree_wrong->Branch("del_phi_lep_w_lep_t_b", &del_phi_lep_w_lep_t_b);
+      permutation_tree_wrong->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+      permutation_tree_wrong->Branch("del_eta_w_u_w_d", &del_eta_w_u_w_d);
+      permutation_tree_wrong->Branch("del_eta_had_w_had_t_b", &del_eta_had_w_had_t_b);
+      permutation_tree_wrong->Branch("del_eta_lep_neu", &del_eta_lep_neu);
+      permutation_tree_wrong->Branch("del_eta_lep_w_lep_t_b", &del_eta_lep_w_lep_t_b);
+      permutation_tree_wrong->Branch("del_eta_had_t_lep_t", &del_eta_had_t_lep_t);
+      permutation_tree_wrong->Branch("del_r_w_u_w_d", &del_r_w_u_w_d);
+      permutation_tree_wrong->Branch("del_r_had_w_had_t_b", &del_r_had_w_had_t_b);
+      permutation_tree_wrong->Branch("del_r_lep_neu", &del_r_lep_neu);
+      permutation_tree_wrong->Branch("del_r_lep_w_lep_t_b", &del_r_lep_w_lep_t_b);
+      permutation_tree_wrong->Branch("del_r_had_t_lep_t", &del_r_had_t_lep_t);
+      permutation_tree_wrong->Branch("theta_w_u_w_d", &theta_w_u_w_d);
+      permutation_tree_wrong->Branch("theta_had_w_had_t_b", &theta_had_w_had_t_b);
+      permutation_tree_wrong->Branch("theta_lep_neu", &theta_lep_neu);
+      permutation_tree_wrong->Branch("theta_lep_w_lep_t_b", &theta_lep_w_lep_t_b);
+      permutation_tree_wrong->Branch("theta_had_t_lep_t", &theta_had_t_lep_t);
       permutation_tree_wrong->Branch("had_t_mass", &had_t_mass);
       permutation_tree_wrong->Branch("had_w_mass", &had_w_mass);
       permutation_tree_wrong->Branch("lep_t_mass", &lep_t_mass);
@@ -359,6 +403,8 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   if(vec_sel_muon.size()!=1) return;
   if(n_sel_jet<4) return;
   if(n_btag<2) return;
+
+  if(n_sel_jet!=4) return;
 
   FillHist(param.Name+"/Cut_Flow", Cut_Flow::TT_Selection, weight_cut_flow, n_cut_flow, 0, n_cut_flow);
 
@@ -628,6 +674,18 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	    }
 	}//search done
       
+      //calculate neutrino pz solution with unrebalanced met and find best one
+      float diff_pz_unrebal[2];
+      float neu_pz_sol_unrebal[2];
+      
+      Sol_Neutrino_Pz(muon, met, neu_pz_sol_unrebal);
+      
+      diff_pz_unrebal[0] = TMath::Abs(gen_neutrino_pz - neu_pz_sol_unrebal[0]);
+      diff_pz_unrebal[1] = TMath::Abs(gen_neutrino_pz - neu_pz_sol_unrebal[1]);
+      
+      if(diff_pz_unrebal[0]<diff_pz_unrebal[1]) neutrino_pz_sol_unrebal = neu_pz_sol_unrebal[0];
+      else neutrino_pz_sol_unrebal = neu_pz_sol_unrebal[1];
+
       for(unsigned int i=0; i<results_container.vec_results.size(); ++i)
 	{
 	  Results results = results_container.vec_results[i];
@@ -635,6 +693,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  met_rebalance_px = results.met_rebalance_px;
 	  met_rebalance_py = results.met_rebalance_py;
 	  neutrino_pz_sol = results.neutrino_pz_sol;
+	  chk_real_neu_pz = results.chk_real_neu_pz;
 
 	  mt_gen = Calculate_Mt(muon, gen_neutrino_px, gen_neutrino_py); 
 	  mt_met = Calculate_Mt(muon, met_px, met_py);
@@ -645,6 +704,10 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
           int index_w_d = results.index_w_d;
           int index_lep_t_b = results.index_lep_t_b;
 
+	  if(index_matched_jet[0]==index_had_t_b && index_matched_jet[1]==index_w_u &&
+             index_matched_jet[2]==index_w_d && index_matched_jet[3]==index_lep_t_b) chk_jet_permutation_match = true;
+	  else chk_jet_permutation_match = false;
+
        	  had_t_b_pt = vec_sel_jet[index_had_t_b].Pt();
 	  w_u_pt = vec_sel_jet[index_w_u].Pt();
        	  w_d_pt = vec_sel_jet[index_w_d].Pt();
@@ -653,8 +716,30 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
        	  had_t_b_bscore = vec_sel_jet[index_had_t_b].GetTaggerResult(JetTagging::DeepJet);
        	  lep_t_b_bscore = vec_sel_jet[index_lep_t_b].GetTaggerResult(JetTagging::DeepJet);
 
-       	  tt_delta_phi = results.tt_delta_phi;
+	  del_phi_w_u_w_d = results.del_phi_w_u_w_d;
+	  del_phi_had_w_had_t_b = results.del_phi_had_w_had_t_b;
+	  del_phi_lep_neu = results.del_phi_lep_neu;
+	  del_phi_lep_w_lep_t_b = results.del_phi_lep_w_lep_t_b;
+       	  del_phi_had_t_lep_t = results.del_phi_had_t_lep_t;
 	  
+	  del_eta_w_u_w_d = results.del_eta_w_u_w_d;
+          del_eta_had_w_had_t_b = results.del_eta_had_w_had_t_b;
+          del_eta_lep_neu = results.del_eta_lep_neu;
+          del_eta_lep_w_lep_t_b = results.del_eta_lep_w_lep_t_b;
+          del_eta_had_t_lep_t = results.del_eta_had_t_lep_t;
+
+	  del_r_w_u_w_d = results.del_r_w_u_w_d;
+          del_r_had_w_had_t_b = results.del_r_had_w_had_t_b;
+          del_r_lep_neu = results.del_r_lep_neu;
+          del_r_lep_w_lep_t_b = results.del_r_lep_w_lep_t_b;
+          del_r_had_t_lep_t = results.del_r_had_t_lep_t;
+
+	  theta_w_u_w_d = results.theta_w_u_w_d;
+          theta_had_w_had_t_b = results.theta_had_w_had_t_b;
+          theta_lep_neu = results.theta_lep_neu;
+          theta_lep_w_lep_t_b = results.theta_lep_w_lep_t_b;
+          theta_had_t_lep_t = results.theta_had_t_lep_t;
+
        	  had_t_mass = results.initial_had_t_mass;
        	  had_w_mass = results.initial_had_w_mass;
       	  lep_t_mass = results.initial_lep_t_mass;
@@ -1410,5 +1495,38 @@ Gen Vcb_Mu::Neutrino(const vector<Gen>& vec_gen)
   
   return gen;
 }//Gen Neutrino(const vector<Gen>& vec_gen)
+
+//////////
+
+void Vcb_Mu::Sol_Neutrino_Pz(const Particle& lepton, const Particle& met, float neutrino_pz_sol[2])
+{
+  float lepton_mass = lepton.M();
+
+  float met_px = met.Px();
+  float met_py = met.Py();
+  float met_pt = met.Pt();
+  
+  double k = TMath::Power(W_MASS, 2.)/2.0 - lepton_mass*lepton_mass/2.0 + lepton.Px()*met_px + lepton.Py()*met_py;
+  double a = TMath::Power(lepton.Px(), 2.0) + TMath::Power(lepton.Py(), 2.0);
+  double b = -2*k*lepton.Pz();
+  double c = TMath::Power(lepton.Pt(), 2.0)*TMath::Power(met_pt, 2.0) - TMath::Power(k, 2.0);
+
+  double determinant = TMath::Power(b, 2.0) - 4*a*c;
+
+  //real solution
+  if(determinant>=0)
+    {
+      neutrino_pz_sol[0] = (-b + TMath::Sqrt(determinant))/(2*a);
+      neutrino_pz_sol[1] = (-b - TMath::Sqrt(determinant))/(2*a);
+    }
+  //complex solution
+  else
+    {
+      neutrino_pz_sol[0] = -b/(2*a);
+      //Resol_Neutrino_Pt();
+    }
+
+  return;
+}//void Vcb_Mu::Sol_Neutrino_Pz(const Particle& lepton, const Particle& met)
 
 //////////

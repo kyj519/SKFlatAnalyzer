@@ -68,7 +68,29 @@ class Vcb_Mu : public AnalyzerCore
   float had_t_b_bscore;
   float lep_t_b_bscore;
   
-  float tt_delta_phi;
+  float del_phi_w_u_w_d;
+  float del_phi_had_w_had_t_b;
+  float del_phi_lep_neu;
+  float del_phi_lep_w_lep_t_b;
+  float del_phi_had_t_lep_t;
+  
+  float del_eta_w_u_w_d;
+  float del_eta_had_w_had_t_b;
+  float del_eta_lep_neu;
+  float del_eta_lep_w_lep_t_b;
+  float del_eta_had_t_lep_t;
+
+  float del_r_w_u_w_d;
+  float del_r_had_w_had_t_b;
+  float del_r_lep_neu;
+  float del_r_lep_w_lep_t_b;
+  float del_r_had_t_lep_t;
+
+  float theta_w_u_w_d;
+  float theta_had_w_had_t_b;
+  float theta_lep_neu;
+  float theta_lep_w_lep_t_b;
+  float theta_had_t_lep_t;
   
   float had_t_mass;
   float had_w_mass;
@@ -97,11 +119,13 @@ class Vcb_Mu : public AnalyzerCore
   float met_rebalance_px;
   float met_rebalance_py;
   float neutrino_pz_sol;
+  float neutrino_pz_sol_unrebal;
   float mt_gen;
   float mt_met;
   float mt_met_rebalance;
 
-  bool chk_real_nu_pz;
+  bool chk_jet_permutation_match;
+  bool chk_real_neu_pz;
   float nu_pz_sol_0;
   float nu_pz_sol_1;
 
@@ -128,6 +152,7 @@ class Vcb_Mu : public AnalyzerCore
   void Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4]);
   //void Index_Restorer(int& index_had_t_b, int& index_w_u, int& index_w_d, int& index_lep_t_b);
   Gen Neutrino(const vector<Gen>& vec_gen);
+  void Sol_Neutrino_Pz(const Particle& lepton, const Particle& met, float neutrino_pz_sol[2]);
 };
 
 #endif /* __Vcb_Mu_h__ */

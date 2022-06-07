@@ -30,7 +30,7 @@ Archive::
 	(tar -zcf lib/AnalyzerTools.tar.gz AnalyzerTools)
 	(tar -zcf lib/GEScaleSyst.tar.gz external/GEScaleSyst/GEScaleSyst.*)
 	(tar -zcf lib/Analyzers.tar.gz Analyzers)
-
+	(tar -zcf lib/KinematicFitter.tar.gz external/KinematicFitter)
 clean::
 	(cd DataFormats; make clean)
 	(cd AnalyzerTools; make clean)
