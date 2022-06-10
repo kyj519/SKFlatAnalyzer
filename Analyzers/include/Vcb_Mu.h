@@ -25,6 +25,7 @@ class Vcb_Mu : public AnalyzerCore
   bool run_debug;
   bool run_kf_eval;
   bool run_permutation_tree;
+  bool run_chi;
   bool run_syst;
   bool rm_wm_constraint;
 
@@ -57,6 +58,7 @@ class Vcb_Mu : public AnalyzerCore
 
   float weight;
     
+  bool chk_included;
   bool chk_matched_jets_only;
   bool chk_kf_correct;
 
@@ -129,6 +131,15 @@ class Vcb_Mu : public AnalyzerCore
   float nu_pz_sol_0;
   float nu_pz_sol_1;
 
+  TTree* permutation_tree_correct;
+  TTree* permutation_tree_wrong;
+
+  float best_chi2;
+  float best_mva_score;
+
+  TTree* kf_eval_tree_correct;
+  TTree* kf_eval_tree_wrong;
+
   float bvsc_w_u;
   float cvsb_w_u;
   float cvsl_w_u;
@@ -138,10 +149,7 @@ class Vcb_Mu : public AnalyzerCore
   float cvsl_w_d;
 
   TTree* result_tree;
-  TTree* event_tree;
-  TTree* permutation_tree_correct;
-  TTree* permutation_tree_wrong;
- 
+
   float Calculate_Mt(const Particle& lepton, const float& neu_px, const float& neu_py);
   int Chk_Included(const int index_matched_jet[4]);
   bool Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2]);

@@ -24,6 +24,13 @@ Vcb_Mu::~Vcb_Mu()
       permutation_tree_correct->Write();
       permutation_tree_wrong->Write();
     }
+
+  if(run_kf_eval)
+    {
+      outfile->cd();
+      kf_eval_tree_correct->Write();
+      kf_eval_tree_wrong->Write();
+    }
 }//Vcb_Mu::~Vcb_Mu()
 
 //////////
@@ -38,6 +45,9 @@ void Vcb_Mu::initializeAnalyzer()
 
   run_kf_eval = HasFlag("RunKFEval");
   cout << "[Vcb_Mu::initializeAnalyzer] RunKFEval = " << run_kf_eval << endl;
+
+  run_chi = HasFlag("RunChi");
+  cout << "[Vcb_Mu::initializeAnalyzer] RunChi = " << run_chi << endl;
 
   run_syst = HasFlag("RunSyst");
   cout << "[Vcb_Mu::initializeAnalyzer] RunSyst = " << run_syst << endl;
@@ -111,7 +121,7 @@ void Vcb_Mu::initializeAnalyzer()
   jet_resolution = JME::JetResolution(jetPtResolutionPath);
   jet_resolution_sf = JME::JetResolutionScaleFactor(jetPtResolutionSFPath);
 
-  fitter_driver = new TKinFitterDriver(DataYear, rm_wm_constraint);
+  fitter_driver = new TKinFitterDriver(DataYear, run_chi, rm_wm_constraint);
     
   result_tree = new TTree("Result_Tree", "Result_Tree");
   result_tree->Branch("weight", &weight);
@@ -125,6 +135,7 @@ void Vcb_Mu::initializeAnalyzer()
 
   if(run_permutation_tree)
     {
+      chk_included = true;
       chk_matched_jets_only = false;
       
       permutation_tree_correct = new TTree("Permutation_Correct", "Permutation_Correct");
@@ -248,8 +259,16 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_wrong->Branch("chi2", &chi2);
     }
   
-  if(run_kf_eval) chk_matched_jets_only = true;
+  if(run_kf_eval)
+    {
+      //chk_matched_jets_only = true;
+      chk_matched_jets_only = false;
+      chk_included = true;
 
+      kf_eval_tree_correct = new TTree("KF_Eval_Tree_Correct", "KF_Eval_Tree_Correct");
+      kf_eval_tree_wrong = new TTree("KF_Eval_Tree_Wrong", "KF_Eval_Tree_Wrong");
+    }
+  
   return;
 }//void Vcb_Mu::initializeAnalyzer()
 
@@ -368,7 +387,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   n_sel_jet = vec_sel_jet.size();
 
   vector<Jet> vec_sel_jet_match;
-  if(!IsData) vec_sel_jet_match = SelectJets(vec_this_jet, param.Jet_ID, 20, JET_ETA);
+  if(!IsData) vec_sel_jet_match = SelectJets(vec_this_jet, param.Jet_ID, JET_PT_MATCH, JET_ETA_MATCH);
 
   //sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
@@ -403,8 +422,8 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   if(vec_sel_muon.size()!=1) return;
   if(n_sel_jet<4) return;
   if(n_btag<2) return;
-
-  if(n_sel_jet!=4) return;
+  
+  //if(n_sel_jet!=4) return;
 
   FillHist(param.Name+"/Cut_Flow", Cut_Flow::TT_Selection, weight_cut_flow, n_cut_flow, 0, n_cut_flow);
 
@@ -481,12 +500,15 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       FillHist(param.Name+"/ThreeB/N_BJet", n_btag, weight, 10, 0, 10);
     }
   
+  //Gen matching
   vector<int> vec_hf_flavour;
   vector<int> vec_hf_origin;
   int index_matched_jet_match[4];//index of sel_jet_match matched to gen
   int index_matched_jet[4];//index of sel_jet matched to gen
   int index_gen[4];
-  int chk_included = -1;
+  bool surely_matched[4];
+  float matched_jet_dr[4];
+  int switch_included = -1;
   if(!IsData)
     {
       //scan GenHFHadronMatcher results and construct JER for gen match
@@ -507,54 +529,44 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 
       //try to find jets from W using closed delta R matching 
       vector<Gen> vec_gen = GetGens();
-      
-      bool surely_matched[4];
-      float matched_jet_dr[4];
-      Gen_Match_TT(vec_sel_jet_match, vec_gen, vec_hf_flavour, vec_hf_origin, vec_jer_match, index_gen, index_matched_jet_match, surely_matched, matched_jet_dr);
-      
+
       //PrintGen(vec_gen);
       
-      Index_Converter(vec_sel_jet, vec_sel_jet_match, index_matched_jet_match, index_matched_jet);
+      Gen_Match_TT(vec_sel_jet_match, vec_gen, vec_hf_flavour, vec_hf_origin, vec_jer_match, index_gen, index_matched_jet_match, surely_matched, matched_jet_dr);
       
-      cout << "n_size sel_jet = " << vec_sel_jet.size() << ", Index of matched_sel_jet[4]" << endl;
-      for(int i=0; i<4; i++)
-	{
-	  cout << index_matched_jet[i] << " ";
-	}
       cout << endl;
-
-      //For the performance evaluation of KF
-      //only nicely matched matched and well selected (= every matched jets passed baseline selection)
-      if(run_kf_eval)
+      cout << "Test Gen acceptance" << endl;
+      bool chk_gen_acceptance = true;
+      for(int i=0; i<4; ++i)
 	{
-	  cout << "test run_kf_eval" << endl;
-
-	  //reject badly selected event
-          if(Chk_Included(index_matched_jet)!=0) return;
-
-	  for(int i=0; i<4; i++)
-	    {
-	      cout << i << ", " << index_matched_jet_match[i] << ", " << vec_hf_flavour[index_matched_jet_match[i]] << ", " << vec_btag_match[index_matched_jet_match[i]] << endl;
-
-	      //reject unmatched events
-	      if(index_matched_jet_match[i]==-999) return;
-
-	      //reject events with too big (>0.4) DR
-	      if(surely_matched[i]==false && 0.4<matched_jet_dr[i]) return;
+	  int index = index_gen[i];
+	  
+	  float pt = vec_gen[index].Pt();
+	  float eta = vec_gen[index].Eta();
 	
-	      //require btag for b jet
-	      if(vec_hf_flavour[index_matched_jet_match[i]]==5 && vec_btag_match[index_matched_jet_match[i]]==false) return;
-
-	      //require no btag for c jet
-	      if(vec_hf_flavour[index_matched_jet_match[i]]==4 && vec_btag_match[index_matched_jet_match[i]]==true) return;
+	  cout << i << " " << index_gen[i] << " " << pt << " " << eta << " ";
+	  if(pt<JET_PT_MATCH || JET_ETA_MATCH<TMath::Abs(eta))
+	    {
+	      cout << "cut" << endl;
+	      chk_gen_acceptance = false;
+	      break;
 	    }
-	}//if(run_kf_eval)
+	  cout << endl;
+	
+	}
       
+      if(chk_gen_acceptance) FillHist(param.Name+"/Gen_Acceptance", 1, weight, 2, 0, 2);
+      else FillHist(param.Name+"/Gen_Acceptance", 0, weight, 2, 0, 2);
+
+      //for(int i=0; i<4; i++){ cout << index_matched_jet_match[i] << endl; }
+
       //if all four jets are successfully match
       if(index_matched_jet_match[0]!=-999 && index_matched_jet_match[1]!=-999 && index_matched_jet_match[2]!=-999 && index_matched_jet_match[3]!=-999)
 	{
+	  cout << "Test Fill 1" << endl;
 	  FillHist(param.Name+"/PF_Gen_Matched", 1, weight, 2, 0, 2);
  
+	  //BJetRegression Test
 	  TLorentzVector w_gen_matched = vec_sel_jet_match.at(index_matched_jet_match[1]) + vec_sel_jet_match.at(index_matched_jet_match[2]);
 	  TLorentzVector t_gen_matched = vec_sel_jet_match.at(index_matched_jet_match[0]) + w_gen_matched;
 
@@ -569,13 +581,13 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  float j0_corr = j0.GetBJetRegressionNN("BCorr");
 	  j0.SetPtEtaPhiM(j0_corr*j0.Pt(), j0.Eta(), j0.Phi(), j0.M());
 	  
-	  float j1_corr;
+	  float j1_corr = 0;
 	  if(vec_hf_flavour[index_matched_jet_match[1]]==4) j1_corr = j1.GetBJetRegressionNN("CCorr");
 	  else if(vec_hf_flavour[index_matched_jet_match[1]]==5) j1_corr = j1.GetBJetRegressionNN("BCorr");
 	  
 	  j1.SetPtEtaPhiM(j1_corr*j1.Pt(), j1.Eta(), j1.Phi(), j1.M());
 
-	  float j2_corr;
+	  float j2_corr = 0;
 	  if(vec_hf_flavour[index_matched_jet_match[2]]==4) j2_corr = j2.GetBJetRegressionNN("CCorr");
           else if(vec_hf_flavour[index_matched_jet_match[2]]==5) j2_corr = j2.GetBJetRegressionNN("BCorr");
 	  
@@ -587,6 +599,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  FillHist(param.Name+"/W_Gen_Matched_Mass_CorrNN", w_gen_matched_corr.M(), weight, 100, 0, 400);
           FillHist(param.Name+"/T_Gen_Matched_Mass_CorrNN", t_gen_matched_corr.M(), weight, 100, 0, 600);
 
+	  //Delta R
 	  for(int i=0; i<4; i++)
             {
               if(surely_matched[i]==true) FillHist(param.Name+Form("/DR_Surely_Matched_%d", i), matched_jet_dr[i], weight, 30, 0, 3);
@@ -604,10 +617,12 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	    }
 	  
 	  //if all matched four jets from tt system are included in vec_jet_sel, chk_included=true
-	  chk_included = Chk_Included(index_matched_jet);
+	  switch_included = Chk_Included(index_matched_jet);
 	}
+      //at least of matching failed
       else 
 	{
+	  cout << "Test Fill 0" << endl;
 	  FillHist(param.Name+"/PF_Gen_Matched", 0, weight, 2, 0, 2);
 	}
       
@@ -618,8 +633,20 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       //first wjet is out of selection -> 2 bit
       //second wjet is out of selection -> 3 bit
       //second bjet is out of selection -> 4 bit        
-      FillHist(param.Name+"/Objects_In_Sel_Jet", chk_included, weight, 18, -2, 16);
+      FillHist(param.Name+"/Objects_In_Sel_Jet", switch_included, weight, 18, -2, 16);
     }//if(!IsData)
+
+  return;
+
+  //To match index of jet_match (loose jet wo/ lepton veto) and jet. If 
+  Index_Converter(vec_sel_jet, vec_sel_jet_match, index_matched_jet_match, index_matched_jet);
+
+  // cout << "n_size sel_jet = " << vec_sel_jet.size() << ", Index of matched_sel_jet[4]" << endl;
+  // for(int i=0; i<4; i++)
+  //        {
+  //          cout << index_matched_jet[i] << " ";
+  //        }
+  // cout << endl;
 
   //kinematic fitter
   vector<float> vec_resolution_pt;
@@ -635,6 +662,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, muon, met, chk_matched_jets_only, index_matched_jet);
   fitter_driver->Scan();
 
+  //Permutation Tree for signal study 
   if(!IsData && run_permutation_tree)
     {
       vector<Gen> vec_gen = GetGens();
@@ -650,7 +678,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       Results_Container results_container = fitter_driver->Get_Results();
     
       //search correct index first
-      int index_correct = -999;
+      unsigned int index_correct = 999999;//should be very large number
       float diff_pz = 99999.;
       for(unsigned int i=0; i<results_container.vec_results.size(); ++i)
        	{
@@ -766,8 +794,78 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	}//for(unsigned int i=0; i<result_container.vec_results.size(); ++i)
       
       return;
-    }//if(run_permutation)
+    }//if(!IsData && run_permutation_tree)
     
+  //KF Evaluation
+  if(!IsData && run_kf_eval)
+    {
+      cout << "test run_kf_eval" << endl;
+
+      //matching succeeded or failed
+      //Consider only events with matching succeed at this stage
+      for(int i=0; i<4; ++i)
+	{
+	  if(index_matched_jet_match[i]==-999)
+	    {
+	      cout << "failed at gen-jet matching" << endl;
+	      return;
+	    }
+
+	  if(surely_matched[i]==false && 0.4<matched_jet_dr[i])
+	    {
+	      cout << "matching badly" << endl;
+	      return;
+	    }
+	}
+
+      //check included
+      if(Chk_Included(index_matched_jet)==0) chk_included = true;
+      else chk_included = false;
+
+      if(chk_included==false) return;
+      cout << "chk_included = " << chk_included << endl;
+      
+      Results_Container results_container = fitter_driver->Get_Results();
+      if(fitter_driver->Check_Status())
+	{
+	  int index_had_t_b = results_container.best_index_had_t_b;
+	  int index_w_u = results_container.best_index_w_u;
+	  int index_w_d = results_container.best_index_w_d;
+	  int index_lep_t_b = results_container.best_index_lep_t_b;
+	  
+	  //Fitter correct
+	  Jet jet_gen_matched[2] = {vec_sel_jet_match.at(index_matched_jet_match[1]), vec_sel_jet_match.at(index_matched_jet_match[2])};
+	  Jet jet_kf_matched[2] = {vec_sel_jet.at(index_w_u), vec_sel_jet.at(index_w_d)};
+	  bool fitter_correct = Compare_Jet_Pair(jet_gen_matched, jet_kf_matched);
+      
+	  best_chi2 = results_container.best_chi2;
+	  best_mva_score = results_container.best_mva_score;
+	  
+	  if(fitter_correct)
+	    {
+	      FillHist(param.Name+"/KF_Eval_Correct", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
+	      FillHist(param.Name+"/Chi2", best_chi2, 1, 1, 200, 0, 200, 2, 0, 2);
+	      FillHist(param.Name+"/MVA_Score", best_mva_score, 1, 1, 200, -0.5, 0.5, 2, 0, 2);
+	    }
+	  else 
+	    {
+	      FillHist(param.Name+"/KF_Eval_Wrong", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
+	      FillHist(param.Name+"/Chi2", best_chi2, 0, 1, 200, 0, 200, 2, 0, 2);
+              FillHist(param.Name+"/MVA_Score", best_mva_score, 0, 1, 200, -0.5, 0.5, 2, 0, 2);
+	    }
+	}
+      else
+	{
+	  cout << "Test Fitter fail" << endl;
+	  FillHist(param.Name+"/KF_Eval_Wrong", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
+	}
+
+      //if(fitter_correct) kf_eval_tree_correct->Fill();
+      //else kf_eval_tree_wrong->Fill();
+
+      return;
+    }//if(!IsData && run_kf_eval)
+
   bool chk_fitter_status = fitter_driver->Check_Status();
   bool fitter_correct = false;
   if(chk_fitter_status)
@@ -779,7 +877,8 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 
       Results_Container results_container = fitter_driver->Get_Results();
       
-      chi2 = results_container.best_chi2;
+      float chi2 = results_container.best_chi2;
+      float mva_score = results_container.best_mva_score;
 
       int index_had_t_b = results_container.best_index_had_t_b;
       int index_w_u = results_container.best_index_w_u;
@@ -801,8 +900,10 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       float fitted_lep_t_m = results_container.best_fitted_lep_t_mass;
       float fitted_lep_w_m = results_container.best_fitted_lep_w_mass;
       
-      FillHist(param.Name+"/Chi2", results_container.best_chi2, weight, 30, 0, 30);
+      FillHist(param.Name+"/Chi2", chi2, weight, 30, 0, 30);
 
+      FillHist(param.Name+"/Mva_Score", mva_score, weight, 50, -1, 1);
+      
       FillHist(param.Name+"/Had_T_M_Initial", chi2, initial_had_t_m, weight, 500, 0, 250, 50, 0, 350);
       FillHist(param.Name+"/Had_W_M_Initial", chi2, initial_had_w_m, weight, 500, 0, 250, 50, 0, 200);
       FillHist(param.Name+"/Lep_T_M_Initial", chi2, initial_lep_t_m, weight, 500, 0, 250, 50, 0, 350);
@@ -822,18 +923,13 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	      Jet jet_kf_matched[2] = {vec_sel_jet.at(index_w_u), vec_sel_jet.at(index_w_d)};
 	      fitter_correct = Compare_Jet_Pair(jet_gen_matched, jet_kf_matched);
 	    
-	      //event counter for KF performance evaluation
-	      if(run_kf_eval)
-		{
-		  if(fitter_correct) FillHist(param.Name+"/KF_Eval_Correct", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
-		  else FillHist(param.Name+"/KF_Eval_Wrong", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
-		}
+	      
 	    }     
 	  else fitter_correct = false;
 	    
 	  if(run_debug)
 	    {
-	      cout << "Fitter converged: " << index_had_t_b << ",  " << index_w_u << ", " << index_w_d << ", " << index_lep_t_b << endl;
+	      cout << "Fitter converged: " << index_had_t_b << ", " << index_w_u << ", " << index_w_d << ", " << index_lep_t_b << endl;
 	      for(unsigned int i=0; i<vec_sel_jet.size(); i++)
 		{
 		  Jet jet = vec_sel_jet.at(i);
@@ -850,24 +946,24 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	      cout << "Included = " << chk_included << endl;
  	    }
 	  
-	  //Histo for HF contamination
-	  int hf_contamination = 0;
-	  for(int i=0; i<2; i++)
-	    {
-	      Jet jet;
-	      if(i==0) jet = vec_sel_jet.at(index_w_u);
-	      else jet = vec_sel_jet.at(index_w_d);
+	  // //Histo for HF contamination
+	  // int hf_contamination = 0;
+	  // for(int i=0; i<2; i++)
+	  //   {
+	  //     Jet jet;
+	  //     if(i==0) jet = vec_sel_jet.at(index_w_u);
+	  //     else jet = vec_sel_jet.at(index_w_d);
 
-	      int jet_flavour = jet.GenHFHadronMatcherFlavour();
-	      int jet_origin = jet.GenHFHadronMatcherOrigin();
+	  //     int jet_flavour = jet.GenHFHadronMatcherFlavour();
+	  //     int jet_origin = jet.GenHFHadronMatcherOrigin();
 	      
-	      int cases = 0;
-	      if(Abs(jet_origin)==6) cases = 1;
-	      else if(Abs(jet_origin)==21) cases = 2;
+	  //     int cases = 0;
+	  //     if(Abs(jet_origin)==6) cases = 1;
+	  //     else if(Abs(jet_origin)==21) cases = 2;
 	      
-	      hf_contamination += (2*i+1)*cases;
-	    }
-	  FillHist(param.Name+"/HF_Contamination", hf_contamination, weight, 9, 0, 9);
+	  //     hf_contamination += (2*i+1)*cases;
+	  //   }
+	  // FillHist(param.Name+"/HF_Contamination", hf_contamination, weight, 9, 0, 9);
 
 	  int fitter_score;
 	  if(fitter_correct) fitter_score = 0;
@@ -957,6 +1053,7 @@ int Vcb_Mu::Chk_Included(const int index_matched_jet[4])
       tmp = tmp << 1;
     }//for(int i=0; i<4; i++)
 
+  //0: every gen jet is matched to loose jets wo/ lepton veto and the loose jets passes baseline selection  
   return result;
 }//int Vcb_Mu::Chk_Included(const int index_matched_jet[4])
 
@@ -1098,46 +1195,46 @@ void Vcb_Mu::Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen
       else cout << "W- decayed hadronically" << endl;
       
       for(unsigned int i=0; i<4; i++)
-	{
-	  if(index_gen[i]!=-999)
-	    {
-	      Gen gen = vec_gen.at(index_gen[i]);
-	      int pid = gen.PID();
+      	{
+      	  if(index_gen[i]!=-999)
+      	    {
+      	      Gen gen = vec_gen.at(index_gen[i]);
+      	      int pid = gen.PID();
 	      
-	      Gen gen_mother = vec_gen.at(gen.MotherIndex());
-	      int m_pid = gen_mother.PID();
+      	      Gen gen_mother = vec_gen.at(gen.MotherIndex());
+      	      int m_pid = gen_mother.PID();
 
-	      float gen_eta = gen.Eta();
-	      float  gen_phi = gen.Phi();
-	      float gen_pt = gen.Pt();
+      	      float gen_eta = gen.Eta();
+      	      float  gen_phi = gen.Phi();
+      	      float gen_pt = gen.Pt();
 	      
-	      cout << "(" << index_gen[i] << ", " << pid << ", " << m_pid << ", " << gen_eta << ", " << gen_phi << ", " << gen_pt << "), ";
+      	      cout << "(" << index_gen[i] << ", " << pid << ", " << m_pid << ", " << gen_pt << ", " << gen_eta << ", " << gen_phi << "), ";
 	      
-	    }
-	  else 
-	    {
-	      cout << "(), ";
-	    }
-	}
+      	    }
+      	  else 
+      	    {
+      	      cout << "(), ";
+      	    }
+      	}
       cout << endl;
            
       for(unsigned int i=0; i<vec_jet.size(); i++)
-	{
-	  int jet_flavour = vec_hf_flavour.at(i);
+      	{
+      	  int jet_flavour = vec_hf_flavour.at(i);
           int jet_origin = vec_hf_origin.at(i);
 	  
-	  Jet jet = vec_jet.at(i);
+      	  Jet jet = vec_jet.at(i);
 	  
-	  float jet_eta = jet.Eta();
-	  float jet_phi = jet.Phi();
-	  float jet_pt =  jet.Pt();
+      	  float jet_eta = jet.Eta();
+      	  float jet_phi = jet.Phi();
+      	  float jet_pt =  jet.Pt();
 	  
-	  float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
-	  bool b_tagged = false;
-	  if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score) b_tagged = true;
+      	  float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
+      	  bool b_tagged = false;
+      	  if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score) b_tagged = true;
 	  
-	  cout << "(" << jet_flavour << ", " << jet_origin << ", " << jet_eta << ", " << jet_phi << ", " << jet_pt << ", " << b_tagged << ")" << endl;
-	}
+      	  cout << "(" << jet_flavour << ", " << jet_origin << ", " << jet_pt << ", " << jet_eta << ", " << jet_phi << ", " << ", " << b_tagged << ")" << endl;
+      	}
       cout << endl;
       
       for(int i=0; i<4; i++)

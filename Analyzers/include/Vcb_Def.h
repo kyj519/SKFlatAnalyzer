@@ -18,6 +18,9 @@ const float JET_PT = 25.;
 const float JET_ETA = 2.4;
 const float DR_LEPTON_VETO = 0.3;
 
+const float JET_PT_MATCH = 15;
+const float JET_ETA_MATCH = 5;
+
 const float MET_PT = 20.;
 
 //selection variables for making SkimTree.
