@@ -62,6 +62,14 @@ public:
   inline bool isPOGMedium() const {return PassSelector(CutBasedIdMedium);}
   inline bool isPOGLoose() const {return PassSelector(CutBasedIdLoose);}
 
+  //==== HN ID
+  bool Pass_HNVeto() const;
+
+
+  void SetPOGMediumHIP(bool ismedium_hip, bool ismedium_nohip);
+  inline bool isPOGMedium_hip() const {return j_ismedium_hip;} //hip mitigated ID. Default for 2016preVFP data
+  inline bool isPOGMedium_nohip() const {return j_ismedium_nohip;} //ordinary medium ID. Default for 2016 MC
+
   //==== TODO isOLDPOGHighPt returns values from bit, which is before the update
   //==== In UltraLegacy, this should be removed
   inline bool isOLDPOGHighPt() const {return PassSelector(CutBasedIdGlobalHighPt);}
@@ -69,7 +77,7 @@ public:
   inline bool isPOGHighPt() const {return j_isPOGHighPt;}
 
   void SetIso(double ch04, double nh04, double ph04, double pu04, double trkiso);
-  void CalcPFRelIso();
+  void CalcPFRelIso(bool use_corrected_pt=true);
   inline double TrkIso() const {return j_trkiso;}
   double EA();
 
@@ -107,10 +115,18 @@ public:
   void SetTrackerLayers(int n);
   inline int TrackerLayers() const { return j_trackerLayers; }
 
+  void SetFilterBits(ULong64_t filterbits){ j_filterbits=filterbits; }
+  void SetPathBits(ULong64_t pathbits){ j_pathbits=pathbits; }
+  bool PassFilter(TString filter) const;
+  bool PassPath(TString path) const;
+
+
 private:
 
   unsigned int j_TypeBit, j_IDBit;
   bool j_isPOGHighPt;
+  bool j_ismedium_hip;
+  bool j_ismedium_nohip;
   double j_chi2;
   double j_PFCH04, j_PFNH04, j_PFPH04, j_PU04, j_trkiso;
   double j_MiniAODPt, j_MiniAODTunePPt, j_MomentumScaleUp, j_MomentumScaleDown;
@@ -118,6 +134,9 @@ private:
   double j_TunePPtError;
   double j_MVA, j_lowptMVA, j_softMVA;
   int j_trackerLayers;
+
+  ULong64_t j_filterbits;
+  ULong64_t j_pathbits;
 
   ClassDef(Muon,1);
 };

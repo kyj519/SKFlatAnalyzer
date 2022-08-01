@@ -25,6 +25,7 @@ parser.add_argument('--skim', dest='Skim', default="", help="ex) SkimTree_Dilept
 parser.add_argument('--no_exec', action='store_true')
 parser.add_argument('--FastSim', action='store_true')
 parser.add_argument('--userflags', dest='Userflags', default="")
+parser.add_argument('--tagoutput', dest='TagOutput', default="")
 parser.add_argument('--nmax', dest='NMax', default=0, type=int, help="maximum running jobs")
 parser.add_argument('--reduction', dest='Reduction', default=1, type=float)
 parser.add_argument('--memory', dest='Memory', default=0, type=float)
@@ -61,7 +62,7 @@ string_ThisTime = ""
 ## Environment Variables
 
 USER = os.environ['USER']
-if os.path.exists('python/UserInfo_'+USER+'.py'):
+if os.path.exists(os.environ['SKFlat_WD']+'/python/UserInfo_'+USER+'.py'):
   exec('from UserInfo_'+USER+' import *')
 else:
   print("No UserInfo file")
@@ -84,9 +85,9 @@ SampleHOSTNAME = HOSTNAME
 
 ## Check joblog email
 
+SendLogToEmail=True
 if SKFlatLogEmail=='':
-  print '[SKFlat.py] Put your email address in setup.sh'
-  exit()
+  SendLogToEmail=False
 SendLogToWeb = True
 if SKFlatLogWebDir=='':
   SendLogToWeb = False
@@ -117,6 +118,8 @@ if IsKNU:
 
 IsSkimTree = "SkimTree" in args.Analyzer
 if IsSkimTree:
+  if args.NMax==0: args.NMax=100 ## Preventing from too heavy IO
+  if args.NJobs==1: args.NJobs=0 ## NJobs=0 means NJobs->NFiles
   if not IsTAMSA:
     print "Skimming only possible in SNU"
     exit()
@@ -301,6 +304,7 @@ for InputSample in InputSamples:
 
   this_dasname = ""
   this_xsec = -1
+  this_sumsign = -1
   this_sumw = -1
   if not IsDATA and args.Analyzer!="GetEffLumi":
     if not os.path.exists(SAMPLE_DATA_DIR+'/CommonSampleInfo/'+InputSample+'.txt'):
@@ -314,7 +318,8 @@ for InputSample in InputSamples:
       if InputSample==words[0]:
         this_dasname = words[1]
         this_xsec = words[2]
-        this_sumw = words[4]
+        this_sumsign = words[4]
+        this_sumw = words[5]
         break
 
   XsecForEachSample.append(this_xsec)
@@ -480,6 +485,7 @@ void {2}(){{
       out.write('  m.MCSample = "'+InputSample+'";\n');
       out.write('  m.IsDATA = false;\n')
       out.write('  m.xsec = '+str(this_xsec)+';\n')
+      out.write('  m.sumSign = '+str(this_sumsign)+';\n')
       out.write('  m.sumW = '+str(this_sumw)+';\n')
 
       if args.FastSim:
@@ -504,6 +510,7 @@ void {2}(){{
       ## /data7/DATA/SKFlat/v949cand2_2/2017/DATA/SingleMuon/periodB/181107_231447/0000/SKFlatNtuple_2017_DATA_100.root
       ## /data7/DATA/SKFlat/v949cand2_2/2017/MC/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/181108_152345/0000/SKFlatNtuple_2017_MC_100.root
       skimoutdir = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Era+'/'
+      if args.Outputdir!='': skimoutdir=args.Outputdir+'/'+SKFlatV+'/'+args.Era+'/'
       skimoutfilename = ""
       if IsDATA:
         skimoutdir += "DATA_"+args.Analyzer+"/"+InputSample+"/period"+DataPeriod+"/"
@@ -597,8 +604,8 @@ if args.Outputdir=="":
     FinalOutputPath += flag+"__"
   if IsDATA:
     FinalOutputPath += '/DATA/'
-if IsSkimTree:
-  FinalOutputPath = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Era+'/'
+  if IsSkimTree:
+    FinalOutputPath = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Era+'/'
 
 os.system('mkdir -p '+FinalOutputPath)
 
@@ -855,6 +862,9 @@ try:
           if IsDATA:
             outputname += '_'+DataPeriod
 
+          if args.TagOutput != '':
+            outputname += '_' + args.TagOutput
+
           if not GotError:
             cwd = os.getcwd()
             os.chdir(base_rundir)
@@ -903,33 +913,34 @@ except KeyboardInterrupt:
 
 ## Send Email now
 
-from SendEmail import *
-JobFinishEmail = '''#### Job Info ####
-HOST = {3}
-JobID = {6}
-Analyzer = {0}
-Era = {7}
-Skim = {5}
-# of Jobs = {4}
-InputSample = {1}
-{8}
-Output sent to : {2}
-'''.format(args.Analyzer,InputSamples,FinalOutputPath,HOSTNAME,NJobs,args.Skim,str_RandomNumber,args.Era,GetXSECTable(InputSamples,XsecForEachSample))
-JobFinishEmail += '''##################
-Job started at {0}
-Job finished at {1}
-'''.format(string_JobStartTime,string_ThisTime)
-
-if IsKNU:
-  JobFinishEmail += 'Queue = '+args.Queue+'\n'
-
-EmailTitle = '['+HOSTNAME+']'+' Summary of JobID '+str_RandomNumber
-if GotError:
-  JobFinishEmail = "#### ERROR OCCURED ####\n"+JobFinishEmail
-  JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
-  EmailTitle = '[ERROR] Summary of JobID '+str_RandomNumber
-
-if IsKNU:
-  SendEmailbyGMail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
-else:
-  SendEmail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
+if SendLogToEmail: 
+  from SendEmail import *
+  JobFinishEmail = '''#### Job Info ####
+  HOST = {3}
+  JobID = {6}
+  Analyzer = {0}
+  Era = {7}
+  Skim = {5}
+  # of Jobs = {4}
+  InputSample = {1}
+  {8}
+  Output sent to : {2}
+  '''.format(args.Analyzer,InputSamples,FinalOutputPath,HOSTNAME,NJobs,args.Skim,str_RandomNumber,args.Era,GetXSECTable(InputSamples,XsecForEachSample))
+  JobFinishEmail += '''##################
+  Job started at {0}
+  Job finished at {1}
+  '''.format(string_JobStartTime,string_ThisTime)
+  
+  if IsKNU:
+    JobFinishEmail += 'Queue = '+args.Queue+'\n'
+  
+  EmailTitle = '['+HOSTNAME+']'+' Summary of JobID '+str_RandomNumber
+  if GotError:
+    JobFinishEmail = "#### ERROR OCCURED ####\n"+JobFinishEmail
+    JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
+    EmailTitle = '[ERROR] Summary of JobID '+str_RandomNumber
+  
+  if IsKNU:
+    SendEmailbyGMail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
+  else:
+    SendEmail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
