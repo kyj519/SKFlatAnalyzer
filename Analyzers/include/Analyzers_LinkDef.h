@@ -18,6 +18,8 @@
 #pragma link C++ class SkimTree_HNMultiLep+;
 #pragma link C++ class MeasureJetTaggingEfficiency+;
 #pragma link C++ class SkimTree_Dilepton+;
-#pragma link C++ class Vcb+;
+#pragma link C++ class SkimTree_Vcb+;
+#pragma link C++ class Vcb_Mu+;
+#pragma link C++ class Vcb_El+;
 
 #endif

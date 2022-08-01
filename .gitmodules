@@ -2,3 +2,6 @@
 	path = external/GEScaleSyst
 	url = https://github.com/jedori0228/GEScaleSyst.git
 	branch = ForSKFlatAnalyzer
+[submodule "external/KinematicFitter"]
+	path = external/KinematicFitter
+	url = git@github.com:diracyoon/KinematicFitter.git

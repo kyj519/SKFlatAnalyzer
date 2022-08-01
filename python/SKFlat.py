@@ -131,7 +131,7 @@ if IsKNU:
 
 ## Make Sample List
 
-InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron", "SinglePhoton", "MuonEG", "EGamma"]
+InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron", "SinglePhoton", "MuonEG", "EGamma", "SkimTree_Vcb_SingleMuon", "SkimTree_Vcb_EGamma"]
 AvailableDataPeriods = []
 if args.Era == "2016preVFP":
   AvailableDataPeriods = ["B_ver2","C","D","E","F"]
@@ -509,8 +509,12 @@ void {2}(){{
       tmp_filename = lines_files[ FileRanges[it_job][0] ].strip('\n')
       ## /data7/DATA/SKFlat/v949cand2_2/2017/DATA/SingleMuon/periodB/181107_231447/0000/SKFlatNtuple_2017_DATA_100.root
       ## /data7/DATA/SKFlat/v949cand2_2/2017/MC/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/181108_152345/0000/SKFlatNtuple_2017_MC_100.root
+<<<<<<< HEAD
       skimoutdir = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Era+'/'
       if args.Outputdir!='': skimoutdir=args.Outputdir+'/'+SKFlatV+'/'+args.Era+'/'
+=======
+      skimoutdir = '/gv0/Users/isyoon/'+SKFlatV+'/'+args.Era+'/'
+>>>>>>> Develop
       skimoutfilename = ""
       if IsDATA:
         skimoutdir += "DATA_"+args.Analyzer+"/"+InputSample+"/period"+DataPeriod+"/"

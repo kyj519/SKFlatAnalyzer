@@ -33,6 +33,12 @@ Jet::Jet() : Particle() {
   
   j_tightJetID=false;
   j_tightLepVetoJetID=false;
+  j_GenHFHadronMatcher_flavour = -999;
+  j_GenHFHadronMatcher_origin = -999;
+  j_bjet_regression_nn_corr = -999;
+  j_bjet_regression_nn_res = -999;
+  j_cjet_regression_nn_corr = -999;
+  j_cjet_regression_nn_res = -999;
 }
 
 Jet::~Jet(){
@@ -97,6 +103,16 @@ void Jet::SetTightLepVetoJetID(double b){
   j_tightLepVetoJetID = b;
 }
 
+void Jet::SetGenHFHadronMatcher(int GenHFHadronMatcher_flavour, int GenHFHadronMatcher_origin)
+{
+  j_GenHFHadronMatcher_flavour = GenHFHadronMatcher_flavour;
+  j_GenHFHadronMatcher_origin = GenHFHadronMatcher_origin;
+
+  return; 
+}//void Jet::SetGenHFHadronMatcher(int GenHFHadronMatcher_flavour, int GenHFHadronMatcher_origin){
+
+//////////
+
 bool Jet::PassID(TString ID) const {
 
   if(ID=="tight") return Pass_tightJetID();
@@ -123,3 +139,47 @@ double Jet::GetTaggerResult(JetTagging::Tagger tg) const {
   }
 }
 
+//////////
+
+void Jet::SetBJetRegressionNN(double bjet_corr, double bjet_res, double cjet_corr, double cjet_res)
+{
+  j_bjet_regression_nn_corr = bjet_corr;
+  j_bjet_regression_nn_res = bjet_res;
+  j_cjet_regression_nn_corr = cjet_corr;
+  j_cjet_regression_nn_res = cjet_res;
+
+  return;
+}//void Jet::SetBJetEnergyCorrectionNN()
+
+//////////
+
+double Jet::GetBJetRegressionNN(TString type)
+{
+  type.ToUpper();
+  
+  if(type=="BCORR") return j_bjet_regression_nn_corr;
+  else if(type=="BRES")
+    {
+      //IQR to Z
+      //75% Quantile = 0.6745 sigma
+      //1.4826 = 1/0.6745
+      return 1.4826*j_bjet_regression_nn_res;
+    }
+  else if(type=="CCORR") return j_cjet_regression_nn_corr;
+  else if(type=="CRES")
+    {
+      //IQR to Z
+      //75% Quantile = 0.6745 sigma
+      //1.4826 = 1/0.6745      
+      return 1.4826*j_cjet_regression_nn_res;
+    }
+  else
+    {
+      cout << "Unkown parameter!! Check it!!. Return default value." << endl;
+      return -999;
+    }
+  
+  return -1;//dummy 
+}//double Jet::Energy_Correction_NN(const TString& type)
+
+//////////

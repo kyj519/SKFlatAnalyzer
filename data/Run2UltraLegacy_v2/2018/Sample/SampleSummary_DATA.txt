@@ -11,7 +11,22 @@ DoubleMuon	A	70926118
 DoubleMuon	B	32173507
 DoubleMuon	C	33794567
 DoubleMuon	D	163319327
+<<<<<<< HEAD
 MuonEG	A	32958503
 MuonEG	B	16211567
 MuonEG	C	15652198
 MuonEG	D	71965111
+=======
+MuonEG	A	31249788
+MuonEG	B	14454733
+MuonEG	C	15363987
+MuonEG	D	70006284
+SkimTree_Vcb_EGamma	A	319395793
+SkimTree_Vcb_EGamma	B	139144140
+SkimTree_Vcb_EGamma	C	143781609
+SkimTree_Vcb_EGamma	D	726847278
+SkimTree_Vcb_SingleMuon	A	227489240
+SkimTree_Vcb_SingleMuon	B	110446445
+SkimTree_Vcb_SingleMuon	C	107972995
+SkimTree_Vcb_SingleMuon	D	501076591
+>>>>>>> Develop

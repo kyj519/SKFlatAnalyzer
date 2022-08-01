@@ -51,6 +51,13 @@ public:
 
   double GetTaggerResult(JetTagging::Tagger tg) const;
 
+  void SetGenHFHadronMatcher(int GenHFHadronMatcher_flavour, int GenHFHadronMatcher_origin);
+  inline int GenHFHadronMatcherFlavour(){ return j_GenHFHadronMatcher_flavour; }
+  inline int GenHFHadronMatcherOrigin(){ return j_GenHFHadronMatcher_origin; }
+  
+  void SetBJetRegressionNN(double bjet_corr, double bjet_res, double cjet_corr, double cjet_res);
+  double GetBJetRegressionNN(TString type);
+
 private:
 
   double  j_area;
@@ -81,7 +88,13 @@ private:
   double j_cJetNN_corr;
   double j_cJetNN_res;
   bool j_tightJetID, j_tightLepVetoJetID;
-
+  int j_GenHFHadronMatcher_flavour;
+  int j_GenHFHadronMatcher_origin;
+  double j_bjet_regression_nn_corr;
+  double j_bjet_regression_nn_res;
+  double j_cjet_regression_nn_corr;
+  double j_cjet_regression_nn_res;
+  
   ClassDef(Jet,1)
 };
 

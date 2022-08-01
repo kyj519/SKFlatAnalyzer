@@ -461,7 +461,9 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     jet.SetPileupJetId(jet_PileupJetId->at(i));
     jet.SetTightJetID(jet_tightJetID->at(i));
     jet.SetTightLepVetoJetID(jet_tightLepVetoJetID->at(i));
-
+    jet.SetGenHFHadronMatcher(jet_GenHFHadronMatcher_flavour->at(i), jet_GenHFHadronMatcher_origin->at(i));
+    jet.SetBJetRegressionNN(jet_bjet_regression_nn_corr->at(i), jet_bjet_regression_nn_res->at(i), jet_cjet_regression_nn_corr->at(i), jet_cjet_regression_nn_res->at(i));
+    
     out.push_back(jet);
   }
 
