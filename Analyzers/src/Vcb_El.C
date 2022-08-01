@@ -211,12 +211,12 @@ void Vcb_El::executeEventFromParameter(AnalyzerParameter param)
   if(!IsData)
     {
       //lumi
-      float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
-      weight *= lumi_weight;
+      //float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
+      //weight *= lumi_weight;
 
       //MCweight +1 or -1
-      float mc_weight = ev.MCweight();
-      weight *= mc_weight;
+      //float mc_weight = ev.MCweight();
+      //weight *= mc_weight;
       
       //pileup reweight
       float pileup_weight = mcCorr->GetPileUpWeight(nPileUp, 0);

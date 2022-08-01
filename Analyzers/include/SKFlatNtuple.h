@@ -148,12 +148,6 @@ public :
    vector<float>   *jet_cJetNN_res;
    vector<float>   *jet_JECL1FastJet;
    vector<float>   *jet_JECFull;
-   vector<int>     *jet_GenHFHadronMatcher_flavour;
-   vector<int>     *jet_GenHFHadronMatcher_origin;
-   vector<float>   *jet_bjet_regression_nn_corr;
-   vector<float>   *jet_bjet_regression_nn_res;
-   vector<float>   *jet_cjet_regression_nn_corr;
-   vector<float>   *jet_cjet_regression_nn_res;
    vector<float>   *fatjet_pt;
    vector<float>   *fatjet_eta;
    vector<float>   *fatjet_phi;
@@ -550,12 +544,6 @@ public :
    TBranch        *b_jet_cJetNN_res;   //!
    TBranch        *b_jet_JECL1FastJet;   //!
    TBranch        *b_jet_JECFull;   //!
-   TBranch        *b_jet_GenHFHadronMatcher_flavour; //!
-   TBranch        *b_jet_GenHFHadronMatcher_origin; //!
-   TBranch        *b_jet_bjet_regression_nn_corr; //!
-   TBranch        *b_jet_bjet_regression_nn_res; //!
-   TBranch        *b_jet_cjet_regression_nn_corr; //!
-   TBranch        *b_jet_cjet_regression_nn_res; //!
    TBranch        *b_fatjet_pt;   //!
    TBranch        *b_fatjet_eta;   //!
    TBranch        *b_fatjet_phi;   //!

@@ -25,7 +25,7 @@ class Vcb_Mu : public AnalyzerCore
     
  protected:
   bool run_debug;
-  bool run_kf_eval;
+  bool run_reco_eval;
   bool run_permutation_tree;
   bool run_hf_contamination_tree;
   bool run_chi;
@@ -171,8 +171,8 @@ class Vcb_Mu : public AnalyzerCore
 
   bool chk_hf_contamination;
   
-  TTree* kf_eval_tree_correct;
-  TTree* kf_eval_tree_wrong;
+  TTree* reco_eval_tree_correct;
+  TTree* reco_eval_tree_wrong;
 
   int decay_mode;
   
@@ -208,8 +208,6 @@ class Vcb_Mu : public AnalyzerCore
   void Gen_Match_Residual(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
   void Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
   int Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[2], int index_matched_jet[2], bool surely_matched[2], float dr_return[2]);
-  float Get_CvsB(const Jet& jet);
-  float Get_CvsL(const Jet& jet);
   int Get_W_Decay_Mode(const vector<Gen>& vec_gen);
   void Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4]);
   //void Index_Restorer(int& index_had_t_b, int& index_w_u, int& index_w_d, int& index_lep_t_b);

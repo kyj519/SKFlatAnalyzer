@@ -32,11 +32,11 @@ Vcb_Mu::~Vcb_Mu()
       hf_contamination_tree_wrong->Write();
     }
 
-  if(run_kf_eval)
+  if(run_reco_eval)
     {
       outfile->cd();
-      kf_eval_tree_correct->Write();
-      kf_eval_tree_wrong->Write();
+      reco_eval_tree_correct->Write();
+      reco_eval_tree_wrong->Write();
     }
 
   if(run_template)
@@ -74,8 +74,8 @@ void Vcb_Mu::initializeAnalyzer()
   run_hf_contamination_tree = HasFlag("RunHFContaminationTree");
   cout << "[Vcb__mu::initializeAnalyzer] RunHFContaminationTree = " << run_hf_contamination_tree << endl;
 
-  run_kf_eval = HasFlag("RunKFEval");
-  cout << "[Vcb_Mu::initializeAnalyzer] RunKFEval = " << run_kf_eval << endl;
+  run_reco_eval = HasFlag("RunRecoEval");
+  cout << "[Vcb_Mu::initializeAnalyzer] RunRecoEval = " << run_reco_eval << endl;
 
   run_chi = HasFlag("RunChi");
   cout << "[Vcb_Mu::initializeAnalyzer] RunChi = " << run_chi << endl;
@@ -350,63 +350,63 @@ void Vcb_Mu::initializeAnalyzer()
       hf_contamination_tree_wrong->Branch("m_w_d_b", &m_w_d_b);
     }
 
-  if(run_kf_eval)
+  if(run_reco_eval)
     {
       //chk_matched_jets_only = true;
       chk_matched_jets_only = false;
       
-      kf_eval_tree_correct = new TTree("KF_Eval_Tree_Correct", "KF_Eval_Tree_Correct");
-      kf_eval_tree_correct->Branch("n_jets", &n_sel_jet);
-      kf_eval_tree_correct->Branch("n_bjets", &n_b_jet);
-      kf_eval_tree_correct->Branch("n_cjets", &n_c_jet);
-      kf_eval_tree_correct->Branch("weight", &weight);
-      kf_eval_tree_correct->Branch("decay_mode", &decay_mode);
-      kf_eval_tree_correct->Branch("best_mva_score", &best_mva_score);
-      kf_eval_tree_correct->Branch("best_chi2", &best_chi2); 
-      kf_eval_tree_correct->Branch("mt", &mt);
-      kf_eval_tree_correct->Branch("chk_included", &chk_included);
-      kf_eval_tree_correct->Branch("chk_hf_contamination", &chk_hf_contamination);
-      kf_eval_tree_correct->Branch("mva_hf_score", &mva_hf_score);
-      kf_eval_tree_correct->Branch("bvsc_had_t_b", &bvsc_had_t_b);
-      kf_eval_tree_correct->Branch("cvsb_had_t_b", &cvsb_had_t_b);
-      kf_eval_tree_correct->Branch("cvsl_had_t_b", &cvsl_had_t_b);
-      kf_eval_tree_correct->Branch("bvsc_w_u", &bvsc_w_u);
-      kf_eval_tree_correct->Branch("cvsb_w_u", &cvsb_w_u);
-      kf_eval_tree_correct->Branch("cvsl_w_u", &cvsl_w_u);
-      kf_eval_tree_correct->Branch("bvsc_w_d", &bvsc_w_d);
-      kf_eval_tree_correct->Branch("cvsb_w_d", &cvsb_w_d);
-      kf_eval_tree_correct->Branch("cvsl_w_d", &cvsl_w_d);
-      kf_eval_tree_correct->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
-      kf_eval_tree_correct->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
-      kf_eval_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
-      kf_eval_tree_correct->Branch("swapped", &swapped);
+      reco_eval_tree_correct = new TTree("Reco_Eval_Tree_Correct", "Reco_Eval_Tree_Correct");
+      reco_eval_tree_correct->Branch("n_jets", &n_sel_jet);
+      reco_eval_tree_correct->Branch("n_bjets", &n_b_jet);
+      reco_eval_tree_correct->Branch("n_cjets", &n_c_jet);
+      reco_eval_tree_correct->Branch("weight", &weight);
+      reco_eval_tree_correct->Branch("decay_mode", &decay_mode);
+      reco_eval_tree_correct->Branch("best_mva_score", &best_mva_score);
+      reco_eval_tree_correct->Branch("best_chi2", &best_chi2); 
+      reco_eval_tree_correct->Branch("mt", &mt);
+      reco_eval_tree_correct->Branch("chk_included", &chk_included);
+      reco_eval_tree_correct->Branch("chk_hf_contamination", &chk_hf_contamination);
+      reco_eval_tree_correct->Branch("mva_hf_score", &mva_hf_score);
+      reco_eval_tree_correct->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+      reco_eval_tree_correct->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+      reco_eval_tree_correct->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      reco_eval_tree_correct->Branch("bvsc_w_u", &bvsc_w_u);
+      reco_eval_tree_correct->Branch("cvsb_w_u", &cvsb_w_u);
+      reco_eval_tree_correct->Branch("cvsl_w_u", &cvsl_w_u);
+      reco_eval_tree_correct->Branch("bvsc_w_d", &bvsc_w_d);
+      reco_eval_tree_correct->Branch("cvsb_w_d", &cvsb_w_d);
+      reco_eval_tree_correct->Branch("cvsl_w_d", &cvsl_w_d);
+      reco_eval_tree_correct->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+      reco_eval_tree_correct->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+      reco_eval_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+      reco_eval_tree_correct->Branch("swapped", &swapped);
       
-      kf_eval_tree_wrong = new TTree("KF_Eval_Tree_Wrong", "KF_Eval_Tree_Wrong");
-      kf_eval_tree_wrong->Branch("n_jets", &n_sel_jet);
-      kf_eval_tree_wrong->Branch("n_bjets", &n_b_jet);
-      kf_eval_tree_wrong->Branch("n_cjets", &n_c_jet);
-      kf_eval_tree_wrong->Branch("weight", &weight);
-      kf_eval_tree_wrong->Branch("decay_mode", &decay_mode);
-      kf_eval_tree_wrong->Branch("best_mva_score", &best_mva_score);
-      kf_eval_tree_wrong->Branch("best_chi2", &best_chi2);
-      kf_eval_tree_wrong->Branch("mt", &mt);
-      kf_eval_tree_wrong->Branch("chk_included", &chk_included);
-      kf_eval_tree_wrong->Branch("chk_hf_contamination", &chk_hf_contamination);
-      kf_eval_tree_wrong->Branch("mva_hf_score", &mva_hf_score);
-      kf_eval_tree_wrong->Branch("bvsc_had_t_b", &bvsc_had_t_b);
-      kf_eval_tree_wrong->Branch("cvsb_had_t_b", &cvsb_had_t_b);
-      kf_eval_tree_wrong->Branch("cvsl_had_t_b", &cvsl_had_t_b);
-      kf_eval_tree_wrong->Branch("bvsc_w_u", &bvsc_w_u);
-      kf_eval_tree_wrong->Branch("cvsb_w_u", &cvsb_w_u);
-      kf_eval_tree_wrong->Branch("cvsl_w_u", &cvsl_w_u);
-      kf_eval_tree_wrong->Branch("bvsc_w_d", &bvsc_w_d);
-      kf_eval_tree_wrong->Branch("cvsb_w_d", &cvsb_w_d);
-      kf_eval_tree_wrong->Branch("cvsl_w_d", &cvsl_w_d);
-      kf_eval_tree_wrong->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
-      kf_eval_tree_wrong->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
-      kf_eval_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
-      kf_eval_tree_wrong->Branch("swapped", &swapped);
-    }//run_kf_eval
+      reco_eval_tree_wrong = new TTree("Reco_Eval_Tree_Wrong", "Reco_Eval_Tree_Wrong");
+      reco_eval_tree_wrong->Branch("n_jets", &n_sel_jet);
+      reco_eval_tree_wrong->Branch("n_bjets", &n_b_jet);
+      reco_eval_tree_wrong->Branch("n_cjets", &n_c_jet);
+      reco_eval_tree_wrong->Branch("weight", &weight);
+      reco_eval_tree_wrong->Branch("decay_mode", &decay_mode);
+      reco_eval_tree_wrong->Branch("best_mva_score", &best_mva_score);
+      reco_eval_tree_wrong->Branch("best_chi2", &best_chi2);
+      reco_eval_tree_wrong->Branch("mt", &mt);
+      reco_eval_tree_wrong->Branch("chk_included", &chk_included);
+      reco_eval_tree_wrong->Branch("chk_hf_contamination", &chk_hf_contamination);
+      reco_eval_tree_wrong->Branch("mva_hf_score", &mva_hf_score);
+      reco_eval_tree_wrong->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+      reco_eval_tree_wrong->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+      reco_eval_tree_wrong->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      reco_eval_tree_wrong->Branch("bvsc_w_u", &bvsc_w_u);
+      reco_eval_tree_wrong->Branch("cvsb_w_u", &cvsb_w_u);
+      reco_eval_tree_wrong->Branch("cvsl_w_u", &cvsl_w_u);
+      reco_eval_tree_wrong->Branch("bvsc_w_d", &bvsc_w_d);
+      reco_eval_tree_wrong->Branch("cvsb_w_d", &cvsb_w_d);
+      reco_eval_tree_wrong->Branch("cvsl_w_d", &cvsl_w_d);
+      reco_eval_tree_wrong->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+      reco_eval_tree_wrong->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+      reco_eval_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+      reco_eval_tree_wrong->Branch("swapped", &swapped);
+    }//run_reco_eval
 
   if(run_template_truth)
     {
@@ -570,11 +570,11 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       decay_mode = Get_W_Decay_Mode(vec_gen);
       
       //lumi
-      float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
-      weight *= lumi_weight;
+      //float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
+      //weight *= lumi_weight;
 
       //MCweight +1 or -1
-      float mc_weight = ev.MCweight();
+      float mc_weight = MCweight();
       weight *= mc_weight;
 
       //pileup reweight
@@ -725,11 +725,11 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   vector<bool> vec_ctag;
   for(auto& jet : vec_sel_jet)
     {
-      float cvsl = Get_CvsL(jet);
-      float cvsb = Get_CvsB(jet);
-
-      float cvsl_wp;
-      float cvsb_wp;
+      float cvsb = jet.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      float cvsl = jet.GetTaggerResult(JetTagging::DeepJet_CvsL);
+      
+      float cvsl_wp = -1;
+      float cvsb_wp = -1;
 
       if(DataYear==2017)
         {
@@ -873,18 +873,18 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  Jet j1 = vec_sel_jet_match.at(index_matched_jet_match[1]);
           Jet j2 = vec_sel_jet_match.at(index_matched_jet_match[2]);
 
-	  float j0_corr = j0.GetBJetRegressionNN("BCorr");
+	  float j0_corr = j0.BJetNNCorrection();
 	  j0.SetPtEtaPhiM(j0_corr*j0.Pt(), j0.Eta(), j0.Phi(), j0.M());
 	  
 	  float j1_corr = 1;
-	  if(vec_hf_flavour[index_matched_jet_match[1]]==4) j1_corr = j1.GetBJetRegressionNN("CCorr");
-	  else if(vec_hf_flavour[index_matched_jet_match[1]]==5) j1_corr = j1.GetBJetRegressionNN("BCorr");
+	  if(vec_hf_flavour[index_matched_jet_match[1]]==4) j1_corr = j1.CJetNNCorrection();
+	  else if(vec_hf_flavour[index_matched_jet_match[1]]==5) j1_corr = j1.BJetNNCorrection();
 	  
 	  j1.SetPtEtaPhiM(j1_corr*j1.Pt(), j1.Eta(), j1.Phi(), j1.M());
 
 	  float j2_corr = 1;
-	  if(vec_hf_flavour[index_matched_jet_match[2]]==4) j2_corr = j2.GetBJetRegressionNN("CCorr");
-          else if(vec_hf_flavour[index_matched_jet_match[2]]==5) j2_corr = j2.GetBJetRegressionNN("BCorr");
+	  if(vec_hf_flavour[index_matched_jet_match[2]]==4) j2_corr = j2.CJetNNCorrection();
+          else if(vec_hf_flavour[index_matched_jet_match[2]]==5) j2_corr = j2.BJetNNCorrection();
 	  
 	  j2.SetPtEtaPhiM(j2_corr*j2.Pt(), j2.Eta(), j2.Phi(), j2.M());
 
@@ -957,12 +957,12 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       Jet jet_w_d = vec_sel_jet[index_matched_jet[2]];
 
       bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_u = Get_CvsB(jet_w_u);
-      cvsl_w_u = Get_CvsL(jet_w_u);
+      cvsb_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_d = Get_CvsB(jet_w_d);
-      cvsl_w_d = Get_CvsL(jet_w_d);
+      cvsb_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       int index = -1;
       if(decay_mode==21) index = 0;
@@ -1157,28 +1157,33 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
              index_matched_jet[2]==index_w_d && index_matched_jet[3]==index_lep_t_b) chk_jet_permutation_match = true;
 	  else chk_jet_permutation_match = false;
 
+	  Jet jet_had_t_b = vec_sel_jet[index_had_t_b];
+	  Jet jet_w_u = vec_sel_jet[index_w_u];
+	  Jet jet_w_d = vec_sel_jet[index_w_d];
+	  Jet jet_lep_t_b = vec_sel_jet[index_lep_t_b];
+
 	  //pt
-	  had_t_b_pt = vec_sel_jet[index_had_t_b].Pt();
-	  w_u_pt = vec_sel_jet[index_w_u].Pt();
-       	  w_d_pt = vec_sel_jet[index_w_d].Pt();
-       	  lep_t_b_pt = vec_sel_jet[index_lep_t_b].Pt();
+	  had_t_b_pt = jet_had_t_b.Pt();
+	  w_u_pt = jet_w_u.Pt();
+       	  w_d_pt = jet_w_d.Pt();
+       	  lep_t_b_pt = jet_lep_t_b.Pt();
 
 	  //tagging scores
-	  bvsc_had_t_b = vec_sel_jet[index_had_t_b].GetTaggerResult(JetTagging::DeepJet);
-	  cvsb_had_t_b = Get_CvsB(vec_sel_jet[index_had_t_b]);
-	  cvsl_had_t_b = Get_CvsL(vec_sel_jet[index_had_t_b]);
+	  bvsc_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet_CvsB);
+	  cvsl_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet_CvsL);
        	  
-	  bvsc_w_u = vec_sel_jet[index_w_u].GetTaggerResult(JetTagging::DeepJet);
-	  cvsb_w_u = Get_CvsB(vec_sel_jet[index_w_u]);
-	  cvsl_w_u = Get_CvsL(vec_sel_jet[index_w_u]);
+	  bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsB);
+	  cvsl_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
-	  bvsc_w_d = vec_sel_jet[index_w_d].GetTaggerResult(JetTagging::DeepJet);
-	  cvsb_w_d = Get_CvsB(vec_sel_jet[index_w_d]);
-          cvsl_w_d = Get_CvsL(vec_sel_jet[index_w_d]);
+	  bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsB);
+          cvsl_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
-	  bvsc_lep_t_b = vec_sel_jet[index_lep_t_b].GetTaggerResult(JetTagging::DeepJet);
-	  cvsb_lep_t_b = Get_CvsB(vec_sel_jet[index_lep_t_b]);
-	  cvsl_lep_t_b = Get_CvsL(vec_sel_jet[index_lep_t_b]);
+	  bvsc_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet_CvsB);
+	  cvsl_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet_CvsL);
 	  
 	  //angles
 	  del_phi_w_u_w_d = results.del_phi_w_u_w_d;
@@ -1209,7 +1214,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
        	  had_w_mass = results.initial_had_w_mass;
       	  lep_t_mass = results.initial_lep_t_mass;
 	  
-      	  TLorentzVector lep_t_partial = vec_sel_jet[index_lep_t_b] + muon;
+      	  TLorentzVector lep_t_partial = jet_lep_t_b + muon;
       	  lep_t_partial_mass = lep_t_partial.M();
 
       	  chi2_jet_had_t_b = results.chi2_jet_had_t_b;
@@ -1252,7 +1257,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	{
 	  Jet jet = vec_sel_jet[index[i]];
 	  
-	  int hf_flavour = jet.GenHFHadronMatcherFlavour();
+	  //int hf_flavour = jet.GenHFHadronMatcherFlavour();
 	  int hf_origin = jet.GenHFHadronMatcherOrigin();
 
 	  if(hf_origin==21) chk_hf_contamination = true;
@@ -1316,7 +1321,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  Jet jet_w_candi = vec_sel_jet[index[i]];
 	  
 	  int index_closest_b = -1;
-	  int index_smallest_b = -1;
+	  //int index_smallest_b = -1;
 	  float theta_b = 999;
 	  //float mass_b = 999;
 	  for(int j=0; j<n_b_jet; j++)
@@ -1361,9 +1366,9 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
     }//if(!IsData && run_hf_contamination_tree)
 
   //KF Evaluation
-  if(!IsData && run_kf_eval)
+  if(!IsData && run_reco_eval)
     {
-      cout << "test run_kf_eval" << endl;
+      cout << "test run_reco_eval" << endl;
 
       Results_Container results_container = fitter_driver->Get_Results();
       if(!fitter_driver->Check_Status())
@@ -1389,7 +1394,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       int index_w_d = results_container.best_index_w_d;
       int index_lep_t_b = results_container.best_index_lep_t_b;
       
-      // cout << "run_kf_eval" << endl;
+      // cout << "run_reco_eval" << endl;
       // cout << index_matched_jet_match[1] << " " << index_matched_jet_match[2] << endl;
       // cout << index_w_u << " " << index_w_d << endl;
 
@@ -1478,26 +1483,26 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       Jet jet_lep_t_b = vec_sel_jet.at(index_lep_t_b);
 
       bvsc_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_had_t_b = Get_CvsB(jet_had_t_b);
-      cvsl_had_t_b = Get_CvsL(jet_had_t_b);
+      cvsb_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_u = Get_CvsB(jet_w_u);
-      cvsl_w_u = Get_CvsL(jet_w_u);
+      cvsb_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_d = Get_CvsB(jet_w_d);
-      cvsl_w_d = Get_CvsL(jet_w_d);
+      cvsb_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       bvsc_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_lep_t_b = Get_CvsB(jet_lep_t_b);
-      cvsl_lep_t_b = Get_CvsL(jet_lep_t_b);
+      cvsb_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
-      if(fitter_correct) kf_eval_tree_correct->Fill();
-      else kf_eval_tree_wrong->Fill();
+      if(fitter_correct) reco_eval_tree_correct->Fill();
+      else reco_eval_tree_wrong->Fill();
       
       return;
-    }//if(!IsData && run_kf_eval)
+    }//if(!IsData && run_reco_eval)
 
   //Template_Truth
   if(!IsData && run_template_truth)
@@ -1519,12 +1524,12 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       Jet jet_w_d = vec_sel_jet[index_w_d];
 
       bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_u = Get_CvsB(jet_w_u);
-      cvsl_w_u = Get_CvsL(jet_w_u);
+      cvsb_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_d = Get_CvsB(jet_w_d);
-      cvsl_w_d = Get_CvsL(jet_w_d);
+      cvsb_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       int index = -1;
       if(decay_mode==21) index = 0;
@@ -1560,12 +1565,12 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
             
       /* Template */
       bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_u = Get_CvsB(jet_w_u);
-      cvsl_w_u = Get_CvsL(jet_w_u);
+      cvsb_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsL);
       
       bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
-      cvsb_w_d = Get_CvsB(jet_w_d);
-      cvsl_w_d = Get_CvsL(jet_w_d);
+      cvsb_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsB);
+      cvsl_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsL);
 
       jet_mass_w_u = jet_w_u.M();
       jet_mass_w_d = jet_w_d.M();
@@ -1732,7 +1737,7 @@ void Vcb_Mu::Gen_Match_Residual(const vector<Jet>& vec_jet, const vector<Gen>& v
 	  if(chk_allocated) continue;
 	  
 	  //if origin is tagged by GenHFHadronMatcher, continue
-	  int jet_flavour = vec_hf_flavour.at(j);
+	  //int jet_flavour = vec_hf_flavour.at(j);
           int jet_origin = vec_hf_origin.at(j);
 	  	  
 	  if(jet_origin!=-999) continue;
@@ -2040,7 +2045,6 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
       return -999;
     }
   
-  int index_had_w[2];
   //W+ decay hadronically
   if(Abs(vec_gen.at(index_d0_w).PID())<10)
     {
@@ -2136,33 +2140,6 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
   
   return selected_w;
 }//int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour , const vector<int>& vec_hf_origin, int index_matched_jet[2])
-
-//////////
-
-float Vcb_Mu::Get_CvsB(const Jet& jet)
-{
-  float prob_c = jet.GetTaggerResult(JetTagging::DeepFlavour_c);
-  float prob_b = jet.GetTaggerResult(JetTagging::DeepFlavour_b);
-  float prob_bb = jet.GetTaggerResult(JetTagging::DeepFlavour_bb);
-  float prob_lepb = jet.GetTaggerResult(JetTagging::DeepFlavour_lepb); 
-  
-  float c_vs_b = prob_c/(prob_c+ prob_b+prob_bb+prob_lepb);
-
-  return c_vs_b;
-}//float Vcb_Mu::Get_CvsB(const Jet& jet)
-
-//////////
-
-float Vcb_Mu::Get_CvsL(const Jet& jet)
-{
-  float prob_c = jet.GetTaggerResult(JetTagging::DeepFlavour_c);
-  float prob_uds = jet.GetTaggerResult(JetTagging::DeepFlavour_uds);
-  float prob_g = jet.GetTaggerResult(JetTagging::DeepFlavour_g);
-  
-  float c_vs_l = prob_c/(prob_c+prob_uds+prob_g);
-
-  return c_vs_l;
-}//float Vcb_Mu::Get_CvsL(const Jet& jet)
 
 //////////
 
