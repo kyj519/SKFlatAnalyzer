@@ -25,12 +25,40 @@ Vcb_Mu::~Vcb_Mu()
       permutation_tree_wrong->Write();
     }
 
+  if(run_hf_contamination_tree)
+    {
+      outfile->cd();
+      hf_contamination_tree_correct->Write();
+      hf_contamination_tree_wrong->Write();
+    }
+
   if(run_kf_eval)
     {
       outfile->cd();
       kf_eval_tree_correct->Write();
       kf_eval_tree_wrong->Write();
     }
+
+  if(run_template)
+    {
+      outfile->cd();
+      
+      for(int i=0; i<5; i++)
+	{
+	  template_tree[i]->Write();
+	}
+    }
+  
+  if(run_template_truth)
+    {
+      outfile->cd();
+      
+      for(int i=0; i<5; i++)
+	{
+	  template_truth_tree[i]->Write();
+	}
+    }
+
 }//Vcb_Mu::~Vcb_Mu()
 
 //////////
@@ -43,11 +71,20 @@ void Vcb_Mu::initializeAnalyzer()
   run_permutation_tree = HasFlag("RunPermutationTree");
   cout << "[Vcb_Mu::initializeAnalyzer] RunPermutationTree = " << run_permutation_tree << endl;
 
+  run_hf_contamination_tree = HasFlag("RunHFContaminationTree");
+  cout << "[Vcb__mu::initializeAnalyzer] RunHFContaminationTree = " << run_hf_contamination_tree << endl;
+
   run_kf_eval = HasFlag("RunKFEval");
   cout << "[Vcb_Mu::initializeAnalyzer] RunKFEval = " << run_kf_eval << endl;
 
   run_chi = HasFlag("RunChi");
   cout << "[Vcb_Mu::initializeAnalyzer] RunChi = " << run_chi << endl;
+
+  run_template = HasFlag("RunTemplate");
+  cout << "[Vcb_Mu::initializeAnalyzer] RunTemplate = " << run_template << endl;
+  
+  run_template_truth = HasFlag("RunTemplateTruth");
+  cout << "[Vcb_Mu::initializeAnalyzer] RuTemplateTruth = " << run_template_truth << endl;
 
   run_syst = HasFlag("RunSyst");
   cout << "[Vcb_Mu::initializeAnalyzer] RunSyst = " << run_syst << endl;
@@ -56,6 +93,9 @@ void Vcb_Mu::initializeAnalyzer()
   rm_wm_constraint = HasFlag("RM_WM");
   cout << "[Vcb_Mu::initializeAnalyzer] RM_WM = " << rm_wm_constraint << endl;
 
+  rm_bjet_energy_reg_nn = HasFlag("RM_REG_NN");
+  cout << "[Vcb_Mu::initializeAnalyzer] RM_REG_NN = " << rm_bjet_energy_reg_nn << endl;
+  
   vec_mu_id = {"POGTightWithTightIso"};
   vec_mu_id_sf_key = {"NUM_TightID_DEN_TrackerMuons"};
   vec_mu_iso_sf_key = {"NUM_TightRelIso_DEN_TightIDandIPCut"};
@@ -121,24 +161,17 @@ void Vcb_Mu::initializeAnalyzer()
   jet_resolution = JME::JetResolution(jetPtResolutionPath);
   jet_resolution_sf = JME::JetResolutionScaleFactor(jetPtResolutionSFPath);
 
-  fitter_driver = new TKinFitterDriver(DataYear, run_chi, rm_wm_constraint);
+  fitter_driver = new TKinFitterDriver(DataYear, run_permutation_tree, run_chi, rm_wm_constraint, rm_bjet_energy_reg_nn);
     
-  result_tree = new TTree("Result_Tree", "Result_Tree");
-  result_tree->Branch("weight", &weight);
-  result_tree->Branch("chi2", &chi2);
-  result_tree->Branch("bvsc_w_u", &bvsc_w_u);
-  result_tree->Branch("cvsb_w_u", &cvsb_w_u);
-  result_tree->Branch("cvsl_w_u", &cvsl_w_u);
-  result_tree->Branch("bvsc_w_d", &bvsc_w_d);
-  result_tree->Branch("cvsb_w_d", &cvsb_w_d);
-  result_tree->Branch("cvsl_w_d", &cvsl_w_d);
-
   if(run_permutation_tree)
     {
-      chk_included = true;
       chk_matched_jets_only = false;
       
       permutation_tree_correct = new TTree("Permutation_Correct", "Permutation_Correct");
+      permutation_tree_correct->Branch("weight", &weight);
+      permutation_tree_correct->Branch("n_jets", &n_sel_jet);
+      permutation_tree_correct->Branch("n_bjets", &n_b_jet);
+      permutation_tree_correct->Branch("n_cjets", &n_c_jet);
       permutation_tree_correct->Branch("gen_neutrino_px", &gen_neutrino_px);
       permutation_tree_correct->Branch("gen_neutrino_py", &gen_neutrino_py);
       permutation_tree_correct->Branch("gen_neutrino_pz", &gen_neutrino_pz);
@@ -152,15 +185,23 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_correct->Branch("mt_gen", &mt_gen);
       permutation_tree_correct->Branch("mt_met", &mt_met);
       permutation_tree_correct->Branch("mt_met_rebalance", &mt_met_rebalance);
-      permutation_tree_correct->Branch("weight", &weight);
-      permutation_tree_correct->Branch("n_jets", &n_sel_jet);
       permutation_tree_correct->Branch("chk_jet_permutation_match", &chk_jet_permutation_match);
       permutation_tree_correct->Branch("had_t_b_pt", &had_t_b_pt);
       permutation_tree_correct->Branch("w_u_pt", &w_u_pt);
       permutation_tree_correct->Branch("w_d_pt", &w_d_pt);
       permutation_tree_correct->Branch("lep_t_b_pt", &lep_t_b_pt);
-      permutation_tree_correct->Branch("had_t_b_bscore", &had_t_b_bscore);
-      permutation_tree_correct->Branch("lep_t_b_bscore", &lep_t_b_bscore);
+      permutation_tree_correct->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+      permutation_tree_correct->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+      permutation_tree_correct->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      permutation_tree_correct->Branch("bvsc_w_u", &bvsc_w_u);
+      permutation_tree_correct->Branch("cvsb_w_u", &cvsb_w_u);
+      permutation_tree_correct->Branch("cvsl_w_u", &cvsl_w_u);
+      permutation_tree_correct->Branch("bvsc_w_d", &bvsc_w_d);
+      permutation_tree_correct->Branch("cvsb_w_d", &cvsb_w_d);
+      permutation_tree_correct->Branch("cvsl_w_d", &cvsl_w_d);
+      permutation_tree_correct->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+      permutation_tree_correct->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+      permutation_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
       permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
       permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
       permutation_tree_correct->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
@@ -197,9 +238,12 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_correct->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
       permutation_tree_correct->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
       permutation_tree_correct->Branch("chi2", &chi2);
-
+      
       permutation_tree_wrong = new TTree("Permutation_Wrong", "Permutation_Wrong");
       permutation_tree_wrong->Branch("weight", &weight);
+      permutation_tree_wrong->Branch("n_jets", &n_sel_jet);
+      permutation_tree_wrong->Branch("n_bjets", &n_b_jet);
+      permutation_tree_wrong->Branch("n_cjets", &n_c_jet);
       permutation_tree_wrong->Branch("gen_neutrino_px", &gen_neutrino_px);
       permutation_tree_wrong->Branch("gen_neutrino_py", &gen_neutrino_py);
       permutation_tree_wrong->Branch("gen_neutrino_pz", &gen_neutrino_pz);
@@ -213,14 +257,23 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_wrong->Branch("mt_gen", &mt_gen);
       permutation_tree_wrong->Branch("mt_met", &mt_met);
       permutation_tree_wrong->Branch("mt_met_rebalance", &mt_met_rebalance);
-      permutation_tree_wrong->Branch("n_jets", &n_sel_jet);
       permutation_tree_wrong->Branch("chk_jet_permutation_match", &chk_jet_permutation_match);
       permutation_tree_wrong->Branch("had_t_b_pt", &had_t_b_pt);
       permutation_tree_wrong->Branch("w_u_pt", &w_u_pt);
       permutation_tree_wrong->Branch("w_d_pt", &w_d_pt);
       permutation_tree_wrong->Branch("lep_t_b_pt", &lep_t_b_pt);
-      permutation_tree_wrong->Branch("had_t_b_bscore", &had_t_b_bscore);
-      permutation_tree_wrong->Branch("lep_t_b_bscore", &lep_t_b_bscore);
+      permutation_tree_wrong->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+      permutation_tree_wrong->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+      permutation_tree_wrong->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      permutation_tree_wrong->Branch("bvsc_w_u", &bvsc_w_u);
+      permutation_tree_wrong->Branch("cvsb_w_u", &cvsb_w_u);
+      permutation_tree_wrong->Branch("cvsl_w_u", &cvsl_w_u);
+      permutation_tree_wrong->Branch("bvsc_w_d", &bvsc_w_d);
+      permutation_tree_wrong->Branch("cvsb_w_d", &cvsb_w_d);
+      permutation_tree_wrong->Branch("cvsl_w_d", &cvsl_w_d);
+      permutation_tree_wrong->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+      permutation_tree_wrong->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+      permutation_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
       permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
       permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
       permutation_tree_wrong->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
@@ -257,18 +310,189 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_wrong->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
       permutation_tree_wrong->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
       permutation_tree_wrong->Branch("chi2", &chi2);
-    }
+    }//if(run_permutation_tree)
   
+  if(run_hf_contamination_tree)
+    {
+      chk_matched_jets_only = false;
+
+      hf_contamination_tree_correct = new TTree("HF_Contamination_Tree_Correct", "HF_Contamination_Tree_Correct");
+      hf_contamination_tree_correct->Branch("n_jets", &n_sel_jet);
+      hf_contamination_tree_correct->Branch("n_bjets", &n_b_jet);
+      hf_contamination_tree_correct->Branch("n_cjets", &n_c_jet);
+      hf_contamination_tree_correct->Branch("best_mva_score", &best_mva_score);
+      hf_contamination_tree_correct->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+      hf_contamination_tree_correct->Branch("theta_b_b", &theta_b_b);
+      hf_contamination_tree_correct->Branch("theta_c_c", &theta_c_c);
+      hf_contamination_tree_correct->Branch("theta_p_had_w", &theta_p_had_w);
+      hf_contamination_tree_correct->Branch("theta_w_u_b", &theta_w_u_b);
+      hf_contamination_tree_correct->Branch("theta_w_d_b", &theta_w_d_b);
+      hf_contamination_tree_correct->Branch("w_u_b_bscore", &w_u_b_bscore);
+      hf_contamination_tree_correct->Branch("w_d_b_bscore", &w_d_b_bscore);
+      hf_contamination_tree_correct->Branch("m_w_u_b", &m_w_u_b);
+      hf_contamination_tree_correct->Branch("m_w_d_b", &m_w_d_b);
+
+      hf_contamination_tree_wrong = new TTree("HF_Contamination_Tree_Wrong", "HF_Contamination_Tree_Wrong");
+      hf_contamination_tree_wrong->Branch("n_jets", &n_sel_jet);
+      hf_contamination_tree_wrong->Branch("n_bjets", &n_b_jet);
+      hf_contamination_tree_wrong->Branch("n_cjets", &n_c_jet);
+      hf_contamination_tree_wrong->Branch("best_mva_score", &best_mva_score);
+      hf_contamination_tree_wrong->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+      hf_contamination_tree_wrong->Branch("theta_p_had_w", &theta_p_had_w);
+      hf_contamination_tree_wrong->Branch("theta_b_b", &theta_b_b);
+      hf_contamination_tree_wrong->Branch("theta_c_c", &theta_c_c);
+      hf_contamination_tree_wrong->Branch("theta_w_u_b", &theta_w_u_b);
+      hf_contamination_tree_wrong->Branch("theta_w_d_b", &theta_w_d_b);
+      hf_contamination_tree_wrong->Branch("theta_b_b", &theta_b_b);
+      hf_contamination_tree_wrong->Branch("w_u_b_bscore", &w_u_b_bscore);
+      hf_contamination_tree_wrong->Branch("w_d_b_bscore", &w_d_b_bscore);
+      hf_contamination_tree_wrong->Branch("m_w_u_b", &m_w_u_b);
+      hf_contamination_tree_wrong->Branch("m_w_d_b", &m_w_d_b);
+    }
+
   if(run_kf_eval)
     {
       //chk_matched_jets_only = true;
       chk_matched_jets_only = false;
-      chk_included = true;
-
+      
       kf_eval_tree_correct = new TTree("KF_Eval_Tree_Correct", "KF_Eval_Tree_Correct");
+      kf_eval_tree_correct->Branch("n_jets", &n_sel_jet);
+      kf_eval_tree_correct->Branch("n_bjets", &n_b_jet);
+      kf_eval_tree_correct->Branch("n_cjets", &n_c_jet);
+      kf_eval_tree_correct->Branch("weight", &weight);
+      kf_eval_tree_correct->Branch("decay_mode", &decay_mode);
+      kf_eval_tree_correct->Branch("best_mva_score", &best_mva_score);
+      kf_eval_tree_correct->Branch("best_chi2", &best_chi2); 
+      kf_eval_tree_correct->Branch("mt", &mt);
+      kf_eval_tree_correct->Branch("chk_included", &chk_included);
+      kf_eval_tree_correct->Branch("chk_hf_contamination", &chk_hf_contamination);
+      kf_eval_tree_correct->Branch("mva_hf_score", &mva_hf_score);
+      kf_eval_tree_correct->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+      kf_eval_tree_correct->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+      kf_eval_tree_correct->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      kf_eval_tree_correct->Branch("bvsc_w_u", &bvsc_w_u);
+      kf_eval_tree_correct->Branch("cvsb_w_u", &cvsb_w_u);
+      kf_eval_tree_correct->Branch("cvsl_w_u", &cvsl_w_u);
+      kf_eval_tree_correct->Branch("bvsc_w_d", &bvsc_w_d);
+      kf_eval_tree_correct->Branch("cvsb_w_d", &cvsb_w_d);
+      kf_eval_tree_correct->Branch("cvsl_w_d", &cvsl_w_d);
+      kf_eval_tree_correct->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+      kf_eval_tree_correct->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+      kf_eval_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+      kf_eval_tree_correct->Branch("swapped", &swapped);
+      
       kf_eval_tree_wrong = new TTree("KF_Eval_Tree_Wrong", "KF_Eval_Tree_Wrong");
-    }
+      kf_eval_tree_wrong->Branch("n_jets", &n_sel_jet);
+      kf_eval_tree_wrong->Branch("n_bjets", &n_b_jet);
+      kf_eval_tree_wrong->Branch("n_cjets", &n_c_jet);
+      kf_eval_tree_wrong->Branch("weight", &weight);
+      kf_eval_tree_wrong->Branch("decay_mode", &decay_mode);
+      kf_eval_tree_wrong->Branch("best_mva_score", &best_mva_score);
+      kf_eval_tree_wrong->Branch("best_chi2", &best_chi2);
+      kf_eval_tree_wrong->Branch("mt", &mt);
+      kf_eval_tree_wrong->Branch("chk_included", &chk_included);
+      kf_eval_tree_wrong->Branch("chk_hf_contamination", &chk_hf_contamination);
+      kf_eval_tree_wrong->Branch("mva_hf_score", &mva_hf_score);
+      kf_eval_tree_wrong->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+      kf_eval_tree_wrong->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+      kf_eval_tree_wrong->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      kf_eval_tree_wrong->Branch("bvsc_w_u", &bvsc_w_u);
+      kf_eval_tree_wrong->Branch("cvsb_w_u", &cvsb_w_u);
+      kf_eval_tree_wrong->Branch("cvsl_w_u", &cvsl_w_u);
+      kf_eval_tree_wrong->Branch("bvsc_w_d", &bvsc_w_d);
+      kf_eval_tree_wrong->Branch("cvsb_w_d", &cvsb_w_d);
+      kf_eval_tree_wrong->Branch("cvsl_w_d", &cvsl_w_d);
+      kf_eval_tree_wrong->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+      kf_eval_tree_wrong->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+      kf_eval_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+      kf_eval_tree_wrong->Branch("swapped", &swapped);
+    }//run_kf_eval
+
+  if(run_template_truth)
+    {
+      template_truth_tree[0] = new TTree("Template_Truth_21", "Template_Truth_21");
+      template_truth_tree[1] = new TTree("Template_Truth_23", "Template_Truth_23");
+      template_truth_tree[2] = new TTree("Template_Truth_41", "Template_Truth_41");
+      template_truth_tree[3] = new TTree("Template_Truth_43", "Template_Truth_43");
+      template_truth_tree[4] = new TTree("Template_Truth_45", "Template_Truth_45");
+      
+      for(int i=0; i<5; i++)
+	{
+	  //template_truth_tree[i]->Branch("best_mva_score", &best_mva_score);
+	  template_truth_tree[i]->Branch("bvsc_w_u", &bvsc_w_u);
+	  template_truth_tree[i]->Branch("cvsb_w_u", &cvsb_w_u);
+	  template_truth_tree[i]->Branch("cvsl_w_u", &cvsl_w_u);
+	  template_truth_tree[i]->Branch("bvsc_w_d", &bvsc_w_d);
+          template_truth_tree[i]->Branch("cvsb_w_d", &cvsb_w_d);
+          template_truth_tree[i]->Branch("cvsl_w_d", &cvsl_w_d);
+	}
+    }//run_template_truth
+
+  result_tree = new TTree("Result_Tree", "Result_Tree");
+  result_tree->Branch("weight", &weight);
+  result_tree->Branch("decay_mode", &decay_mode);
+  result_tree->Branch("n_jets", &n_sel_jet);
+  result_tree->Branch("n_bjets", &n_b_jet);
+  result_tree->Branch("n_cjets", &n_c_jet);
+  result_tree->Branch("best_chi2", &best_chi2);
+  result_tree->Branch("best_mva_score", &best_mva_score);
+  result_tree->Branch("mt", &mt);
+  result_tree->Branch("bvsc_w_u", &bvsc_w_u);
+  result_tree->Branch("cvsb_w_u", &cvsb_w_u);
+  result_tree->Branch("cvsl_w_u", &cvsl_w_u);
+  result_tree->Branch("bvsc_w_d", &bvsc_w_d);
+  result_tree->Branch("cvsb_w_d", &cvsb_w_d);
+  result_tree->Branch("cvsl_w_d", &cvsl_w_d);
+  result_tree->Branch("jet_mass_w_u", &jet_mass_w_u);
+  result_tree->Branch("jet_mass_w_d", &jet_mass_w_d);
+  result_tree->Branch("mva_hf_score", &mva_hf_score);
+
+  reader_hf_contamination_lessthantwo = new TMVA::Reader("!Color:!Silent");
+  reader_hf_contamination_lessthantwo->AddSpectator("n_jets", &n_sel_jet);
+  reader_hf_contamination_lessthantwo->AddVariable("n_bjets", &n_b_jet_f);//strange...
+  reader_hf_contamination_lessthantwo->AddVariable("n_cjets", &n_c_jet_f);
+  reader_hf_contamination_lessthantwo->AddVariable("best_mva_score", &best_mva_score);
+  reader_hf_contamination_lessthantwo->AddVariable("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+  reader_hf_contamination_lessthantwo->AddVariable("theta_b_b", &theta_b_b);
+  reader_hf_contamination_lessthantwo->AddVariable("theta_p_had_w", &theta_p_had_w);
+  reader_hf_contamination_lessthantwo->AddVariable("theta_w_u_b", &theta_w_u_b);
+  reader_hf_contamination_lessthantwo->AddVariable("theta_w_d_b", &theta_w_d_b);
+  reader_hf_contamination_lessthantwo->AddVariable("w_u_b_bscore", &w_u_b_bscore);
+  reader_hf_contamination_lessthantwo->AddVariable("w_d_b_bscore", &w_d_b_bscore);
+  reader_hf_contamination_lessthantwo->AddVariable("m_w_u_b", &m_w_u_b);
+  reader_hf_contamination_lessthantwo->AddVariable("m_w_d_b", &m_w_d_b);
   
+  TString weight_file_base = getenv("SKFlat_WD");
+  weight_file_base += "/data/Run2UltraLegacy_v2/";
+  weight_file_base += DataEra;
+  weight_file_base += "/HF_Contamination/";
+  
+  TString weight_file = weight_file_base + "LessThanTwo/weights/TMVAClassification_BDTG.weights.xml";
+
+  cout << weight_file << endl;
+  reader_hf_contamination_lessthantwo->BookMVA("LessThanTwo", weight_file);
+
+  reader_hf_contamination_morethantwo = new TMVA::Reader("!Color:!Silent");
+  reader_hf_contamination_morethantwo->AddSpectator("n_jets", &n_sel_jet);
+  reader_hf_contamination_morethantwo->AddVariable("n_bjets", &n_b_jet_f);//strange...
+  reader_hf_contamination_morethantwo->AddVariable("n_cjets", &n_c_jet_f);
+  reader_hf_contamination_morethantwo->AddVariable("best_mva_score", &best_mva_score);
+  reader_hf_contamination_morethantwo->AddVariable("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+  reader_hf_contamination_morethantwo->AddVariable("theta_b_b", &theta_b_b);
+  reader_hf_contamination_morethantwo->AddVariable("theta_c_c", &theta_c_c);
+  reader_hf_contamination_morethantwo->AddVariable("theta_p_had_w", &theta_p_had_w);
+  reader_hf_contamination_morethantwo->AddVariable("theta_w_u_b", &theta_w_u_b);
+  reader_hf_contamination_morethantwo->AddVariable("theta_w_d_b", &theta_w_d_b);
+  reader_hf_contamination_morethantwo->AddVariable("w_u_b_bscore", &w_u_b_bscore);
+  reader_hf_contamination_morethantwo->AddVariable("w_d_b_bscore", &w_d_b_bscore);
+  reader_hf_contamination_morethantwo->AddVariable("m_w_u_b", &m_w_u_b);
+  reader_hf_contamination_morethantwo->AddVariable("m_w_d_b", &m_w_d_b);
+  
+  weight_file = weight_file_base + "MoreThanTwo/weights/TMVAClassification_BDTG.weights.xml";
+
+  cout << weight_file << endl;
+  reader_hf_contamination_morethantwo->BookMVA("MoreThanTwo", weight_file);
+
   return;
 }//void Vcb_Mu::initializeAnalyzer()
 
@@ -301,7 +525,7 @@ void Vcb_Mu::executeEvent()
 
       executeEventFromParameter(param);
 
-      //run syst
+     //run syst
       if(run_syst)
 	{
 	  //basic variation defined in AnalyzerParameter
@@ -333,34 +557,57 @@ void Vcb_Mu::executeEvent()
 
 void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 {
-  Event ev = GetEvent();
-  Particle met = ev.GetMETVector();
+  weight = 1;
 
-  //caculate weight for cut flow
-  float weight_cut_flow = 1;
+  Event ev = GetEvent();
+
+  decay_mode = 999;
+  
   if(!IsData)
     {
+      //separate W decay mode
+      vector<Gen> vec_gen = GetGens();
+      decay_mode = Get_W_Decay_Mode(vec_gen);
+      
+      //lumi
+      float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
+      weight *= lumi_weight;
+
       //MCweight +1 or -1
       float mc_weight = ev.MCweight();
-      weight_cut_flow *= mc_weight;
+      weight *= mc_weight;
+
+      //pileup reweight
+      float pileup_weight = mcCorr->GetPileUpWeight(nPileUp, 0);
+      weight *= pileup_weight;
+
+      //L1 prefire
+      float prefire_weight = GetPrefireWeight(0);
+      weight *= prefire_weight;
+    
+      // if(!TMath::Finite(lumi_weight)) cout << lumi_weight << endl;
+      // if(!TMath::Finite(mc_weight)) cout << mc_weight << endl;
+      // if(!TMath::Finite(pileup_weight)) cout << pileup_weight << endl;
+      // if(!TMath::Finite(prefire_weight)) cout << prefire_weight << endl;
     }
 
   //no cut
-  FillHist(param.Name+"/Cut_Flow", Cut_Flow::No_Cut, weight_cut_flow, n_cut_flow, 0, n_cut_flow);
-  
+  FillHist(param.Name+"/Cut_Flow", Cut_Flow::No_Cut, weight, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::No_Cut, weight, n_cut_flow, 0, n_cut_flow);
+
   //met filter
   if(!PassMETFilter()) return;
-  FillHist(param.Name+"/Cut_Flow", Cut_Flow::Met_Filter, weight_cut_flow, n_cut_flow, 0, n_cut_flow);
-  
-  //trigger
-  if(!ev.PassTrigger(vec_mu_trig)) return;
-  FillHist(param.Name+"/Cut_Flow", Cut_Flow::Trigger, weight_cut_flow, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+"/Cut_Flow", Cut_Flow::Met_Filter, weight, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Met_Filter, weight, n_cut_flow, 0, n_cut_flow);
 
+  //set objects
   vector<Muon> vec_this_muon = vec_muon;
   vector<Electron> vec_this_electron = vec_electron;
   vector<Jet> vec_this_jet = vec_jet;
+  
+  Particle met = ev.GetMETVector();
 
-  //syst basics
+  //syst basics for objects
   // if(param.syst_ == AnalyzerParameter::Central){}
   // else if(param.syst_ == AnalyzerParameter::JetResUp) vec_this_jet = SmearJets(vec_this_jet, +1);
   // else if(param.syst_ == AnalyzerParameter::JetResDown) vec_this_jet = SmearJets(vec_this_jet, -1);
@@ -377,31 +624,89 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   //     cerr << "Vcb_Mu::executeEventFromParameter: Wrong syst_" << endl;
   //     exit(1);
   //   }
+  
+  //setup objects
   vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, trig_safe_pt_cut, MUON_ETA);
 
+  //for lepton veto
   vector<Muon> vec_muon_veto = SelectMuons(vec_this_muon, param.Muon_Tight_ID, MUON_PT_VETO, MUON_ETA);
   vector<Electron> vec_electron_veto = SelectElectrons(vec_this_electron, param.Electron_Loose_ID, ELECTRON_PT_VETO, ELECTRON_ETA);
-  
+
   vector<Jet> vec_sel_jet = SelectJets(vec_this_jet, param.Jet_ID, JET_PT, JET_ETA);
   vec_sel_jet = JetsVetoLeptonInside(vec_sel_jet, vec_electron_veto, vec_muon_veto, DR_LEPTON_VETO);
   n_sel_jet = vec_sel_jet.size();
 
-  vector<Jet> vec_sel_jet_match;
-  if(!IsData) vec_sel_jet_match = SelectJets(vec_this_jet, param.Jet_ID, JET_PT_MATCH, JET_ETA_MATCH);
+  vector<Jet> vec_sel_jet_match = SelectJets(vec_this_jet, param.Jet_ID, JET_PT_MATCH, JET_ETA_MATCH);
 
   //sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
   sort(vec_sel_jet_match.begin(), vec_sel_jet_match.end(), PtComparing);
   
+  //single lepton trigger
+  if(!ev.PassTrigger(vec_mu_trig)) return;
+
+  if(!IsData)
+    {
+      //SF for muon trigger effi
+      float sf_mu_trig_effi;
+      
+      if(vec_sel_muon.size()==0) sf_mu_trig_effi = 1;
+      else sf_mu_trig_effi = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, 0);
+      
+      weight *= sf_mu_trig_effi;
+
+      // cout << "n_muon = " << vec_sel_muon.size() << endl;
+      // for(int i=0; i<vec_sel_muon.size(); i++)
+      //   {
+      //     Muon muon = vec_sel_muon.at(i);
+      //     cout << muon.Eta() << "\t" << muon.MiniAODPt() << endl;
+      //   }
+      // cout << sf_mu_trig_effi << endl;
+    }
+
+  FillHist(param.Name+"/Cut_Flow", Cut_Flow::Trigger, weight, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Trigger, weight, n_cut_flow, 0, n_cut_flow);
+  
+  //cut on lepton
+  if(vec_sel_muon.size()!=1) return;
+  if(vec_muon_veto.size()!=1) return;
+  if(vec_electron_veto.size()!=0) return;
+  
+  Muon muon = vec_sel_muon.at(0);
+
+  if(!IsData)
+    {
+      //SF for muon id
+      float sf_mu_id_effi = mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muon.Eta(), muon.MiniAODPt());
+      weight *= sf_mu_id_effi;
+
+      //if(run_debug) cout << "M ID SF = " << muon.Eta() << "\t" << muon.MiniAODPt() << "\t" << sf_mu_id_effi << endl;
+
+      //SF for muon iso
+      float sf_mu_iso_effi = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muon.Eta(), muon.MiniAODPt());
+      weight *= sf_mu_iso_effi;
+      
+      //if(run_debug) cout << "M ISO SF = " << muon.Eta() << "\t" << muon.MiniAODPt() << "\t" << sf_mu_iso_effi << endl;
+    }
+
+  FillHist(param.Name+"/Cut_Flow", Cut_Flow::Single_Lepton, weight, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Single_Lepton, weight, n_cut_flow, 0, n_cut_flow);
+  
+  //cut on jet
+  if(n_sel_jet<4) return;
+  
+  FillHist(param.Name+"/Cut_Flow", Cut_Flow::At_Least_Four_Jets, weight, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::At_Least_Four_Jets, weight, n_cut_flow, 0, n_cut_flow);
+  
   //n of btag
-  int n_btag = 0;
+  n_b_jet = 0;
   vector<bool> vec_btag;
   for(auto& jet : vec_sel_jet)
     {
       float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
       if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score)
         {
-          n_btag++;
+          n_b_jet++;
           vec_btag.push_back(true);
         }
       else vec_btag.push_back(false);
@@ -414,66 +719,62 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score) vec_btag_match.push_back(true);
       else vec_btag_match.push_back(false);
     }
-
-  //baseline selection
-  if(met.Pt()<MET_PT) return;
-  if(vec_muon_veto.size()!=1) return;
-  if(vec_electron_veto.size()!=0) return;
-  if(vec_sel_muon.size()!=1) return;
-  if(n_sel_jet<4) return;
-  if(n_btag<2) return;
   
-  //if(n_sel_jet!=4) return;
+  //n of ctag
+  n_c_jet = 0;
+  vector<bool> vec_ctag;
+  for(auto& jet : vec_sel_jet)
+    {
+      float cvsl = Get_CvsL(jet);
+      float cvsb = Get_CvsB(jet);
 
-  FillHist(param.Name+"/Cut_Flow", Cut_Flow::TT_Selection, weight_cut_flow, n_cut_flow, 0, n_cut_flow);
+      float cvsl_wp;
+      float cvsb_wp;
 
-  Muon muon = vec_sel_muon.at(0);
+      if(DataYear==2017)
+        {
+          cvsl_wp = cvsl_2017_m;
+          cvsb_wp = cvsb_2017_m;
+        }
+      else if(DataYear==2018)
+        {
+          cvsl_wp = cvsl_2018_m;
+          cvsb_wp = cvsb_2018_m;
+        }
 
-  //caculate weight
-  weight = 1.;
+      if(cvsl_wp<cvsl && cvsb_wp<cvsb)
+        {
+          n_c_jet++;
+          vec_ctag.push_back(true);
+        }
+      else vec_ctag.push_back(false);
+    }
+  //cout << "test n_of_ctag" << n_c_jet << endl;
+
   if(!IsData)
     {
-      //lumi
-      float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
-      weight *= lumi_weight;
-
-      //MCweight +1 or -1
-      float mc_weight = ev.MCweight();
-      weight *= mc_weight;
-
-      //pileup reweight
-      float pileup_weight = mcCorr->GetPileUpWeight(nPileUp, 0);
-      weight *= pileup_weight;
-
-      //L1 prefire
-      float prefire_weight = GetPrefireWeight(0);
-      weight *= prefire_weight;
-
-      //SF for muon trigger effi
-      float sf_mu_trig_effi = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, 0);
-      weight *= sf_mu_trig_effi;
-
-      //if(run_debug) cout << "M Trig SF = " << muon.Eta() << "\t" << muon.MiniAODPt() << "\t" << sf_mu_trig_effi << endl;
-
-      //SF for muon id
-      float sf_mu_id_effi = mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muon.Eta(), muon.MiniAODPt());
-      weight *= sf_mu_id_effi;
-
-      //if(run_debug) cout << "M ID SF = " << muon.Eta() << "\t" << muon.MiniAODPt() << "\t" << sf_mu_trig_effi << endl;
-
-      //SF for muon iso
-      float sf_mu_iso_effi = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muon.Eta(), muon.MiniAODPt());
-      weight *= sf_mu_iso_effi;
-
       //SF for b-tagging
       float sf_b_tag = 1;
+      
       if(run_debug) sf_b_tag *= mcCorr->GetBTaggingReweight_1a(vec_sel_jet, vec_jet_tagging_para.at(0));
       else sf_b_tag *= mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0));
+      
       weight *= sf_b_tag;
-    }//if(!IsData)
+    }
+
+  if(n_b_jet<2) return;
+  
+  FillHist(param.Name+"/Cut_Flow", Cut_Flow::At_Least_Two_B_Tagged, weight, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::At_Least_Two_B_Tagged, weight, n_cut_flow, 0, n_cut_flow);
+  
+  //cut on MET
+  if(met.Pt()<MET_PT) return;
+
+  FillHist(param.Name+"/Cut_Flow", Cut_Flow::MET, weight, n_cut_flow, 0, n_cut_flow);
+  FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::MET, weight, n_cut_flow, 0, n_cut_flow);
 
   //Data and MC comparison
-  if(n_btag==2)
+  if(n_b_jet==2)
     {
       FillHist(param.Name+"/TwoB/Met", met.Vect().Mag(), weight, 50, 0, 300);
       FillHist(param.Name+"/TwoB/N_Vertex", nPV, weight, 100, 0, 100);
@@ -484,7 +785,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       FillHist(param.Name+"/TwoB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
       FillHist(param.Name+"/TwoB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
       FillHist(param.Name+"/TwoB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10); 
-      FillHist(param.Name+"/TwoB/N_BJet", n_btag, weight, 10, 0, 10);
+      FillHist(param.Name+"/TwoB/N_BJet", n_b_jet, weight, 10, 0, 10);
     }
   else
     {
@@ -497,7 +798,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       FillHist(param.Name+"/ThreeB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
       FillHist(param.Name+"/ThreeB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
       FillHist(param.Name+"/ThreeB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10);
-      FillHist(param.Name+"/ThreeB/N_BJet", n_btag, weight, 10, 0, 10);
+      FillHist(param.Name+"/ThreeB/N_BJet", n_b_jet, weight, 10, 0, 10);
     }
   
   //Gen matching
@@ -534,8 +835,6 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       
       Gen_Match_TT(vec_sel_jet_match, vec_gen, vec_hf_flavour, vec_hf_origin, vec_jer_match, index_gen, index_matched_jet_match, surely_matched, matched_jet_dr);
       
-      cout << endl;
-      cout << "Test Gen acceptance" << endl;
       bool chk_gen_acceptance = true;
       for(int i=0; i<4; ++i)
 	{
@@ -544,26 +843,22 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  float pt = vec_gen[index].Pt();
 	  float eta = vec_gen[index].Eta();
 	
-	  cout << i << " " << index_gen[i] << " " << pt << " " << eta << " ";
 	  if(pt<JET_PT_MATCH || JET_ETA_MATCH<TMath::Abs(eta))
 	    {
-	      cout << "cut" << endl;
 	      chk_gen_acceptance = false;
 	      break;
 	    }
-	  cout << endl;
-	
 	}
       
       if(chk_gen_acceptance) FillHist(param.Name+"/Gen_Acceptance", 1, weight, 2, 0, 2);
       else FillHist(param.Name+"/Gen_Acceptance", 0, weight, 2, 0, 2);
 
-      //for(int i=0; i<4; i++){ cout << index_matched_jet_match[i] << endl; }
+      cout << "test index_matched_jet_match[i]" << endl;
+      for(int i=0; i<4; i++){ cout << index_matched_jet_match[i] << " " << matched_jet_dr[i] << endl; }
 
       //if all four jets are successfully match
-      if(index_matched_jet_match[0]!=-999 && index_matched_jet_match[1]!=-999 && index_matched_jet_match[2]!=-999 && index_matched_jet_match[3]!=-999)
+      if(-1<index_matched_jet_match[0] && -1<index_matched_jet_match[1] && -1<index_matched_jet_match[2] && -1<index_matched_jet_match[3])
 	{
-	  cout << "Test Fill 1" << endl;
 	  FillHist(param.Name+"/PF_Gen_Matched", 1, weight, 2, 0, 2);
  
 	  //BJetRegression Test
@@ -581,13 +876,13 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  float j0_corr = j0.GetBJetRegressionNN("BCorr");
 	  j0.SetPtEtaPhiM(j0_corr*j0.Pt(), j0.Eta(), j0.Phi(), j0.M());
 	  
-	  float j1_corr = 0;
+	  float j1_corr = 1;
 	  if(vec_hf_flavour[index_matched_jet_match[1]]==4) j1_corr = j1.GetBJetRegressionNN("CCorr");
 	  else if(vec_hf_flavour[index_matched_jet_match[1]]==5) j1_corr = j1.GetBJetRegressionNN("BCorr");
 	  
 	  j1.SetPtEtaPhiM(j1_corr*j1.Pt(), j1.Eta(), j1.Phi(), j1.M());
 
-	  float j2_corr = 0;
+	  float j2_corr = 1;
 	  if(vec_hf_flavour[index_matched_jet_match[2]]==4) j2_corr = j2.GetBJetRegressionNN("CCorr");
           else if(vec_hf_flavour[index_matched_jet_match[2]]==5) j2_corr = j2.GetBJetRegressionNN("BCorr");
 	  
@@ -635,11 +930,16 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       //second bjet is out of selection -> 4 bit        
       FillHist(param.Name+"/Objects_In_Sel_Jet", switch_included, weight, 18, -2, 16);
     }//if(!IsData)
-
-  return;
-
+  
   //To match index of jet_match (loose jet wo/ lepton veto) and jet. If 
   Index_Converter(vec_sel_jet, vec_sel_jet_match, index_matched_jet_match, index_matched_jet);
+
+  cout << "test index_matched_jet[i]" << endl;
+  for(int i=0; i<4; i++){ cout << index_matched_jet[i] << endl; }
+  
+  //To estimate the fraction of the included events
+  if(Chk_Included(index_matched_jet)==0) FillHist(param.Name+"/Included", 1, weight, 2, 0, 2);
+  else FillHist(param.Name+"/Included", 0, weight, 2, 0, 2);
 
   // cout << "n_size sel_jet = " << vec_sel_jet.size() << ", Index of matched_sel_jet[4]" << endl;
   // for(int i=0; i<4; i++)
@@ -647,6 +947,33 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   //          cout << index_matched_jet[i] << " ";
   //        }
   // cout << endl;
+
+  //
+  if(!IsData && run_template_truth)
+    {
+      if(index_matched_jet[1]<0 || index_matched_jet[2]<0) return;
+
+      Jet jet_w_u = vec_sel_jet[index_matched_jet[1]];
+      Jet jet_w_d = vec_sel_jet[index_matched_jet[2]];
+
+      bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_u = Get_CvsB(jet_w_u);
+      cvsl_w_u = Get_CvsL(jet_w_u);
+
+      bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_d = Get_CvsB(jet_w_d);
+      cvsl_w_d = Get_CvsL(jet_w_d);
+
+      int index = -1;
+      if(decay_mode==21) index = 0;
+      else if(decay_mode==23) index = 1;
+      else if(decay_mode==41) index = 2;
+      else if(decay_mode==43) index = 3;
+      else if(decay_mode==45) index = 4;
+      if(index!=-1) template_truth_tree[index]->Fill();
+
+      return;
+    }//if(!IsData && run_template_truth)
 
   //kinematic fitter
   vector<float> vec_resolution_pt;
@@ -658,10 +985,104 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 
       vec_resolution_pt.push_back(resolution_pt*resolution_pt_sf);
     }
-
+ 
   fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, muon, met, chk_matched_jets_only, index_matched_jet);
   fitter_driver->Scan();
 
+  //HF contamination score
+  Results_Container results_container = fitter_driver->Get_Results();
+
+  n_b_jet_f = n_b_jet;
+  n_c_jet_f = n_c_jet;
+  best_mva_score = results_container.best_mva_score;
+  del_phi_had_t_lep_t = results_container.best_del_phi_had_t_lep_t;
+
+  theta_b_b = 999;
+  for(int i=0; i<n_sel_jet; i++)
+    {
+      if(!vec_btag[i])  continue;
+
+      Jet b0 = vec_sel_jet[i];
+
+      for(int j=i+1; j<n_sel_jet; j++)
+        {
+          if(!vec_btag[j]) continue;
+
+          Jet b1 = vec_sel_jet[j];
+
+          float theta_b_b_new = b0.Angle(b1.Vect());
+
+          if(theta_b_b_new<theta_b_b) theta_b_b = theta_b_b_new;
+        }
+    }
+  
+  theta_c_c = 999;
+  for(int i=0; i<n_sel_jet; i++)
+    {
+      if(!vec_ctag[i]) continue;
+      
+      Jet c0 = vec_sel_jet[i];
+      
+      for(int j=i+1; j<n_sel_jet; j++)
+	{
+	  if(!vec_ctag[j]) continue;
+
+	  Jet c1 = vec_sel_jet[j];
+
+	  float theta_c_c_new = c0.Angle(c1.Vect());
+
+	  if(theta_c_c_new<theta_c_c) theta_c_c = theta_c_c_new;
+	}
+    }
+
+  int index[2];
+  index[0] = results_container.best_index_w_u;
+  index[1] = results_container.best_index_w_d;
+
+  for(int i=0; i<2; i++)
+    {
+      Jet jet_w_candi = vec_sel_jet[index[i]];
+
+      int index_closest_b = -1;
+      float theta_b = 999;
+      //float mass_b = 999;
+      for(int j=0; j<n_sel_jet; j++)
+	{
+	  if(!vec_btag[j]) continue;
+	  
+	  Jet bjet = vec_sel_jet[j];
+
+	  //if two jets are same
+	  if(Compare_Jet(jet_w_candi, bjet)) continue;
+
+	  float theta_b_new = jet_w_candi.Angle(bjet.Vect());
+	  
+	  if(theta_b_new<theta_b)
+	    {
+	      index_closest_b = j;
+	      theta_b = theta_b_new;
+	    }
+	}//loop over bjets
+      
+      if(i==0)
+	{
+	  theta_w_u_b = theta_b;
+
+	  w_u_b_bscore = vec_sel_jet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
+	  m_w_u_b = (jet_w_candi+vec_sel_jet[index_closest_b]).M();
+	}
+      else if(i==1)
+	{
+	  theta_w_d_b = theta_b;
+
+	  w_d_b_bscore = vec_sel_jet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
+	  m_w_d_b = (jet_w_candi+vec_sel_jet[index_closest_b]).M();
+	}
+    }//loop over w candidate
+  
+  if(n_c_jet<=1) mva_hf_score = reader_hf_contamination_lessthantwo->EvaluateMVA("LessThanTwo");
+  else if(2<=n_c_jet) mva_hf_score = reader_hf_contamination_morethantwo->EvaluateMVA("MoreThanTwo");
+  
   //Permutation Tree for signal study 
   if(!IsData && run_permutation_tree)
     {
@@ -671,12 +1092,12 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       gen_neutrino_px = gen_neutrino.Px();
       gen_neutrino_py = gen_neutrino.Py();
       gen_neutrino_pz = gen_neutrino.Pz();
-
+      
       met_px = met.Px();
       met_py = met.Py();
-
+      
       Results_Container results_container = fitter_driver->Get_Results();
-    
+      
       //search correct index first
       unsigned int index_correct = 999999;//should be very large number
       float diff_pz = 99999.;
@@ -736,14 +1157,30 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
              index_matched_jet[2]==index_w_d && index_matched_jet[3]==index_lep_t_b) chk_jet_permutation_match = true;
 	  else chk_jet_permutation_match = false;
 
-       	  had_t_b_pt = vec_sel_jet[index_had_t_b].Pt();
+	  //pt
+	  had_t_b_pt = vec_sel_jet[index_had_t_b].Pt();
 	  w_u_pt = vec_sel_jet[index_w_u].Pt();
        	  w_d_pt = vec_sel_jet[index_w_d].Pt();
        	  lep_t_b_pt = vec_sel_jet[index_lep_t_b].Pt();
 
-       	  had_t_b_bscore = vec_sel_jet[index_had_t_b].GetTaggerResult(JetTagging::DeepJet);
-       	  lep_t_b_bscore = vec_sel_jet[index_lep_t_b].GetTaggerResult(JetTagging::DeepJet);
+	  //tagging scores
+	  bvsc_had_t_b = vec_sel_jet[index_had_t_b].GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_had_t_b = Get_CvsB(vec_sel_jet[index_had_t_b]);
+	  cvsl_had_t_b = Get_CvsL(vec_sel_jet[index_had_t_b]);
+       	  
+	  bvsc_w_u = vec_sel_jet[index_w_u].GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_w_u = Get_CvsB(vec_sel_jet[index_w_u]);
+	  cvsl_w_u = Get_CvsL(vec_sel_jet[index_w_u]);
 
+	  bvsc_w_d = vec_sel_jet[index_w_d].GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_w_d = Get_CvsB(vec_sel_jet[index_w_d]);
+          cvsl_w_d = Get_CvsL(vec_sel_jet[index_w_d]);
+
+	  bvsc_lep_t_b = vec_sel_jet[index_lep_t_b].GetTaggerResult(JetTagging::DeepJet);
+	  cvsb_lep_t_b = Get_CvsB(vec_sel_jet[index_lep_t_b]);
+	  cvsl_lep_t_b = Get_CvsL(vec_sel_jet[index_lep_t_b]);
+	  
+	  //angles
 	  del_phi_w_u_w_d = results.del_phi_w_u_w_d;
 	  del_phi_had_w_had_t_b = results.del_phi_had_w_had_t_b;
 	  del_phi_lep_neu = results.del_phi_lep_neu;
@@ -790,95 +1227,326 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  
        	  if(i==index_correct) permutation_tree_correct->Fill();
        	  else permutation_tree_wrong->Fill();
-	  
 	}//for(unsigned int i=0; i<result_container.vec_results.size(); ++i)
       
       return;
     }//if(!IsData && run_permutation_tree)
     
+  //HF Contamination
+  if(!IsData && run_hf_contamination_tree)
+    {
+      cout << "test run_hf_contamination_tree" << endl;
+      
+      //if(n_b_jet<3) return; 
+
+      Results_Container results_container = fitter_driver->Get_Results();
+      if(!fitter_driver->Check_Status()) return;
+                 
+      chk_hf_contamination = false;
+
+      int index[2];
+      index[0] = results_container.best_index_w_u;
+      index[1] = results_container.best_index_w_d;
+      
+      for(int i=0; i<2; i++)
+	{
+	  Jet jet = vec_sel_jet[index[i]];
+	  
+	  int hf_flavour = jet.GenHFHadronMatcherFlavour();
+	  int hf_origin = jet.GenHFHadronMatcherOrigin();
+
+	  if(hf_origin==21) chk_hf_contamination = true;
+	}
+
+      //vec_bjet for easy handling
+      vector<Jet> vec_bjet;
+      for(int i=0; i<n_sel_jet; i++)
+	{
+	  if(vec_btag[i]==true) vec_bjet.push_back(vec_sel_jet[i]);
+	}
+
+      //vec_cjet for easy handling
+      vector<Jet> vec_cjet;
+      for(int i=0; i<n_sel_jet; i++)
+	{
+	  if(vec_ctag[i]==true) vec_cjet.push_back(vec_sel_jet[i]);
+	}
+
+      best_mva_score = results_container.best_mva_score;
+      del_phi_had_t_lep_t = results_container.best_del_phi_had_t_lep_t;
+      
+      theta_b_b = 999;
+      for(int i=0; i<n_b_jet; i++)
+        {
+          Jet b0 = vec_bjet[i];
+
+          for(int j=i+1; j<n_b_jet; j++)
+            {
+              Jet b1 = vec_bjet[j];
+
+              float theta_b_b_new = b0.Angle(b1.Vect());
+
+              if(theta_b_b_new<theta_b_b) theta_b_b = theta_b_b_new;
+            }
+        }
+
+      //not useful... 
+      theta_c_c = 999;
+      for(int i=0; i<n_c_jet; i++)
+	{
+	  Jet c0 = vec_cjet[i];
+	  
+	  for(int j=i+1; j<n_c_jet; j++)
+	    {
+	      Jet c1 = vec_cjet[j];
+
+	      float theta_c_c_new = c0.Angle(c1.Vect());
+
+	      if(theta_c_c_new<theta_c_c) theta_c_c = theta_c_c_new;
+	    }
+	}
+
+      Jet jet_w_u = vec_sel_jet[index[0]];
+      Jet jet_w_d = vec_sel_jet[index[1]];
+     
+      theta_p_had_w = results_container.best_theta_w_u_w_d*(jet_w_u+jet_w_d).P();
+
+      for(int i=0; i<2; i++)
+	{
+	  Jet jet_w_candi = vec_sel_jet[index[i]];
+	  
+	  int index_closest_b = -1;
+	  int index_smallest_b = -1;
+	  float theta_b = 999;
+	  //float mass_b = 999;
+	  for(int j=0; j<n_b_jet; j++)
+	    {
+	      Jet bjet = vec_bjet[j];
+	      
+	      //if two jets are same
+	      if(Compare_Jet(jet_w_candi, bjet)) continue;
+	      
+	      float theta_b_new = jet_w_candi.Angle(bjet.Vect());
+	      //float mass_b_new = (jet_w_candi+bjet).M();
+
+	      if(theta_b_new<theta_b)
+		{
+		  index_closest_b = j;
+		  theta_b = theta_b_new;
+		}
+
+	      //if(mass_b_new<mass_b) mass_b = mass_b_new;
+	    }//loop over bjets
+	  
+	  if(i==0)
+	    {
+	      theta_w_u_b = theta_b;
+	      
+	      w_u_b_bscore = vec_bjet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
+	      m_w_u_b = (jet_w_candi+vec_bjet[index_closest_b]).M();
+	    }
+	  else if(i==1)
+	    {
+	      theta_w_d_b = theta_b;
+	      
+	      w_d_b_bscore = vec_bjet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
+	      m_w_d_b = (jet_w_candi+vec_bjet[index_closest_b]).M();
+	    }
+	}//loop over w candidate
+
+      if(chk_hf_contamination) hf_contamination_tree_correct->Fill();
+      else hf_contamination_tree_wrong->Fill();
+      
+      return;
+    }//if(!IsData && run_hf_contamination_tree)
+
   //KF Evaluation
   if(!IsData && run_kf_eval)
     {
       cout << "test run_kf_eval" << endl;
 
-      //matching succeeded or failed
-      //Consider only events with matching succeed at this stage
-      for(int i=0; i<4; ++i)
+      Results_Container results_container = fitter_driver->Get_Results();
+      if(!fitter_driver->Check_Status())
 	{
-	  if(index_matched_jet_match[i]==-999)
-	    {
-	      cout << "failed at gen-jet matching" << endl;
-	      return;
-	    }
+	  cout << "Test Fitter fail" << endl;
 
-	  if(surely_matched[i]==false && 0.4<matched_jet_dr[i])
-	    {
-	      cout << "matching badly" << endl;
-	      return;
-	    }
+	  if(Chk_Included(index_matched_jet)==0) chk_included = true;
+	  else chk_included = false;
+	  
+	  if(chk_included) FillHist(param.Name+"/KF_Eval_Fail", n_sel_jet, n_b_jet, 1, 10, 0, 10, 8, 0, 8);
+	
+	  return;
 	}
+      
+      //chk included
+      if(Chk_Included(index_matched_jet)==0) chk_included = true;
+      else chk_included = false;
+      cout << "Chk Included = " << chk_included << endl;
 
-      //check included
+      //Fitter correct
+      int index_had_t_b = results_container.best_index_had_t_b;
+      int index_w_u = results_container.best_index_w_u;
+      int index_w_d = results_container.best_index_w_d;
+      int index_lep_t_b = results_container.best_index_lep_t_b;
+      
+      // cout << "run_kf_eval" << endl;
+      // cout << index_matched_jet_match[1] << " " << index_matched_jet_match[2] << endl;
+      // cout << index_w_u << " " << index_w_d << endl;
+
+      int fitter_correct = 0;
+      // if(-1<index_matched_jet_match[1] && -1<index_matched_jet[2])
+      // 	{
+      // 	  Jet jet_gen_matched[2] = {vec_sel_jet_match.at(index_matched_jet_match[1]), vec_sel_jet_match.at(index_matched_jet_match[2])};
+      // 	  Jet jet_kf_matched[2] = {vec_sel_jet.at(index_w_u), vec_sel_jet.at(index_w_d)};
+	  
+      // 	  fitter_correct = Compare_Jet_Pair(jet_gen_matched, jet_kf_matched);
+      // 	}
+      // else fitter_correct = 0;
+
+      // if(fitter_correct==0) swapped = -1;
+      // else if(fitter_correct==1) swapped = 0;
+      // else if(fitter_correct==2) swapped = 1;
+
+      if(index_matched_jet[1]==index_w_u && index_matched_jet[2]==index_w_d)
+      	{
+      	  fitter_correct = 1;
+      	  swapped = 0;
+      	}
+      else if(index_matched_jet[1]==index_w_d && index_matched_jet[2] ==index_w_u)
+      	{
+      	  fitter_correct = 1;
+      	  swapped = 1;
+      	}
+      else 
+      	{
+      	  fitter_correct = 0;
+      	  swapped = -1;
+      	}
+
+      // cout << "KF Correct = " << fitter_correct << endl;
+      // cout << "Swapped = " << swapped << endl;
+      
+      best_chi2 = results_container.best_chi2;
+      best_mva_score = results_container.best_mva_score;
+
       if(Chk_Included(index_matched_jet)==0) chk_included = true;
       else chk_included = false;
 
-      if(chk_included==false) return;
-      cout << "chk_included = " << chk_included << endl;
-      
-      Results_Container results_container = fitter_driver->Get_Results();
-      if(fitter_driver->Check_Status())
+      if(chk_included)
 	{
-	  int index_had_t_b = results_container.best_index_had_t_b;
-	  int index_w_u = results_container.best_index_w_u;
-	  int index_w_d = results_container.best_index_w_d;
-	  int index_lep_t_b = results_container.best_index_lep_t_b;
-	  
-	  //Fitter correct
-	  Jet jet_gen_matched[2] = {vec_sel_jet_match.at(index_matched_jet_match[1]), vec_sel_jet_match.at(index_matched_jet_match[2])};
-	  Jet jet_kf_matched[2] = {vec_sel_jet.at(index_w_u), vec_sel_jet.at(index_w_d)};
-	  bool fitter_correct = Compare_Jet_Pair(jet_gen_matched, jet_kf_matched);
-      
-	  best_chi2 = results_container.best_chi2;
-	  best_mva_score = results_container.best_mva_score;
-	  
 	  if(fitter_correct)
 	    {
-	      FillHist(param.Name+"/KF_Eval_Correct", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
+	      FillHist(param.Name+"/KF_Eval_Correct", n_sel_jet, n_b_jet, 1, 10, 0, 10, 8, 0, 8);
 	      FillHist(param.Name+"/Chi2", best_chi2, 1, 1, 200, 0, 200, 2, 0, 2);
-	      FillHist(param.Name+"/MVA_Score", best_mva_score, 1, 1, 200, -0.5, 0.5, 2, 0, 2);
+	      FillHist(param.Name+"/MVA_Score", best_mva_score, 1, 1, 200, -1, 1, 2, 0, 2);
 	    }
-	  else 
+	  else
 	    {
-	      FillHist(param.Name+"/KF_Eval_Wrong", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
+	      FillHist(param.Name+"/KF_Eval_Wrong", n_sel_jet, n_b_jet, 1, 10, 0, 10, 8, 0, 8);
 	      FillHist(param.Name+"/Chi2", best_chi2, 0, 1, 200, 0, 200, 2, 0, 2);
-              FillHist(param.Name+"/MVA_Score", best_mva_score, 0, 1, 200, -0.5, 0.5, 2, 0, 2);
+	      FillHist(param.Name+"/MVA_Score", best_mva_score, 0, 1, 200, -1, 1, 2, 0, 2);
 	    }
 	}
-      else
+      
+      //mt of W 
+      met_px = met.Px();
+      met_py = met.Py();
+      mt = Calculate_Mt(muon, met_px, met_py);
+            
+      //HF contamination
+      cout << "test HF contamination" << endl;
+      Jet jet_w[2];
+      jet_w[0] = vec_sel_jet[index_w_u];
+      jet_w[1] = vec_sel_jet[index_w_d];
+      
+      chk_hf_contamination = false;
+      for(int i=0; i<2; ++i)
 	{
-	  cout << "Test Fitter fail" << endl;
-	  FillHist(param.Name+"/KF_Eval_Wrong", n_sel_jet, n_btag, 1, 10, 0, 10, 8, 0, 8);
+	  int hf_flavour = jet_w[i].GenHFHadronMatcherFlavour();
+	  int hf_origin = jet_w[i].GenHFHadronMatcherOrigin();
+
+	  cout << "test hf_flavour = " << hf_flavour << ", hf_origin = " << hf_origin << endl; 
+
+	  if(hf_origin==21) chk_hf_contamination = true;
 	}
+      cout << "HF Contamination = " << chk_hf_contamination << endl;
+      cout << endl;
 
-      //if(fitter_correct) kf_eval_tree_correct->Fill();
-      //else kf_eval_tree_wrong->Fill();
+      Jet jet_had_t_b = vec_sel_jet.at(index_had_t_b);
+      Jet jet_w_u = vec_sel_jet.at(index_w_u);
+      Jet jet_w_d = vec_sel_jet.at(index_w_d);
+      Jet jet_lep_t_b = vec_sel_jet.at(index_lep_t_b);
 
+      bvsc_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_had_t_b = Get_CvsB(jet_had_t_b);
+      cvsl_had_t_b = Get_CvsL(jet_had_t_b);
+
+      bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_u = Get_CvsB(jet_w_u);
+      cvsl_w_u = Get_CvsL(jet_w_u);
+
+      bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_d = Get_CvsB(jet_w_d);
+      cvsl_w_d = Get_CvsL(jet_w_d);
+
+      bvsc_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_lep_t_b = Get_CvsB(jet_lep_t_b);
+      cvsl_lep_t_b = Get_CvsL(jet_lep_t_b);
+
+      if(fitter_correct) kf_eval_tree_correct->Fill();
+      else kf_eval_tree_wrong->Fill();
+      
       return;
     }//if(!IsData && run_kf_eval)
 
+  //Template_Truth
+  if(!IsData && run_template_truth)
+    {
+      Results_Container results_container = fitter_driver->Get_Results();
+      if(!fitter_driver->Check_Status()) return;
+
+      best_mva_score = results_container.best_mva_score;
+
+      int index_had_t_b = results_container.best_index_had_t_b;
+      int index_w_u = results_container.best_index_w_u;
+      int index_w_d = results_container.best_index_w_d;
+      int index_lep_t_b = results_container.best_index_lep_t_b;
+
+      if(index_matched_jet[0]!=index_had_t_b || index_matched_jet[1]!=index_w_u ||
+	 index_matched_jet[2]!=index_w_d || index_matched_jet[3]!=index_lep_t_b) return;
+
+      Jet jet_w_u = vec_sel_jet[index_w_u];
+      Jet jet_w_d = vec_sel_jet[index_w_d];
+
+      bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_u = Get_CvsB(jet_w_u);
+      cvsl_w_u = Get_CvsL(jet_w_u);
+
+      bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
+      cvsb_w_d = Get_CvsB(jet_w_d);
+      cvsl_w_d = Get_CvsL(jet_w_d);
+
+      int index = -1;
+      if(decay_mode==21) index = 0;
+      else if(decay_mode==23) index = 1;
+      else if(decay_mode==41) index = 2;
+      else if(decay_mode==43) index = 3;
+      else if(decay_mode==45) index = 4;
+      if(index!=-1) template_truth_tree[index]->Fill(); 
+      
+      return;
+    }//if(!IsData && run_template_truth)
+
   bool chk_fitter_status = fitter_driver->Check_Status();
-  bool fitter_correct = false;
   if(chk_fitter_status)
     {
-      FillHist(param.Name+"/Cut_Flow", Cut_Flow::KF_Pass, weight_cut_flow, n_cut_flow, 0, n_cut_flow);
+      FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::KF_Pass, weight, n_cut_flow, 0, n_cut_flow);
       
-      FillHist(param.Name+"/Fitter_Succeeded", 0., weight, 1, 0., 1.);
-      FillHist(param.Name+"/Fitter_Succeeded_NW", 0., 1, 1, 0., 1.);
-
       Results_Container results_container = fitter_driver->Get_Results();
       
-      float chi2 = results_container.best_chi2;
-      float mva_score = results_container.best_mva_score;
+      best_chi2 = results_container.best_chi2;
+      best_mva_score = results_container.best_mva_score;
+      mt = Calculate_Mt(muon, met_px, met_py);
 
       int index_had_t_b = results_container.best_index_had_t_b;
       int index_w_u = results_container.best_index_w_u;
@@ -889,92 +1557,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       Jet jet_w_u = vec_sel_jet.at(index_w_u);
       Jet jet_w_d = vec_sel_jet.at(index_w_d);
       Jet jet_lep_t_b = vec_sel_jet.at(index_lep_t_b);
-      
-      float initial_had_t_m = results_container.best_initial_had_t_mass;
-      float initial_had_w_m = results_container.best_initial_had_w_mass;
-      float initial_lep_t_m = results_container.best_initial_lep_t_mass;
-      float initial_lep_w_m = results_container.best_initial_lep_w_mass;
-
-      float fitted_had_t_m = results_container.best_fitted_had_t_mass;
-      float fitted_had_w_m = results_container.best_fitted_had_w_mass;
-      float fitted_lep_t_m = results_container.best_fitted_lep_t_mass;
-      float fitted_lep_w_m = results_container.best_fitted_lep_w_mass;
-      
-      FillHist(param.Name+"/Chi2", chi2, weight, 30, 0, 30);
-
-      FillHist(param.Name+"/Mva_Score", mva_score, weight, 50, -1, 1);
-      
-      FillHist(param.Name+"/Had_T_M_Initial", chi2, initial_had_t_m, weight, 500, 0, 250, 50, 0, 350);
-      FillHist(param.Name+"/Had_W_M_Initial", chi2, initial_had_w_m, weight, 500, 0, 250, 50, 0, 200);
-      FillHist(param.Name+"/Lep_T_M_Initial", chi2, initial_lep_t_m, weight, 500, 0, 250, 50, 0, 350);
-      FillHist(param.Name+"/Lep_W_M_Initial", chi2, initial_lep_w_m, weight, 500, 0, 250, 50, 0, 200);
-
-      FillHist(param.Name+"/Had_T_M_Fitted", chi2, fitted_had_t_m, weight, 500, 0, 250, 50, 0, 350);
-      FillHist(param.Name+"/Had_W_M_Fitted", chi2, fitted_had_w_m, weight, 500, 0, 250, 50, 0, 200);
-      FillHist(param.Name+"/Lep_T_M_Fitted", chi2, fitted_lep_t_m, weight, 500, 0, 250, 50, 0, 350);
-      FillHist(param.Name+"/Lep_W_M_Fitted", chi2, fitted_lep_w_m, weight, 500, 0, 250, 50, 0, 200);
-
-      if(!IsData)
-	{
-	  //check gen-jet matching and KF give same result or not
-	  if(index_matched_jet_match[1]!=-999 && index_matched_jet_match[2]!=-999)
-	    {
-	      Jet jet_gen_matched[2] = {vec_sel_jet_match.at(index_matched_jet_match[1]), vec_sel_jet_match.at(index_matched_jet_match[2])};
-	      Jet jet_kf_matched[2] = {vec_sel_jet.at(index_w_u), vec_sel_jet.at(index_w_d)};
-	      fitter_correct = Compare_Jet_Pair(jet_gen_matched, jet_kf_matched);
-	    
-	      
-	    }     
-	  else fitter_correct = false;
-	    
-	  if(run_debug)
-	    {
-	      cout << "Fitter converged: " << index_had_t_b << ", " << index_w_u << ", " << index_w_d << ", " << index_lep_t_b << endl;
-	      for(unsigned int i=0; i<vec_sel_jet.size(); i++)
-		{
-		  Jet jet = vec_sel_jet.at(i);
-		  
-		  int jet_flavour = jet.GenHFHadronMatcherFlavour();
-		  int jet_origin = jet.GenHFHadronMatcherOrigin();
-		  
-		  float pt = jet.Pt();
-
-		  cout << i << ", " << jet_flavour << ", " << jet_origin << ", " << pt << endl;   
-		}
-
-	      cout << "Fitter Correct = " << fitter_correct << endl;
-	      cout << "Included = " << chk_included << endl;
- 	    }
-	  
-	  // //Histo for HF contamination
-	  // int hf_contamination = 0;
-	  // for(int i=0; i<2; i++)
-	  //   {
-	  //     Jet jet;
-	  //     if(i==0) jet = vec_sel_jet.at(index_w_u);
-	  //     else jet = vec_sel_jet.at(index_w_d);
-
-	  //     int jet_flavour = jet.GenHFHadronMatcherFlavour();
-	  //     int jet_origin = jet.GenHFHadronMatcherOrigin();
-	      
-	  //     int cases = 0;
-	  //     if(Abs(jet_origin)==6) cases = 1;
-	  //     else if(Abs(jet_origin)==21) cases = 2;
-	      
-	  //     hf_contamination += (2*i+1)*cases;
-	  //   }
-	  // FillHist(param.Name+"/HF_Contamination", hf_contamination, weight, 9, 0, 9);
-
-	  int fitter_score;
-	  if(fitter_correct) fitter_score = 0;
-	  else
-	    {
-	      if(chk_included==0) fitter_score = 1;
-	      else fitter_score = 2;
-	    }
-	  FillHist(param.Name+"/Fitter_Correct", fitter_score, chi2, weight, 6, 0, 6, 100, 0, 20);
-	}
-      
+            
       /* Template */
       bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
       cvsb_w_u = Get_CvsB(jet_w_u);
@@ -983,6 +1566,9 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
       cvsb_w_d = Get_CvsB(jet_w_d);
       cvsl_w_d = Get_CvsL(jet_w_d);
+
+      jet_mass_w_u = jet_w_u.M();
+      jet_mass_w_d = jet_w_d.M();
 
       result_tree->Fill();
 
@@ -995,11 +1581,11 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       FillHist(param.Name+"/C_vs_L_W_D", cvsl_w_d, weight, 10, 0, 1);
 
       //n b-tagged
-      float n_btag_w = 0;
-      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < bvsc_w_u) n_btag_w++;
-      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < bvsc_w_d) n_btag_w++;
+      float n_b_jet_w = 0;
+      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < bvsc_w_u) n_b_jet_w++;
+      if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < bvsc_w_d) n_b_jet_w++;
             
-      FillHist(param.Name+"/N_BTag_W_Candidate", n_btag_w, weight, 3, 0, 3);
+      FillHist(param.Name+"/N_B_Jet_W_Candidate", n_b_jet_w, weight, 3, 0, 3);
 
       //n c-tagged
       
@@ -1017,13 +1603,8 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  cout << "Fitter failed" << endl;
 	  cout << "Included = " << chk_included << endl;
 	}
-      
-      int fitter_score;
-      if(chk_included==0) fitter_score = 3;
-      else fitter_score = 4;
-      chi2 = 999;
-      FillHist(param.Name+"/Fitter_Correct", fitter_score, chi2, weight, 6, 0, 6, 100, 0, 20);
-    }
+    }     
+ 
   
   return;
 }//Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
@@ -1032,10 +1613,23 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 
 float Vcb_Mu::Calculate_Mt(const Particle& lepton, const float& neu_px, const float& neu_py)
 {
-  float px = lepton.Px() + neu_px;
-  float py = lepton.Py() + neu_py;
+  //float px = lepton.Px() + neu_px;
+  //float py = lepton.Py() + neu_py;
   
-  float mt = TMath::Sqrt(W_MASS*W_MASS + px*px + py*py);
+  //float mt = TMath::Sqrt(W_MASS*W_MASS + px*px + py*py);
+
+  float lepton_px = lepton.Px();
+  float lepton_py = lepton.Py();
+  float lepton_et = Sqrt(lepton_px*lepton_px + lepton_py*lepton_py);
+  
+  float neu_et = Sqrt(neu_px*neu_px + neu_py*neu_py);
+
+  TVector3 lepton3(lepton_px, lepton_py, 0);
+  TVector3 neu3(neu_px, neu_py, 0);
+
+  float angle = lepton3.Angle(neu3);
+  
+  float mt = Sqrt(lepton_et*neu_et*(1-Cos(angle)));
 
   return mt;
 }//float Vcb_Mu::Calculate_Mt(const Particle& lepton, const Particle& met)
@@ -1048,7 +1642,7 @@ int Vcb_Mu::Chk_Included(const int index_matched_jet[4])
   unsigned int tmp = 1;
   for(int i=0; i<4; ++i)
     {     
-      if(index_matched_jet[i]==-999) result += tmp;
+      if(index_matched_jet[i]<0) result += tmp;
 
       tmp = tmp << 1;
     }//for(int i=0; i<4; i++)
@@ -1059,7 +1653,18 @@ int Vcb_Mu::Chk_Included(const int index_matched_jet[4])
 
 //////////
 
-bool Vcb_Mu::Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2])
+bool Vcb_Mu::Compare_Jet(const Jet& jet0, const Jet& jet1)
+{
+  float pt0 = jet0.Pt();
+  float pt1 = jet1.Pt();
+
+  if(Abs(pt0-pt1)<1e-8) return true;
+  else return false;
+}//bool Vcb_Mu::Compare_Jet(const Jet& jet0, const Jet& jet1)
+
+//////////
+
+int Vcb_Mu::Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2])
 {
   Double_t pt0[2] = {jet0[0].Pt(), jet0[1].Pt()};
   // float eta0[2] = {jet0[0].Eta(), jet0[1].Eta()};
@@ -1069,11 +1674,142 @@ bool Vcb_Mu::Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2])
   // float eta1[2] = {jet1[0].Eta(), jet1[1].Eta()};
   // float phi1[2] = {jet1[0].Phi(), jet1[1].Phi()};
 
-  if(Abs(pt0[0]-pt1[0])<1e-8 && Abs(pt0[1]-pt1[1])<1e-8) return true;
-  else if(Abs(pt0[0]-pt1[1])<1e-8 && Abs(pt0[1]-pt1[0])<1e-8) return true; 
+  //Same jet pair
+  if(Abs(pt0[0]-pt1[0])<1e-8 && Abs(pt0[1]-pt1[1])<1e-8) return 1;
   
-  return false;
+  //Same jet pair but, swapped
+  else if(Abs(pt0[0]-pt1[1])<1e-8 && Abs(pt0[1]-pt1[0])<1e-8) return 2; 
+  
+  //different jet pair
+  return 0;
 }//bool Vcb_Mu::Compare_Jet_Pair(const Jet& jet0, const Jet& jet1)
+
+//////////
+
+void Vcb_Mu::Gen_Match_Residual(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4])
+{
+  //For gen particles which are not matched surely, this method will try to match those to jeco jet using DR matching
+  
+  const float rel_pt_diff_cut = 1.5;
+  const float dr_cut = 0.4;
+
+  int possible_matched_index[4] = {-999, -999, -999, -999};
+  float dr_smallest[4] = {999, 999, 999, 999};
+  for(int i=0; i<4; ++i)
+    {
+      //cout << "gen " << i << " " << index_gen[i] << " " << index_matched_jet[i] << endl;
+      
+      if(index_matched_jet[i]!=-999) continue;
+      
+      Gen gen = vec_gen[index_gen[i]];
+      
+      float gen_pt = gen.Pt();
+      float gen_eta = gen.Eta();
+      float gen_phi = gen.Phi();
+     
+      //cout << "gen pt = " << gen_pt << " " << gen_eta << " " << gen_phi << endl;
+
+      //acceptance test. If gen particle is out of acceptance, matching is not tried 
+      // if(JET_ETA_MATCH<Abs(gen_eta))
+      //  	{
+      // 	  //cout << "Out of acceptance" << endl;
+      // 	  index_matched_jet[i] = -1;//gen is out of acceptance
+      //  	  continue;
+      //  	}
+
+      for(unsigned int j=0; j<vec_jet.size(); ++j)
+	{
+	  //if jet is aleady matched surely with other gen particles, continue
+	  bool chk_allocated = false;
+	  for(int k=0; k<4; ++k)
+	    {
+	      if(j==index_matched_jet[k])
+		{
+		  chk_allocated = true;
+		  break;
+		}
+	    }
+	  if(chk_allocated) continue;
+	  
+	  //if origin is tagged by GenHFHadronMatcher, continue
+	  int jet_flavour = vec_hf_flavour.at(j);
+          int jet_origin = vec_hf_origin.at(j);
+	  	  
+	  if(jet_origin!=-999) continue;
+	  
+	  Jet jet = vec_jet.at(j);
+
+	  float jet_pt = jet.Pt();
+	  float jet_eta = jet.Eta();
+	  float jet_phi = jet.Phi();
+	  
+	  float del_pt = gen_pt - jet_pt;
+	  float del_eta = gen_eta - jet_eta;
+	  float del_phi = gen_phi - jet_phi;
+
+	  float rel_pt_diff = Abs(del_pt/vec_jer[i]/jet_pt);
+	  
+	  float dr = Sqrt(del_eta*del_eta + del_phi*del_phi);
+	  
+	  if(rel_pt_diff<rel_pt_diff_cut && dr<dr_smallest[i]) 
+	    {
+	      dr_smallest[i] = dr;
+	      possible_matched_index[i] = j;
+	    }
+
+	  //cout << j << " " << jet_flavour << " " << jet_origin << " " << rel_pt_diff << " " << dr << " " << possible_matched_index[i] << endl;
+	  
+	}//loop over jet
+      
+      //if no jet is allocated to gen particle
+      if(possible_matched_index[i]==-999 || dr_cut<dr_smallest[i])
+	{
+	  //cout << "impossible to allocate jet to gen " << i << endl;
+	  index_matched_jet[i] = -2;//impossible to allocate any jet to gen particle
+	}
+
+      //cout << endl;
+    }//loop over gen 
+  
+  //if two or more gen particles are matched to same jet, gen particle with smallest dr is chosen
+  //then recursively call this method to allcate jet to the second ranked gen 
+  for(int i=0; i<3; ++i)
+    {
+      if(index_matched_jet[i]!=-999) continue;
+      
+      bool chk_overlap[4] = {false, false, false, false};
+      chk_overlap[i] = true;    
+      
+      for(int j=i+1; j<4; ++j)
+	{
+	  if(index_matched_jet[j]!=-999) continue;
+
+	  //same jet allocation found
+	  if(possible_matched_index[i]==possible_matched_index[j]) chk_overlap[j] = true;
+	}
+      
+      //find gen particle with smallest dr among overlaped gen
+      int gen_index_best_among_overlap = -999; 
+      float dr_smallest_among_overlap = 999;
+      for(int j=i; j<4; ++j)
+	{
+	  if(chk_overlap[j]!=true) continue;
+		  
+	  if(dr_smallest[j]<dr_smallest_among_overlap)
+	    {
+	      gen_index_best_among_overlap = j;
+	      dr_smallest_among_overlap = dr_smallest[j];
+	    }
+	}
+      
+      index_matched_jet[gen_index_best_among_overlap] = possible_matched_index[gen_index_best_among_overlap];
+      dr_return[gen_index_best_among_overlap] = dr_smallest[gen_index_best_among_overlap];
+
+      Gen_Match_Residual(vec_jet, vec_gen, vec_hf_flavour, vec_hf_origin, vec_jer, index_gen, index_matched_jet, surely_matched, dr_return);
+    }
+  
+  return;
+}//void Vcb_Mu::Gen_Match_Residual(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, int index_gen[4], int index_matched_jet[4], bool surely_matched[4])
 
 //////////
 
@@ -1185,64 +1921,66 @@ void Vcb_Mu::Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen
             }
 	}
     }//for(unsigned int i=0; i<vec_jet.size(); i++)
-
-
-  if(run_debug)
-    {
-      cout << endl;
-      cout << endl;
-      if(selected_w == 1) cout << "W+ decayed hadronically" << endl;
-      else cout << "W- decayed hadronically" << endl;
-      
-      for(unsigned int i=0; i<4; i++)
-      	{
-      	  if(index_gen[i]!=-999)
-      	    {
-      	      Gen gen = vec_gen.at(index_gen[i]);
-      	      int pid = gen.PID();
-	      
-      	      Gen gen_mother = vec_gen.at(gen.MotherIndex());
-      	      int m_pid = gen_mother.PID();
-
-      	      float gen_eta = gen.Eta();
-      	      float  gen_phi = gen.Phi();
-      	      float gen_pt = gen.Pt();
-	      
-      	      cout << "(" << index_gen[i] << ", " << pid << ", " << m_pid << ", " << gen_pt << ", " << gen_eta << ", " << gen_phi << "), ";
-	      
-      	    }
-      	  else 
-      	    {
-      	      cout << "(), ";
-      	    }
-      	}
-      cout << endl;
-           
-      for(unsigned int i=0; i<vec_jet.size(); i++)
-      	{
-      	  int jet_flavour = vec_hf_flavour.at(i);
-          int jet_origin = vec_hf_origin.at(i);
-	  
-      	  Jet jet = vec_jet.at(i);
-	  
-      	  float jet_eta = jet.Eta();
-      	  float jet_phi = jet.Phi();
-      	  float jet_pt =  jet.Pt();
-	  
-      	  float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
-      	  bool b_tagged = false;
-      	  if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score) b_tagged = true;
-	  
-      	  cout << "(" << jet_flavour << ", " << jet_origin << ", " << jet_pt << ", " << jet_eta << ", " << jet_phi << ", " << ", " << b_tagged << ")" << endl;
-      	}
-      cout << endl;
-      
-      for(int i=0; i<4; i++)
-	{
-	  cout << "Matched jet index = " << index_matched_jet[i] << ", surely matched = " << surely_matched[i] << ", d_r = " << dr_return[i] << endl;
-	}
-    }
   
+  // if(run_debug)
+  //   {
+  //     cout << endl;
+  //     cout << endl;
+  //     if(selected_w == 1) cout << "W+ decayed hadronically" << endl;
+  //     else cout << "W- decayed hadronically" << endl;
+      
+  //     for(unsigned int i=0; i<4; i++)
+  //     	{
+  //     	  if(index_gen[i]!=-999)
+  //     	    {
+  //     	      Gen gen = vec_gen.at(index_gen[i]);
+  //     	      int pid = gen.PID();
+	      
+  //     	      Gen gen_mother = vec_gen.at(gen.MotherIndex());
+  //     	      int m_pid = gen_mother.PID();
+
+  //     	      float gen_eta = gen.Eta();
+  //     	      float  gen_phi = gen.Phi();
+  //     	      float gen_pt = gen.Pt();
+	      
+  //     	      cout << "(" << index_gen[i] << ", " << pid << ", " << m_pid << ", " << gen_pt << ", " << gen_eta << ", " << gen_phi << "), ";
+	      
+  //     	    }
+  //     	  else 
+  //     	    {
+  //     	      cout << "(), ";
+  //     	    }
+  //     	}
+  //     cout << endl;
+           
+  //     for(unsigned int i=0; i<vec_jet.size(); i++)
+  //     	{
+  //     	  int jet_flavour = vec_hf_flavour.at(i);
+  //         int jet_origin = vec_hf_origin.at(i);
+	  
+  //     	  Jet jet = vec_jet.at(i);
+	  
+  //     	  float jet_eta = jet.Eta();
+  //     	  float jet_phi = jet.Phi();
+  //     	  float jet_pt =  jet.Pt();
+	  
+  //     	  float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
+  //     	  bool b_tagged = false;
+  //     	  if(mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score) b_tagged = true;
+	  
+  //     	  cout << "(" << jet_flavour << ", " << jet_origin << ", " << jet_pt << ", " << jet_eta << ", " << jet_phi << ", " << ", " << b_tagged << ")" << endl;
+  //     	}
+  //     cout << endl;
+      
+  //     for(int i=0; i<4; i++)
+  // 	{
+  // 	  cout << "Matched jet index = " << index_matched_jet[i] << ", surely matched = " << surely_matched[i] << ", d_r = " << dr_return[i] << endl;
+  // 	}
+  //     cout << endl;
+  //   }
+  
+  Gen_Match_Residual(vec_jet, vec_gen, vec_hf_flavour, vec_hf_origin, vec_jer, index_gen, index_matched_jet, surely_matched, dr_return);
+
   return;
 }//void Vcb_Mu::Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, int index_matched_jet[4], bool surely_matched[4], float dr_return[4])
 
@@ -1250,6 +1988,15 @@ void Vcb_Mu::Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen
 
 int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[2], int index_matched_jet[2], bool surely_matched[2], float dr_return[2])
 {
+  //this method is designed to find gen particles from W and to try to match to reco jet via GenHFHadronMatcher results
+ 
+  const int target_pdg_id_positive = 24; 
+  const int target_pdg_id_negative = -24;
+  
+  //For CHtoCB decay
+  //const int target_pdg_id_positive = 37;
+  //const int target_pdg_id_negative = -37;
+
   int index_last_w = -999;
   int index_last_aw = -999; 
   int index_d0_w = -999;
@@ -1268,18 +2015,18 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
       int m_index = gen.MotherIndex();
 
       //find last index of W+ and W-
-      if(pid==24) index_last_w = i;
-      if(pid==-24) index_last_aw = i;
+      if(pid==target_pdg_id_positive) index_last_w = i;
+      if(pid==target_pdg_id_negative) index_last_aw = i;
       
       //find decay products of W+
-      if(m_index == index_last_w && pid!=24)
+      if(m_index==index_last_w && pid!=target_pdg_id_positive)
 	{
 	  if(index_d0_w==-999)  index_d0_w = i;
 	  else index_d1_w = i;
 	}
       
       //find decay products of W-
-      if(m_index == index_last_aw && pid!=-24)
+      if(m_index==index_last_aw && pid!=target_pdg_id_negative)
 	{
 	  if(index_d0_aw==-999)  index_d0_aw = i;
           else index_d1_aw = i;
@@ -1289,7 +2036,7 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
   //if input sample is not TT, so both of W couldn't be found 
   if(index_last_w==-999 || index_last_aw==-999)
     {
-      if(run_debug) cout << "Can't find both of W" << endl;
+      //if(run_debug) cout << "Can't find both of W" << endl;
       return -999;
     }
   
@@ -1297,23 +2044,33 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
   //W+ decay hadronically
   if(Abs(vec_gen.at(index_d0_w).PID())<10)
     {
-      index_gen[0] = index_d0_w;
-      index_gen[1] = index_d1_w;
-
-      index_had_w[0] = index_d0_w;
-      index_had_w[1] = index_d1_w;
+      if(vec_gen.at(index_d0_w).PID()%2==0)
+	{
+	  index_gen[0] = index_d0_w;
+	  index_gen[1] = index_d1_w;
+	}
+      else 
+	{
+	  index_gen[0] = index_d1_w;
+	  index_gen[1] = index_d0_w;
+	}
       
       selected_w = 1;//mean W+ decayed hadronically
     }
   //W- decay hadronically
   else if(Abs(vec_gen.at(index_d0_aw).PID()<10))
     {
-      index_gen[0] = index_d0_aw;
-      index_gen[1] = index_d1_aw;
-      
-      index_had_w[0] = index_d0_aw;
-      index_had_w[1] = index_d1_aw;
-   
+      if(vec_gen.at(index_d0_aw).PID()%2==0)
+	{
+	  index_gen[0] = index_d0_aw;
+	  index_gen[1] = index_d1_aw;
+	}
+      else
+	{
+	  index_gen[0] = index_d1_aw;
+          index_gen[1] = index_d0_aw;
+	}
+
       selected_w = -1;//mean W- decayed hadronically
     }
   //no W decays hadronically
@@ -1323,158 +2080,59 @@ int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, 
 
       return -999;
     }
-  
-  //calculate del_r for W
-  vector<float> vec_dr[2];
-  vector<bool> vec_chk_pt_diff[2];
-  for(int i=0; i<2; i++)
-    {
-      Gen gen = vec_gen.at(index_had_w[i]);
-      
-      float gen_eta = gen.Eta();
-      float gen_phi = gen.Phi();
-      float gen_pt = gen.Pt();
-
-      for(unsigned int j=0; j<vec_jet.size(); j++)
-	{
-	  Jet jet = vec_jet.at(j);
-	  
-	  float jet_eta = jet.Eta();
-	  float jet_phi = jet.Phi();
-	  float jet_pt = jet.Pt();
-
-	  float del_eta = jet_eta - gen_eta;
-	  float del_phi = jet_phi - gen_phi;
-
-	  float del_r = Sqrt(Power(del_eta, 2.)+Power(del_phi, 2.));
-	  vec_dr[i].push_back(del_r);
-
-	  float del_pt = Abs(gen_pt - jet_pt);
-	  float max_pt_diff = vec_jer.at(j)*jet_pt;
-	  
-	  //maximum allowed pt diff for Gen matching
-	  if(del_pt < 1.6*max_pt_diff) vec_chk_pt_diff[i].push_back(true);
-	  else vec_chk_pt_diff[i].push_back(false);
- 	}//for(int j=0; j<vec_jet.size(); j++)
-    }//for(int i=0; i<2; i++)
-  
+   
   //matching with GenHFHadronMatcher information
   for(unsigned int i=0; i<vec_jet.size(); i++)
     {
       int hf_flavour = vec_hf_flavour.at(i);
       int hf_origin = vec_hf_origin.at(i); 
       
+      Jet jet = vec_jet.at(i);
+      
+      float jet_eta = jet.Eta();
+      float jet_phi = jet.Phi();
+      
       //w is tagged by GenHFHadronMatcher
-      if(Abs(hf_origin)==24)
+      if(Abs(hf_origin)==target_pdg_id_positive)
 	{
 	  for(int j=0; j<2; j++)
 	    {
-	      if(Abs(hf_flavour)==Abs(vec_gen.at(index_had_w[j]).PID()))
+	      if(Abs(hf_flavour)==Abs(vec_gen.at(index_gen[j]).PID()))
 		{
 		  index_matched_jet[j] = i;
 		  surely_matched[j] = true;
+
+		  Gen gen = vec_gen.at(index_gen[j]);
+
+		  float gen_eta = gen.Eta();
+		  float gen_phi = gen.Phi();
+		  
+		  float del_eta = jet_eta - gen_eta;
+		  float del_phi = jet_phi - gen_phi; 
+
+		  float del_r = Sqrt(Power(del_eta, 2.)+Power(del_phi, 2.));
+		  
+		  dr_return[j] = del_r;
 		} 
 	    }
 	}
     }
+ 
+  // cout << endl;
+  // cout << "Daughters from W"; 
+  // if(selected_w>0) cout << "+" << endl;
+  // else cout << "-" << endl;
+  // cout << "(" << index_gen[0] << ", " << vec_gen.at(index_gen[0]).PID() <<  "), (" << index_gen[1] << ", " <<  vec_gen.at(index_gen[1]).PID() << ")" << endl;
   
-  //for light jet, try DR matching + maximum pt diff
-  for(int i=0; i<2; i++)
-    {
-      //skip if W parton is matched surely with GenHFMatcher
-      if(surely_matched[i]==true)
-	{
-	  dr_return[i] = vec_dr[i].at(index_matched_jet[i]);
-	  continue;
-	}
+  // for(unsigned int i=0; i<vec_jet.size(); i++)
+  //   {
+  //     int jet_flavour = vec_hf_flavour.at(i);
+  //     int jet_origin = vec_hf_origin.at(i);
       
-      float closest_dr = 999; 
-      
-      for(unsigned int j=0; j<vec_jet.size(); j++)
-	{
-	  int hf_origin = vec_hf_origin.at(j);
-	  if(hf_origin!=-999) continue;
-
-	  float dr = vec_dr[i].at(j);
-	  bool chk_pt_diff = vec_chk_pt_diff[i].at(j);
-	  if(dr<closest_dr && chk_pt_diff==true)
-	    {
-	      closest_dr = dr;
-	      index_matched_jet[i] = j;
-	    }
-	}
-  
-      if(index_matched_jet[i]!=-999) dr_return[i] = vec_dr[i].at(index_matched_jet[i]);
-      else dr_return[i] = -999;
-    }
-  
-  //if same two jets are matched
-  if(index_matched_jet[0]==index_matched_jet[1] && index_matched_jet[1]!=-999)
-    {
-      int index;
-      if(surely_matched[0]==true && surely_matched[1]==false) index = 1;
-      else if(surely_matched[0]==false && surely_matched[1]==true) index = 0;
-      else
-	{
-	  if(dr_return[0]<dr_return[1]) index = 1;
-	  else index = 0;
-	} 
-
-      vector<float> vec_dr_copy;
-      for(unsigned int i=0; i<vec_dr[index].size(); i++)
-	{
-	  int hf_origin = vec_hf_origin.at(i);
-	  bool chk_pt_diff = vec_chk_pt_diff[index].at(i);
-	  if(hf_origin==-999 && chk_pt_diff==true) vec_dr_copy.push_back(vec_dr[index].at(i));
-	}
-      
-      nth_element(vec_dr_copy.begin(), vec_dr_copy.begin()+1, vec_dr_copy.end());
-      
-      float second_smallest_dr = vec_dr_copy[1];
-      
-      //means there is no second smallest dr
-      if(second_smallest_dr==0) 
-	{
-	 index_matched_jet[index] = -999;
-	 dr_return[index] = -999;
-	}
-      else
-	{
-	  for(unsigned int i=0; i<vec_dr[index].size(); i++)
-	    {
-	      if(vec_dr[index].at(i)==second_smallest_dr)
-		{
-		  index_matched_jet[index] = i;
-		  dr_return[index] = vec_dr[index].at(i);
-		  break;
-		}
-	    }
-	}
-    }
-  
-  cout << endl;
-  cout << endl;
-  cout << "Daughters from W"; 
-  if(selected_w>0) cout << "+" << endl;
-  else cout << "-" << endl;
-  cout << "(" << index_had_w[0] << ", " << vec_gen.at(index_had_w[0]).PID() <<  "), (" << index_had_w[1] << ", " <<  vec_gen.at(index_had_w[1]).PID() << ")" << endl;
-  
-  for(unsigned int i=0; i<vec_jet.size(); i++)
-    {
-      int jet_flavour = vec_hf_flavour.at(i);
-      int jet_origin = vec_hf_origin.at(i);
-      
-      cout << "(" << jet_flavour << "," <<  jet_origin << "), ";
-    }
-  cout << endl;
-  for(int i=0; i<2; i++)
-    {
-      for(unsigned int j=0; j<vec_dr[i].size(); j++)
-  	{
-  	  cout << i << " " << j << " " << vec_dr[i].at(j) << " " << vec_chk_pt_diff[i].at(j) << endl;
-  	}
-      cout << "Matched jet index = " << index_matched_jet[i] << ", surely matched = " << surely_matched[i] << ", d_r = " << dr_return[i] << endl;
-    }
+  //     cout << "(" << jet_flavour << "," <<  jet_origin << "), ";
+  //   }
+  // cout << endl;
+  // for(int i=0; i<2; i++) cout << "Matched jet index = " << index_matched_jet[i] << ", surely matched = " << surely_matched[i] << ", d_r = " << dr_return[i] << endl;
   
   return selected_w;
 }//int Vcb_Mu::Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour , const vector<int>& vec_hf_origin, int index_matched_jet[2])
@@ -1508,13 +2166,93 @@ float Vcb_Mu::Get_CvsL(const Jet& jet)
 
 //////////
 
+int Vcb_Mu::Get_W_Decay_Mode(const vector<Gen>& vec_gen)
+{
+  int index_last_w = -999;
+  int index_last_aw = -999;
+  int index_d0_w = -999;
+  int index_d1_w = -999;
+  int index_d0_aw = -999;
+  int index_d1_aw = -999;
+
+  //scan gen to find W
+  for(unsigned int i=0; i<vec_gen.size(); i++)
+    {
+      Gen gen = vec_gen.at(i);
+
+      int pid = gen.PID();
+      int m_index = gen.MotherIndex();
+
+      //find last index of W+ and W-
+      if(pid==24) index_last_w = i;
+      if(pid==-24) index_last_aw = i;
+
+      //find decay products of W+
+      if(m_index == index_last_w && pid!=24)
+        {
+          if(index_d0_w==-999)  index_d0_w = i;
+          else index_d1_w = i;
+        }
+
+      //find decay products of W-
+      if(m_index == index_last_aw && pid!=-24)
+        {
+          if(index_d0_aw==-999)  index_d0_aw = i;
+          else index_d1_aw = i;
+        }
+    }
+
+  //if input sample is not TT, so both of W couldn't be found
+  if(index_last_w==-999 || index_last_aw==-999)
+    {
+      //if(run_debug) cout << "Can't find both of W" << endl;
+      return 999;
+    }
+
+  int index_had_w[2];
+  //W+ decay hadronically
+  if(Abs(vec_gen.at(index_d0_w).PID())<10)
+    {
+      index_had_w[0] = index_d0_w;
+      index_had_w[1] = index_d1_w;
+    }
+  //W- decay hadronically
+  else if(Abs(vec_gen.at(index_d0_aw).PID()<10))
+    {
+      index_had_w[0] = index_d0_aw;
+      index_had_w[1] = index_d1_aw;
+    }
+  //no W decays hadronically
+  else
+    {
+      //if(run_debug) cout << "No W decays hadronically" << endl;
+
+      return 999;
+    }
+
+  int decay_mode = 0;
+  for(unsigned int i=0; i<2; i++)
+    {
+      Gen gen = vec_gen.at(index_had_w[i]);
+
+      int pid = gen.PID();
+    
+      if(pid%2==0) decay_mode += Abs(pid)*10;
+      else decay_mode += Abs(pid);
+    }
+ 
+  return decay_mode;
+}//int Vcb_Mu::Get_W_Decay_Mode(const vector<Gen>& vec_gen)
+
+//////////
+
 void Vcb_Mu::Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4])
 {
   for(int i=0; i<4; i++)
     {
       index_matched_jet[i] = -999;
 
-      if(index_matched_jet_match[i]==-999) continue;
+      if(index_matched_jet_match[i]<0) continue;
       
       Jet jet_match = vec_sel_jet_match[index_matched_jet_match[i]];
 
