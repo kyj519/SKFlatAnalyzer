@@ -92,7 +92,7 @@ void SkimTree_Vcb::executeEvent()
   //pre selection
   if(met.Pt()<MET_PT_SKIM) return;
   if(vec_sel_muon.size()+vec_sel_electron.size()!=1) return;
-  if(vec_sel_jet.size()<4) return;
+  //if(vec_sel_jet.size()<4) return;
   if(nbtag<2) return;
 
   //fill

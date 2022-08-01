@@ -1,6 +1,8 @@
 #ifndef __Vcb_Mu_h__
 #define __Vcb_Mu_h__
 
+#include <TMVA/Reader.h>
+
 #include "AnalyzerCore.h"
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
 
@@ -25,11 +27,15 @@ class Vcb_Mu : public AnalyzerCore
   bool run_debug;
   bool run_kf_eval;
   bool run_permutation_tree;
+  bool run_hf_contamination_tree;
   bool run_chi;
+  bool run_template;
+  bool run_template_truth;
   bool run_syst;
   bool rm_wm_constraint;
+  bool rm_bjet_energy_reg_nn;
 
-  typedef enum cut_flow {No_Cut, Met_Filter, Trigger, TT_Selection, KF_Pass} Cut_Flow;
+  typedef enum cut_flow {No_Cut, Met_Filter, Trigger, Single_Lepton, At_Least_Four_Jets, At_Least_Two_B_Tagged, MET, KF_Pass} Cut_Flow;
   int n_cut_flow = Cut_Flow::KF_Pass+1;
 
   vector<TString> vec_mu_id;
@@ -51,6 +57,12 @@ class Vcb_Mu : public AnalyzerCore
   vector<Jet> vec_jet;
   
   int n_sel_jet;
+  int n_b_jet;
+  int n_c_jet;
+
+  float n_b_jet_f;
+  float n_c_jet_f;
+
   int n_jet_bin;
   int n_bjet_bin;
 
@@ -94,6 +106,21 @@ class Vcb_Mu : public AnalyzerCore
   float theta_lep_w_lep_t_b;
   float theta_had_t_lep_t;
   
+  float theta_w_u_b;
+  float theta_w_d_b;
+  float theta_p_had_w;
+  float theta_b_b;
+  float theta_c_c;
+
+  float w_u_b_bscore;
+  float w_d_b_bscore;
+  
+  float m_w_u_b;
+  float m_w_d_b;
+
+  TMVA::Reader* reader_hf_contamination_lessthantwo;
+  TMVA::Reader* reader_hf_contamination_morethantwo;
+
   float had_t_mass;
   float had_w_mass;
   float lep_t_mass;
@@ -134,11 +161,24 @@ class Vcb_Mu : public AnalyzerCore
   TTree* permutation_tree_correct;
   TTree* permutation_tree_wrong;
 
+  TTree* hf_contamination_tree_correct;
+  TTree* hf_contamination_tree_wrong;
+
   float best_chi2;
   float best_mva_score;
+  float mt;
+  float mva_hf_score;
 
+  bool chk_hf_contamination;
+  
   TTree* kf_eval_tree_correct;
   TTree* kf_eval_tree_wrong;
+
+  int decay_mode;
+  
+  float bvsc_had_t_b;
+  float cvsb_had_t_b;
+  float cvsl_had_t_b;
 
   float bvsc_w_u;
   float cvsb_w_u;
@@ -148,15 +188,29 @@ class Vcb_Mu : public AnalyzerCore
   float cvsb_w_d;
   float cvsl_w_d;
 
+  float bvsc_lep_t_b;
+  float cvsb_lep_t_b;
+  float cvsl_lep_t_b;
+
+  int swapped;
+
+  float jet_mass_w_u;
+  float jet_mass_w_d;
+
+  TTree* template_tree[5];
+  TTree* template_truth_tree[5];
   TTree* result_tree;
 
   float Calculate_Mt(const Particle& lepton, const float& neu_px, const float& neu_py);
   int Chk_Included(const int index_matched_jet[4]);
-  bool Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2]);
-  void Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[2], float dr_return[2]);
+  bool Compare_Jet(const Jet& jet0, const Jet& jet1);
+  int Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2]);
+  void Gen_Match_Residual(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
+  void Gen_Match_TT(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
   int Gen_Match_W(const vector<Jet>& vec_jet, const vector<Gen>& vec_gen, const vector<int>& vec_hf_flavour, const vector<int>& vec_hf_origin, const vector<float>& vec_jer, int index_gen[2], int index_matched_jet[2], bool surely_matched[2], float dr_return[2]);
   float Get_CvsB(const Jet& jet);
   float Get_CvsL(const Jet& jet);
+  int Get_W_Decay_Mode(const vector<Gen>& vec_gen);
   void Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4]);
   //void Index_Restorer(int& index_had_t_b, int& index_w_u, int& index_w_d, int& index_lep_t_b);
   Gen Neutrino(const vector<Gen>& vec_gen);
