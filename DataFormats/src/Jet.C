@@ -148,8 +148,8 @@ int Jet::GetPUID(double Pt, double eta){
   }
   
   if(j_PileupJetId>=wp[binID][0]) return 0b111;
-  else if(j_PileupJetId >= wp[binID][1]) return 0b110;
-  else if(j_PileupJetId >= wp[binID][2]) return 0b100;
+  else if(j_PileupJetId >= wp[binID][1]) return 0b11;
+  else if(j_PileupJetId >= wp[binID][2]) return 0b1;
   else return 0b0;
 }
 
