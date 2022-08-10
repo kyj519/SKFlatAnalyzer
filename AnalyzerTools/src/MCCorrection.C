@@ -1343,11 +1343,11 @@ bool MCCorrection::IsBTagged_2a(JetTagging::Parameters jtp, const Jet& jet, stri
 double MCCorrection::GetPUIDReweight(const vector<Jet>& jets, const vector<Gen>& gens,string wp, string Syst){
 
   if(IsDATA) return 1.;
-  if GetEra() != '2018'{
-    cout << 'PUID: era not implemented yet'
-    exit()
+  if(GetEra() != "2018"){
+    cout << "PUID: era not implemented yet" << endl;
+    exit(ENODATA);
   }
-  int bid = 0b0
+  int bid = 0b0;
   if(wp == 'T') bid = 0b100;
   else if(wp == 'M') bid = 0b10;
   else if(wp == 'L') bid = 0b1;
@@ -1355,40 +1355,54 @@ double MCCorrection::GetPUIDReweight(const vector<Jet>& jets, const vector<Gen>&
   std::vector<bool> isGenMatched;
   std::vector<bool> isPassed;
   for(unsigned int i=0; i<jets.size(); i++){
-    passed = jets.at(i).GetPUID(jets.at(i).Pt(), jets.at(i).Eta()) & bid;
-    mathced = false;
+    int PUID = jets.at(i).GetPUID(jets.at(i).Pt(), jets.at(i).Eta());
+    bool passed = PUID & bid;
+    bool matched = false;
     for(unsigned int j=0; j<gens.size();j++){
       if(jets.at(i).DeltaR(gens.at(j)) < 0.4){
-        matched = True;
+        matched = true;
         continue;
       }
     }
-    isPassed.push_back(passed)
-    isGenMatched.push_back(mathched)
+    isPassed.push_back(passed);
+    isGenMatched.push_back(matched);
   }
   
   for(unsigned int i=0; i<jets.size(); i++){
-    double this_MC_Eff = GetMCJetTagEff(jtp.j_Tagger, jtp.j_WP, jets.at(i).hadronFlavour(), jets.at(i).Pt(), jets.at(i).Eta());
-    double this_SF = GetJetTaggingSF(jtp,
-                                     jets.at(i).hadronFlavour(),
-                                     jets.at(i).Pt(),
-                                     jets.at(i).Eta(),
-                                     jets.at(i).GetTaggerResult(jtp.j_Tagger),
-                                     Syst );
+    double this_MC_Eff = GetPUIDEff(wp,jets.at(i).Pt(),jets.at(i).Eta(),0);
+    double this_SF = GetPUIDSF(wp,jets.at(i).Pt(),jets.at(i).Eta(),0);
     double this_DATA_Eff = this_MC_Eff*this_SF;
 
-    bool isTagged = jets.at(i).GetTaggerResult(jtp.j_Tagger) > GetJetTaggingCutValue(jtp.j_Tagger, jtp.j_WP);
-    if(isTagged){
-      Prob_MC *= this_MC_Eff;
-      Prob_DATA *= this_DATA_Eff;
+    double this_MC_Mistag = GetPUIDMistag(wp,jets.at(i).Pt(),jets.at(i).Eta(),0);
+    double this_Mistag_SF = GetPUIDMistagSF(wp,jets.at(i).Pt(),jets.at(i).Eta(),0);
+    double this_DATA_Mistag = this_MC_Mistag * this_Mistag_SF;
+
+    if(isGenMatched.at(i)){
+      if(isPassed.at(i)){
+        Prob_MC *= this_MC_Eff;
+        Prob_DATA *= this_DATA_Eff;
+      }
+      else{
+        Prob_MC *= 1. - this_MC_Eff;
+        Prob_DATA *= 1. - this_DATA_Eff;
+      }
+
     }
     else{
-      Prob_MC *= 1.-this_MC_Eff;
-      Prob_DATA *= 1.-this_DATA_Eff;
+      if(isPassed.at(i)){
+        if(Prob_MC != 0){
+          Prob_MC *= this_MC_Mistag;
+          Prob_DATA *= this_DATA_Mistag;
+        }
+      }
+      else{
+        Prob_MC *= 1. - this_MC_Mistag;
+        Prob_DATA *= 1. - this_DATA_Mistag; 
+      }
     }
   }
 
-  return (Prob_DATA/Prob_MC)>5.? 5.: (Prob_DATA/Prob_MC);
+  return Prob_DATA/Prob_MC;
 
 }
 
@@ -1403,13 +1417,20 @@ double MCCorrection::GetPUIDEff(string wp, double JetPt, double JetEta, int sys)
   
   TString datapath = getenv("DATA_DIR");
   TString histpath = datapath+"/"+GetEra()+"/PUID/PUID.root";
+  ifstream fcheck(histpath);
+  if(!fcheck.good()){
+    cout<<"[MCCorrection::PUID] no "+histpath<<endl;
+    return 0.;
+  }
   TFile fpuID(histpath);
-
+  cout << histpath << endl;
   double value = 1., error = 0., out = 1.;
-  TString hnum = "h2_eff_MCUL_" + GetEra() +"_"+ wp;
-
-  TH2F *this_hist = fpuID.Get(hnum)
+  TString hnum = "h2_eff_mcUL" + GetEra() + "_"+wp;
+  cout << hnum << endl;
+  TH2F *this_hist = (TH2F*) fpuID.Get(hnum);
+  cout << typeid(*this_hist).name() << endl;
   int this_bin = this_hist->FindBin(JetPt,JetEta);
+  cout << this_bin << endl;
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
 
@@ -1429,13 +1450,19 @@ double MCCorrection::GetPUIDMistag(string wp, double JetPt, double JetEta, int s
   if(JetEta < -5.0) JetEta = 5.0;
   
   TString datapath = getenv("DATA_DIR");
+
   TString histpath = datapath+"/"+GetEra()+"/PUID/PUID.root";
+  ifstream fcheck(histpath);
+  if(!fcheck.good()){
+    cout<<"[MCCorrection::PUID] no "+histpath<<endl;
+    return 0.;
+  }
   TFile fpuID(histpath);
 
   double value = 1., error = 0., out = 1.;
-  TString hnum = "h2_mistag_MCUL_" + GetEra() +"_"+ wp;
+  TString hnum = "h2_mistag_mcUL" + GetEra() + "_"+wp;
 
-  TH2F *this_hist = fpuID.Get(hnum)
+  TH2F *this_hist = (TH2F*) fpuID.Get(hnum);
   int this_bin = this_hist->FindBin(JetPt,JetEta);
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
@@ -1457,19 +1484,24 @@ double MCCorrection::GetPUIDSF(string wp, double JetPt, double JetEta, int sys){
   
   TString datapath = getenv("DATA_DIR");
   TString histpath = datapath+"/"+GetEra()+"/PUID/PUID.root";
+  ifstream fcheck(histpath);
+  if(!fcheck.good()){
+    cout<<"[MCCorrection::PUID] no "+histpath<<endl;
+    return 0.;
+  }
   TFile fpuID(histpath);
 
   double value = 1., error = 0., out = 1.;
-  TString hnum = "h2_eff_sfUL_" + GetEra() +"_"+ wp;
+  TString hnum = "h2_eff_sfUL" + GetEra() + "_"+wp;
 
-  TH2F *this_hist = fpuID.Get(hnum)
+  TH2F *this_hist = (TH2F*) fpuID.Get(hnum);
   int this_bin = this_hist->FindBin(JetPt,JetEta);
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
 
   out = value+double(sys)*error;
   if(out<=0.) out = 0.0001;
-  if(out>=1.) out = 0.9999;
+  
   return out;
 }
 
@@ -1484,18 +1516,23 @@ double MCCorrection::GetPUIDMistagSF(string wp, double JetPt, double JetEta, int
   
   TString datapath = getenv("DATA_DIR");
   TString histpath = datapath+"/"+GetEra()+"/PUID/PUID.root";
+  ifstream fcheck(histpath);
+  if(!fcheck.good()){
+    cout<<"[MCCorrection::PUID] no "+histpath<<endl;
+    return 0.;
+  }
   TFile fpuID(histpath);
 
   double value = 1., error = 0., out = 1.;
-  TString hnum = "h2_mistag_sfUL_" + GetEra() +"_"+ wp;
+  TString hnum = "h2_mistag_sfUL" + GetEra() + "_"+wp;
 
-  TH2F *this_hist = fpuID.Get(hnum)
+  TH2F *this_hist = (TH2F*) fpuID.Get(hnum);
   int this_bin = this_hist->FindBin(JetPt,JetEta);
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
 
   out = value+double(sys)*error;
   if(out<=0.) out = 0.0001;
-  if(out>=1.) out = 0.9999;
+  
   return out;
 }

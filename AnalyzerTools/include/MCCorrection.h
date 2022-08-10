@@ -121,7 +121,11 @@ public:
 
   //==== 2a) Jet-by-jet updating of the b-tagging status
   bool IsBTagged_2a(JetTagging::Parameters jtp, const Jet& jet, string Syst="central");
-
+  double GetPUIDReweight(const vector<Jet>& jets, const vector<Gen>& gens,string wp, string Syst);
+  double GetPUIDEff(string wp, double JetPt, double JetEta, int sys);
+  double GetPUIDMistag(string wp, double JetPt, double JetEta, int sys);
+  double GetPUIDSF(string wp, double JetPt, double JetEta, int sys);
+  double GetPUIDMistagSF(string wp, double JetPt, double JetEta, int sys);
 };
 
 #endif

@@ -40,7 +40,7 @@ public:
   bool PassID(TString ID) const;
 
   double GetTaggerResult(JetTagging::Tagger tg) const;
-  int GetPUID(double Pt, double eta);
+  int GetPUID(double Pt, double eta) const;
 
 private:
 

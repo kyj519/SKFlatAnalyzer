@@ -124,7 +124,7 @@ double Jet::GetTaggerResult(JetTagging::Tagger tg) const {
   }
 }
 
-int Jet::GetPUID(double Pt, double eta){
+int Jet::GetPUID(double Pt, double eta) const{
   unsigned PtNum = 0;
   unsigned etaNum = 0;
   if(10.<=Pt && Pt < 20.) PtNum = 1;
