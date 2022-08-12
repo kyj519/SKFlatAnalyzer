@@ -101,7 +101,6 @@ void MCCorrection::ReadHistograms(){
     cout << "[MCCorrection::MCCorrection] key = " << it->first << endl;
   }
 
-
   // == Get Prefiring maps
   TString PrefirePath  = datapath+"/"+GetEra()+"/Prefire/";
 
@@ -172,6 +171,26 @@ void MCCorrection::ReadHistograms(){
   file_DYPtReweightPath->Close();
   delete file_DYPtReweightPath;
   origDir->cd();
+
+  // == Get Pileup Jet Veto
+  TString  pileupJetVetoPath = datapath+"/"+GetEra()+"/PileupJetVeto/PUID_ULRun2_"+TString::Itoa(DataYear,10)+".root";
+  TFile* file_pileupJetVetoPath = new TFile(pileupJetVetoPath);
+  histDir->cd();
+  map_hist_pujet_veto["eff_mcUL2018_T"] = (TH2F*)file_pileupJetVetoPath->Get("h2_eff_mcUL2018_T")->Clone();
+  map_hist_pujet_veto["eff_mcUL2018_M"] = (TH2F*)file_pileupJetVetoPath->Get("h2_eff_mcUL2018_M")->Clone();
+  map_hist_pujet_veto["eff_mcUL2018_L"] = (TH2F*)file_pileupJetVetoPath->Get("h2_eff_mcUL2018_L")->Clone();
+  map_hist_pujet_veto["mistag_mcUL2018_T"] = (TH2F*)file_pileupJetVetoPath->Get("h2_mistag_mcUL2018_T")->Clone();
+  map_hist_pujet_veto["mistag_mcUL2018_M"] = (TH2F*)file_pileupJetVetoPath->Get("h2_mistag_mcUL2018_M")->Clone();
+  map_hist_pujet_veto["mistag_mcUL2018_L"] = (TH2F*)file_pileupJetVetoPath->Get("h2_mistag_mcUL2018_L")->Clone();
+  map_hist_pujet_veto["eff_sfUL2018_T"] = (TH2F*)file_pileupJetVetoPath->Get("h2_eff_sfUL2018_T")->Clone();
+  map_hist_pujet_veto["eff_sfUL2018_M"] = (TH2F*)file_pileupJetVetoPath->Get("h2_eff_sfUL2018_M")->Clone();
+  map_hist_pujet_veto["eff_sfUL2018_L"] = (TH2F*)file_pileupJetVetoPath->Get("h2_eff_sfUL2018_L")->Clone();
+  map_hist_pujet_veto["mistag_sfUL2018_T"] = (TH2F*)file_pileupJetVetoPath->Get("h2_mistag_sfUL2018_T")->Clone();
+  map_hist_pujet_veto["mistag_sfUL2018_M"] = (TH2F*)file_pileupJetVetoPath->Get("h2_mistag_sfUL2018_M")->Clone();
+  map_hist_pujet_veto["mistag_sfUL2018_L"] = (TH2F*)file_pileupJetVetoPath->Get("h2_mistag_sfUL2018_L")->Clone();
+  file_pileupJetVetoPath->Close();
+  delete file_pileupJetVetoPath;
+  origDir->cd();  
 }
 
 MCCorrection::~MCCorrection(){
@@ -1360,4 +1379,121 @@ bool MCCorrection::IsBTagged_2a(JetTagging::Parameters jtp, const Jet& jet, stri
   return newBTag;
 
 }
+
+double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys)
+{
+  if(IsDATA) return 1.;
+
+  if(pt<20) pt = 20.;
+  if(pt>=50.) pt = 49.9;
+  if(eta>=5.0) eta = 4.49;
+  if(eta < -5.0) eta = -4.49;
+  
+  TString target;
+  if(type=="MC_Eff") target = "eff_mcUL";
+  else if(type=="MC_Eff_SF") target = "eff_sfUL";
+  else if(type=="MC_Mistag") target = "mistag_mcUL";
+  else if(type=="MC_Mistag_SF") target = "mistag_sfUL";
+  else 
+    {
+      cout << "[MCCorrection::PileupJetVeto_MCCorr] Wrong " << type << ". Abort." << endl;
+      exit(ENODATA);
+    }
+
+  TString wp_key= "";
+  if(wp=="Tight") wp_key = "_T";
+  else if(wp=="Medium") wp_key = "_M";
+  else if(wp=="Loose") wp_key = "_L";
+  else 
+    {
+      cout << "[MCCorrection::PileupJetVeto_MCCorr] Wrong " << wp << ". Abort." << endl;
+      exit(ENODATA);
+    }
+
+  TString key = target + GetEra() + wp_key;
+  TH2F* this_hist = map_hist_pujet_veto[key];
+  if(!this_hist)
+    {
+      cerr << "[MCCorrection::PileupJetVeto_MCCorr] No " << key << endl;
+      exit(ENODATA);
+    }
+
+  int bin = this_hist->FindBin(pt, eta);
+
+  double value = this_hist->GetBinContent(bin);
+  double error = this_hist->GetBinError(bin);
+
+  double out = value + double(sys)*error;
+  if(out<=0.) out = 0.0001;
+  if(out>=1. && (type=="Eff" || type=="Mistag")) out = 0.9999;
+
+  return out;
+}//double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys)
+
+double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TString& wp, string Syst)
+{
+  if(IsDATA) return 1.;
+  
+  //std::vector<bool> is_gen_matched;
+  //std::vector<bool> is_passed;
+  
+  double prob_mc = 1.;
+  double prob_data = 1.;
+  for(unsigned int i=0; i<jets.size(); i++)
+    {
+      Jet jet = jets.at(i);
+      
+      int hf_flavour = jet.GenHFHadronMatcherFlavour();
+      int hf_origin = jet.GenHFHadronMatcherOrigin();
+      
+      bool matched = false;
+      if(hf_flavour!=-999 || hf_origin!=-999) matched = true;
+      
+      bool passed = jet.Pass_PileupJetVeto(wp);
+     
+      double pt = jet.Pt();
+      double eta = jet.Eta();
+      
+      //genjet matched
+      if(matched)
+	{
+	  double mc_eff = PileupJetVeto_MCCorr("MC_Eff", wp, pt, eta, 0);
+	  double mc_eff_sf = PileupJetVeto_MCCorr("MC_Eff_SF", wp, pt, eta, 0);
+	  
+	  double data_eff = mc_eff*mc_eff_sf;
+	  
+	  if(passed)
+	    {
+	      prob_mc *= mc_eff;
+	      prob_data *= data_eff;
+	    }
+	  else
+	    {
+	      prob_mc *= 1 - mc_eff;
+	      prob_data *= 1 - data_eff;
+	    }
+	}//genjet matched
+      //genjet unmatched
+      else
+	{
+	  double mc_mistag = PileupJetVeto_MCCorr("MC_Mistag", wp, pt, eta, 0);
+	  double mc_mistag_sf = PileupJetVeto_MCCorr("MC_Mistag_SF", wp, pt, eta, 0);
+
+	  double data_mistag = mc_mistag*mc_mistag_sf;
+
+	  if(passed)
+	    {
+	      prob_mc *= mc_mistag;
+	      prob_data *= data_mistag;
+	    }
+	  else 
+	    {
+	      prob_mc *= 1 - mc_mistag;
+	      prob_data *= 1 - data_mistag;
+	    }
+	}//genjet unmatched
+    }//loop over jets
+  
+  return prob_data/prob_mc;
+}//double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, string wp, string Syst)
 

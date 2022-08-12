@@ -446,6 +446,8 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     jet.SetCJetNNCorrection(jet_cJetNN_corr->at(i),jet_cJetNN_res->at(i));
     jet.SetCharge(jet_charge->at(i));
 
+    jet.SetM(jet_m->at(i));
+
     jet.SetArea(jet_area->at(i));
     std::vector<double> tvs = {
       jet_DeepCSV->at(i),

@@ -172,6 +172,7 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_correct->Branch("n_jets", &n_sel_jet);
       permutation_tree_correct->Branch("n_bjets", &n_b_jet);
       permutation_tree_correct->Branch("n_cjets", &n_c_jet);
+      permutation_tree_correct->Branch("n_matched_jets", &n_matched_jets);
       permutation_tree_correct->Branch("gen_neutrino_px", &gen_neutrino_px);
       permutation_tree_correct->Branch("gen_neutrino_py", &gen_neutrino_py);
       permutation_tree_correct->Branch("gen_neutrino_pz", &gen_neutrino_pz);
@@ -185,7 +186,6 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_correct->Branch("mt_gen", &mt_gen);
       permutation_tree_correct->Branch("mt_met", &mt_met);
       permutation_tree_correct->Branch("mt_met_rebalance", &mt_met_rebalance);
-      permutation_tree_correct->Branch("chk_jet_permutation_match", &chk_jet_permutation_match);
       permutation_tree_correct->Branch("had_t_b_pt", &had_t_b_pt);
       permutation_tree_correct->Branch("w_u_pt", &w_u_pt);
       permutation_tree_correct->Branch("w_d_pt", &w_d_pt);
@@ -244,6 +244,7 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_wrong->Branch("n_jets", &n_sel_jet);
       permutation_tree_wrong->Branch("n_bjets", &n_b_jet);
       permutation_tree_wrong->Branch("n_cjets", &n_c_jet);
+      permutation_tree_wrong->Branch("n_matched_jets", &n_matched_jets);
       permutation_tree_wrong->Branch("gen_neutrino_px", &gen_neutrino_px);
       permutation_tree_wrong->Branch("gen_neutrino_py", &gen_neutrino_py);
       permutation_tree_wrong->Branch("gen_neutrino_pz", &gen_neutrino_pz);
@@ -257,7 +258,6 @@ void Vcb_Mu::initializeAnalyzer()
       permutation_tree_wrong->Branch("mt_gen", &mt_gen);
       permutation_tree_wrong->Branch("mt_met", &mt_met);
       permutation_tree_wrong->Branch("mt_met_rebalance", &mt_met_rebalance);
-      permutation_tree_wrong->Branch("chk_jet_permutation_match", &chk_jet_permutation_match);
       permutation_tree_wrong->Branch("had_t_b_pt", &had_t_b_pt);
       permutation_tree_wrong->Branch("w_u_pt", &w_u_pt);
       permutation_tree_wrong->Branch("w_d_pt", &w_d_pt);
@@ -356,10 +356,10 @@ void Vcb_Mu::initializeAnalyzer()
       chk_matched_jets_only = false;
       
       reco_eval_tree_correct = new TTree("Reco_Eval_Tree_Correct", "Reco_Eval_Tree_Correct");
+      reco_eval_tree_correct->Branch("weight", &weight);
       reco_eval_tree_correct->Branch("n_jets", &n_sel_jet);
       reco_eval_tree_correct->Branch("n_bjets", &n_b_jet);
       reco_eval_tree_correct->Branch("n_cjets", &n_c_jet);
-      reco_eval_tree_correct->Branch("weight", &weight);
       reco_eval_tree_correct->Branch("decay_mode", &decay_mode);
       reco_eval_tree_correct->Branch("best_mva_score", &best_mva_score);
       reco_eval_tree_correct->Branch("best_chi2", &best_chi2); 
@@ -370,22 +370,28 @@ void Vcb_Mu::initializeAnalyzer()
       reco_eval_tree_correct->Branch("bvsc_had_t_b", &bvsc_had_t_b);
       reco_eval_tree_correct->Branch("cvsb_had_t_b", &cvsb_had_t_b);
       reco_eval_tree_correct->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      reco_eval_tree_correct->Branch("had_t_b_pt", &had_t_b_pt);
       reco_eval_tree_correct->Branch("bvsc_w_u", &bvsc_w_u);
       reco_eval_tree_correct->Branch("cvsb_w_u", &cvsb_w_u);
       reco_eval_tree_correct->Branch("cvsl_w_u", &cvsl_w_u);
+      reco_eval_tree_correct->Branch("w_u_pt", &w_u_pt);
+      reco_eval_tree_correct->Branch("m_w_u", &m_w_u);
       reco_eval_tree_correct->Branch("bvsc_w_d", &bvsc_w_d);
       reco_eval_tree_correct->Branch("cvsb_w_d", &cvsb_w_d);
       reco_eval_tree_correct->Branch("cvsl_w_d", &cvsl_w_d);
+      reco_eval_tree_correct->Branch("w_d", &w_d_pt);
+      reco_eval_tree_correct->Branch("m_w_d", &m_w_d);
       reco_eval_tree_correct->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
       reco_eval_tree_correct->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
       reco_eval_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+      reco_eval_tree_correct->Branch("lep_t_b_pt", &lep_t_b_pt);
       reco_eval_tree_correct->Branch("swapped", &swapped);
       
       reco_eval_tree_wrong = new TTree("Reco_Eval_Tree_Wrong", "Reco_Eval_Tree_Wrong");
+      reco_eval_tree_wrong->Branch("weight", &weight);
       reco_eval_tree_wrong->Branch("n_jets", &n_sel_jet);
       reco_eval_tree_wrong->Branch("n_bjets", &n_b_jet);
       reco_eval_tree_wrong->Branch("n_cjets", &n_c_jet);
-      reco_eval_tree_wrong->Branch("weight", &weight);
       reco_eval_tree_wrong->Branch("decay_mode", &decay_mode);
       reco_eval_tree_wrong->Branch("best_mva_score", &best_mva_score);
       reco_eval_tree_wrong->Branch("best_chi2", &best_chi2);
@@ -396,15 +402,21 @@ void Vcb_Mu::initializeAnalyzer()
       reco_eval_tree_wrong->Branch("bvsc_had_t_b", &bvsc_had_t_b);
       reco_eval_tree_wrong->Branch("cvsb_had_t_b", &cvsb_had_t_b);
       reco_eval_tree_wrong->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      reco_eval_tree_wrong->Branch("had_t_b_pt", &had_t_b_pt);
       reco_eval_tree_wrong->Branch("bvsc_w_u", &bvsc_w_u);
       reco_eval_tree_wrong->Branch("cvsb_w_u", &cvsb_w_u);
       reco_eval_tree_wrong->Branch("cvsl_w_u", &cvsl_w_u);
+      reco_eval_tree_wrong->Branch("w_u_pt", &w_u_pt);
+      reco_eval_tree_wrong->Branch("m_w_u", &m_w_u);
       reco_eval_tree_wrong->Branch("bvsc_w_d", &bvsc_w_d);
       reco_eval_tree_wrong->Branch("cvsb_w_d", &cvsb_w_d);
       reco_eval_tree_wrong->Branch("cvsl_w_d", &cvsl_w_d);
+      reco_eval_tree_wrong->Branch("w_d_pt", &w_d_pt);
+      reco_eval_tree_wrong->Branch("m_w_d", &m_w_d);
       reco_eval_tree_wrong->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
       reco_eval_tree_wrong->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
       reco_eval_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+      reco_eval_tree_wrong->Branch("lep_t_b_pt", &lep_t_b_pt);
       reco_eval_tree_wrong->Branch("swapped", &swapped);
     }//run_reco_eval
 
@@ -418,13 +430,15 @@ void Vcb_Mu::initializeAnalyzer()
       
       for(int i=0; i<5; i++)
 	{
-	  //template_truth_tree[i]->Branch("best_mva_score", &best_mva_score);
+	  template_truth_tree[i]->Branch("best_mva_score", &best_mva_score);//dummy
 	  template_truth_tree[i]->Branch("bvsc_w_u", &bvsc_w_u);
 	  template_truth_tree[i]->Branch("cvsb_w_u", &cvsb_w_u);
 	  template_truth_tree[i]->Branch("cvsl_w_u", &cvsl_w_u);
+	  template_truth_tree[i]->Branch("m_w_u", &m_w_u);
 	  template_truth_tree[i]->Branch("bvsc_w_d", &bvsc_w_d);
           template_truth_tree[i]->Branch("cvsb_w_d", &cvsb_w_d);
           template_truth_tree[i]->Branch("cvsl_w_d", &cvsl_w_d);
+	  template_truth_tree[i]->Branch("m_w_d", &m_w_d);
 	}
     }//run_template_truth
 
@@ -574,7 +588,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       //weight *= lumi_weight;
 
       //MCweight +1 or -1
-      float mc_weight = MCweight();
+      float mc_weight = MCweight()*ev.GetTriggerLumi("Full");
       weight *= mc_weight;
 
       //pileup reweight
@@ -632,11 +646,18 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   vector<Muon> vec_muon_veto = SelectMuons(vec_this_muon, param.Muon_Tight_ID, MUON_PT_VETO, MUON_ETA);
   vector<Electron> vec_electron_veto = SelectElectrons(vec_this_electron, param.Electron_Loose_ID, ELECTRON_PT_VETO, ELECTRON_ETA);
 
-  vector<Jet> vec_sel_jet = SelectJets(vec_this_jet, param.Jet_ID, JET_PT, JET_ETA);
+  float jet_eta_cut = 999;
+  if(DataYear==2016) jet_eta_cut = JET_ETA_2016;
+  else if(DataYear==2017||DataYear==2017) jet_eta_cut = JET_ETA;
+  
+  //Jet selection
+  vector<Jet> vec_sel_jet = SelectJets(vec_this_jet, param.Jet_ID, JET_PT, jet_eta_cut);
+  vec_sel_jet = SelectJets(vec_sel_jet, "LoosePileupJetVeto", JET_PT, jet_eta_cut);
   vec_sel_jet = JetsVetoLeptonInside(vec_sel_jet, vec_electron_veto, vec_muon_veto, DR_LEPTON_VETO);
   n_sel_jet = vec_sel_jet.size();
 
   vector<Jet> vec_sel_jet_match = SelectJets(vec_this_jet, param.Jet_ID, JET_PT_MATCH, JET_ETA_MATCH);
+  vec_sel_jet_match = SelectJets(vec_sel_jet_match, "LoosePileupJetVeto", JET_PT_MATCH, JET_ETA_MATCH);
 
   //sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
@@ -694,7 +715,15 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   
   //cut on jet
   if(n_sel_jet<4) return;
-  
+
+  if(!IsData)
+    {
+      //SF for PUJet Veto
+      float sf_pujet_veto = mcCorr->PileupJetVetoReweight(vec_sel_jet, "Loose", "");
+      weight *= sf_pujet_veto;
+    }
+
+
   FillHist(param.Name+"/Cut_Flow", Cut_Flow::At_Least_Four_Jets, weight, n_cut_flow, 0, n_cut_flow);
   FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::At_Least_Four_Jets, weight, n_cut_flow, 0, n_cut_flow);
   
@@ -956,13 +985,17 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       Jet jet_w_u = vec_sel_jet[index_matched_jet[1]];
       Jet jet_w_d = vec_sel_jet[index_matched_jet[2]];
 
+      best_mva_score = 1;
+
       bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
       cvsb_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsB);
       cvsl_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsL);
+      m_w_u = jet_w_u.GetM();
 
       bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
       cvsb_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsB);
       cvsl_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsL);
+      m_w_d = jet_w_d.GetM();
 
       int index = -1;
       if(decay_mode==21) index = 0;
@@ -988,7 +1021,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
  
   fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, muon, met, chk_matched_jets_only, index_matched_jet);
   fitter_driver->Scan();
-
+  
   //HF contamination score
   Results_Container results_container = fitter_driver->Get_Results();
 
@@ -1153,10 +1186,12 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
           int index_w_d = results.index_w_d;
           int index_lep_t_b = results.index_lep_t_b;
 
-	  if(index_matched_jet[0]==index_had_t_b && index_matched_jet[1]==index_w_u &&
-             index_matched_jet[2]==index_w_d && index_matched_jet[3]==index_lep_t_b) chk_jet_permutation_match = true;
-	  else chk_jet_permutation_match = false;
-
+	  n_matched_jets = 0;
+	  if(index_matched_jet[0]==index_had_t_b) n_matched_jets++;
+	  if(index_matched_jet[1]==index_w_u) n_matched_jets++;
+          if(index_matched_jet[2]==index_w_d) n_matched_jets++;
+	  if(index_matched_jet[3]==index_lep_t_b) n_matched_jets++; 
+	  
 	  Jet jet_had_t_b = vec_sel_jet[index_had_t_b];
 	  Jet jet_w_u = vec_sel_jet[index_w_u];
 	  Jet jet_w_d = vec_sel_jet[index_w_d];
@@ -1485,18 +1520,24 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       bvsc_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet);
       cvsb_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet_CvsB);
       cvsl_had_t_b = jet_had_t_b.GetTaggerResult(JetTagging::DeepJet_CvsL);
+      had_t_b_pt = jet_had_t_b.Pt();
 
       bvsc_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet);
       cvsb_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsB);
       cvsl_w_u = jet_w_u.GetTaggerResult(JetTagging::DeepJet_CvsL);
+      w_u_pt = jet_w_u.Pt();
+      m_w_u = jet_w_u.GetM();      
 
       bvsc_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet);
       cvsb_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsB);
       cvsl_w_d = jet_w_d.GetTaggerResult(JetTagging::DeepJet_CvsL);
+      w_d_pt = jet_w_d.Pt();
+      m_w_d = jet_w_d.GetM();
 
       bvsc_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet);
       cvsb_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet_CvsB);
       cvsl_lep_t_b = jet_lep_t_b.GetTaggerResult(JetTagging::DeepJet_CvsL);
+      lep_t_b_pt = jet_lep_t_b.Pt();
 
       if(fitter_correct) reco_eval_tree_correct->Fill();
       else reco_eval_tree_wrong->Fill();

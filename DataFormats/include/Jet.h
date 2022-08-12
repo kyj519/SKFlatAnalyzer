@@ -41,16 +41,20 @@ class Jet: public Particle {
   void SetCJetNNCorrection(double cJetNN_corr, double cJetNN_res);
   inline double CJetNNCorrection() const { return j_cJetNN_corr; }
   inline double CJetNNResolution() const { return j_cJetNN_res; }
+  
+  inline void SetM(double jet_m) { j_m = jet_m; return; }
+  inline double GetM() { return j_m; }
 
   void SetTightJetID(double b);
   void SetTightLepVetoJetID(double b);
   inline bool Pass_tightJetID() const { return j_tightJetID; }
   inline bool Pass_tightLepVetoJetID() const { return j_tightLepVetoJetID; }
+  bool Pass_PileupJetVeto(const TString& wp) const;
 
   bool PassID(TString ID) const;
 
   double GetTaggerResult(JetTagging::Tagger tg) const;
-
+  
  private:
 
   double  j_area;
@@ -68,6 +72,7 @@ class Jet: public Particle {
   double  j_neutralHadronEnergyFraction;
   double  j_neutralEmEnergyFraction;
   double  j_chargedEmEnergyFraction;
+  double  j_m;
   double j_muonEnergyFraction;
   int j_chargedMultiplicity;
   int j_neutralMultiplicity;

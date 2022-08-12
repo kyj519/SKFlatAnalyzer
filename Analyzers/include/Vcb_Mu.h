@@ -59,6 +59,7 @@ class Vcb_Mu : public AnalyzerCore
   int n_sel_jet;
   int n_b_jet;
   int n_c_jet;
+  int n_matched_jets;
 
   float n_b_jet_f;
   float n_c_jet_f;
@@ -153,7 +154,6 @@ class Vcb_Mu : public AnalyzerCore
   float mt_met;
   float mt_met_rebalance;
 
-  bool chk_jet_permutation_match;
   bool chk_real_neu_pz;
   float nu_pz_sol_0;
   float nu_pz_sol_1;
@@ -179,14 +179,16 @@ class Vcb_Mu : public AnalyzerCore
   float bvsc_had_t_b;
   float cvsb_had_t_b;
   float cvsl_had_t_b;
-
+  
   float bvsc_w_u;
   float cvsb_w_u;
   float cvsl_w_u;
-
+  float m_w_u;
+  
   float bvsc_w_d;
   float cvsb_w_d;
   float cvsl_w_d;
+  float m_w_d;
 
   float bvsc_lep_t_b;
   float cvsb_lep_t_b;

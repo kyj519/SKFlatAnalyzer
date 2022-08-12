@@ -122,6 +122,11 @@ public:
   //==== 2a) Jet-by-jet updating of the b-tagging status
   bool IsBTagged_2a(JetTagging::Parameters jtp, const Jet& jet, string Syst="central");
 
+  //Pileup Jet Veto
+  std::map<TString, TH2F*> map_hist_pujet_veto;
+  double PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys);
+  double PileupJetVetoReweight(const vector<Jet>& jets, const TString& wp, string Syst);
+  
 };
 
 #endif
