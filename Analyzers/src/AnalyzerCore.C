@@ -81,12 +81,12 @@ Event AnalyzerCore::GetEvent(){
 
   Event ev;
   ev.SetTrigger(*HLT_TriggerName);
-  ev.SetMET(pfMET_Type1_pt,pfMET_Type1_phi);
+  ev.SetMET("PF", pfMET_Type1_pt,pfMET_Type1_phi);
+  ev.SetMET("PUPPI", PuppiMET_Type1_pt,PuppiMET_Type1_phi);
   ev.SetnPV(nPV);
   ev.SetEra(GetEra());
 
   return ev;
-
 }
 
 std::vector<Muon> AnalyzerCore::GetAllMuons(){

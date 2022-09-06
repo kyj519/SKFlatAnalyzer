@@ -20,8 +20,8 @@ public:
   double GetTriggerLumi(TString trig);
   bool IsPDForTrigger(TString trig, TString PD);
 
-  void SetMET(double pt, double phi);
-  inline Particle GetMETVector() const {return j_METVector;}
+  void SetMET(const TString& type, double pt, double phi);
+  Particle GetMETVector(const TString& type="PF") const;
 
   void SetEra(TString era){
     j_DataEra=era;
@@ -34,7 +34,8 @@ public:
 private:
   int j_nPV;
   vector<string> j_HLT_TriggerName;
-  Particle j_METVector;
+  Particle j_METVector_pf;
+  Particle j_METVector_puppi;
   int j_DataYear;
   TString j_DataEra;
 

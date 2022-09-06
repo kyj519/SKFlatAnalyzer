@@ -10,6 +10,8 @@
 #include "Vcb_Def.h"
 #include "Results_Container.h"
 
+#include "XYMETCorrection_withUL17andUL18andUL16.h"
+
 using namespace std;
 using namespace TMath;
 
@@ -31,6 +33,7 @@ class Vcb_Mu : public AnalyzerCore
   bool run_chi;
   bool run_template;
   bool run_template_truth;
+  bool run_result;
   bool run_syst;
   bool rm_wm_constraint;
   bool rm_bjet_energy_reg_nn;
@@ -55,34 +58,51 @@ class Vcb_Mu : public AnalyzerCore
   vector<Muon> vec_muon;
   vector<Electron> vec_electron;
   vector<Jet> vec_jet;
-  
+   
   int n_sel_jet;
   int n_b_jet;
   int n_c_jet;
   int n_matched_jets;
 
+  int n_jet_bin;
+  int n_bjet_bin;
+  
   float n_b_jet_f;
   float n_c_jet_f;
 
-  int n_jet_bin;
-  int n_bjet_bin;
-
+  //Particle met;
+  XYMETCorrection_withUL17andUL18andUL16 xy_met_correction;
+  
   float weight_prefire;
 
   float weight;
-    
+  
+  float lepton_pt;
+  float lepton_eta;
+  float met_pt;
+  float met_phi;
+  
+  bool chk_reco_correct;
   bool chk_included;
   bool chk_matched_jets_only;
-  bool chk_kf_correct;
 
-  float had_t_b_pt;
-  float w_u_pt;
-  float w_d_pt;
-  float lep_t_b_pt;
+  float pt_leading_jet;
+  float pt_subleading_jet;
   
-  float had_t_b_bscore;
-  float lep_t_b_bscore;
+  float eta_leading_jet;
+  float eta_subleading_jet;
   
+  float pt_had_t_b;
+  float pt_w_u;
+  float pt_w_d;
+  float pt_lep_t_b;
+  
+
+  bool pu_conta_had_t_b;
+  bool pu_conta_w_u;
+  bool pu_conta_w_d;
+  bool pu_conta_lep_t_b;
+
   float del_phi_w_u_w_d;
   float del_phi_had_w_had_t_b;
   float del_phi_lep_neu;
@@ -119,6 +139,7 @@ class Vcb_Mu : public AnalyzerCore
   float m_w_u_b;
   float m_w_d_b;
 
+  TMVA::Reader* reader_swapper[2];
   TMVA::Reader* reader_hf_contamination_lessthantwo;
   TMVA::Reader* reader_hf_contamination_morethantwo;
 
@@ -165,6 +186,7 @@ class Vcb_Mu : public AnalyzerCore
   TTree* hf_contamination_tree_wrong;
 
   float best_chi2;
+  float best_mva_score_pre;
   float best_mva_score;
   float mt;
   float mva_hf_score;
@@ -194,10 +216,8 @@ class Vcb_Mu : public AnalyzerCore
   float cvsb_lep_t_b;
   float cvsl_lep_t_b;
 
-  int swapped;
-
-  float jet_mass_w_u;
-  float jet_mass_w_d;
+  int swapped_truth;
+  int swapped_mva;
 
   TTree* template_tree[5];
   TTree* template_truth_tree[5];
@@ -213,6 +233,7 @@ class Vcb_Mu : public AnalyzerCore
   int Get_W_Decay_Mode(const vector<Gen>& vec_gen);
   void Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4]);
   //void Index_Restorer(int& index_had_t_b, int& index_w_u, int& index_w_d, int& index_lep_t_b);
+  void KF_Ambiguity_Remover(const vector<Jet>& vec_sel_jet, const int index_matched_jet[4]);
   Gen Neutrino(const vector<Gen>& vec_gen);
   void Sol_Neutrino_Pz(const Particle& lepton, const Particle& met, float neutrino_pz_sol[2]);
 };

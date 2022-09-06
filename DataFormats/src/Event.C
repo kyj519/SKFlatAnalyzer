@@ -277,7 +277,22 @@ bool Event::IsPDForTrigger(TString trig, TString PD){
 
 }
 
-void Event::SetMET(double pt, double phi){
-  j_METVector.SetPtEtaPhiE(pt, 0, phi, pt);
+void Event::SetMET(const TString& type, double pt, double phi){
+  if(type=="PF") j_METVector_pf.SetPtEtaPhiE(pt, 0, phi, pt);
+  else if(type=="PUPPI") j_METVector_puppi.SetPtEtaPhiE(pt, 0, phi, pt);
+  else
+    { cout << "[Event::SetMet]: Unknown type." << endl;
+      exit(EXIT_FAILURE);
+    }
 }
 
+Particle Event::GetMETVector(const TString& type) const
+{
+  if(type=="PF") return j_METVector_pf;
+  else if(type=="PUPPI") return j_METVector_puppi;
+  else 
+    {
+      cout << "[Event::GetMetVector]: Unknown type." << endl;
+      exit(EXIT_FAILURE);
+    }
+}

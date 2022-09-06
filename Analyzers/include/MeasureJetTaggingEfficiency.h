@@ -15,11 +15,22 @@ public:
   MeasureJetTaggingEfficiency();
   ~MeasureJetTaggingEfficiency();
 
+ protected:
+  vector<double> vec_etabins;
+  vector<double> vec_ptbins;
+
+  double PtMax;
+  
+  int NEtaBin;
+  int NPtBin;
+
+  double* etabins;
+  double* ptbins;
+    
   //==== Read what to measrue from data/Run2Legacy_v4/<Year>/BTag/taggermap.txt
   vector<string> Taggers;
   vector<string> WPs;
-  vector<double> CutValues;
-
+  vector<pair<double, double>> cut_values;
 };
 
 

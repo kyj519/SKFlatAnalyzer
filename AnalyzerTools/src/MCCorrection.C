@@ -850,104 +850,105 @@ void MCCorrection::SetJetTaggingParameters(std::vector<JetTagging::Parameters> v
   jetTaggingPars = v;
 }
 
-void MCCorrection::SetupJetTagging(){
-
+void MCCorrection::SetupJetTagging()
+{
   if(IsDATA) return;
-
+  
   TString datapath = getenv("DATA_DIR");
   TString btagpath = datapath+"/"+GetEra()+"/BTag/";
 
   std::map< string, BTagCalibration > tmp_map_BTagCalibration; //==== key = tagger+"_"+method
-  for(unsigned int i=0; i<jetTaggingPars.size(); i++){
-    //==== (DeepCSV,Medium,incl,comb
+  for(unsigned int i=0; i<jetTaggingPars.size(); i++)
+    {
+      //==== (DeepCSV,Medium,incl,comb
 
-    cout << "[MCCorrection::SetJetTaggingParameters] Contructing BTagCalibrationReader with ";jetTaggingPars.at(i).Print();
-    string this_tagger = JetTagging::TaggerToString(jetTaggingPars.at(i).j_Tagger);
+      cout << "[MCCorrection::SetJetTaggingParameters] Contructing BTagCalibrationReader with ";jetTaggingPars.at(i).Print();
+      string this_tagger = JetTagging::TaggerToString(jetTaggingPars.at(i).j_Tagger);
 
-    string this_wp = JetTagging::WPToString(jetTaggingPars.at(i).j_WP);
-    BTagEntry::OperatingPoint op = BTagEntry::OP_LOOSE;
-    if(this_wp=="Loose"){
-      op = BTagEntry::OP_LOOSE;
-    }
-    else if(this_wp=="Medium"){
-      op = BTagEntry::OP_MEDIUM;
-    }
-    else if(this_wp=="Tight"){
-      op = BTagEntry::OP_TIGHT;
-    }
-    else{
-      cerr << "[MCCorrection::ReadJetTaggingCVSs()] Wrong WP : " << this_wp << endl;
-      exit(ENODATA);
-    }
-    //==== When using iterativefit method, use BTagEntry::OP_RESHAPING
-    if(jetTaggingPars.at(i).j_MeasurmentType_Light==JetTagging::iterativefit ||
-       jetTaggingPars.at(i).j_MeasurmentType_Heavy==JetTagging::iterativefit ){
-      op = BTagEntry::OP_RESHAPING;
-    }
+      string this_wp = JetTagging::WPToString(jetTaggingPars.at(i).j_WP);
+      BTagEntry::OperatingPoint op = BTagEntry::OP_LOOSE;
+      if(this_wp=="Loose") op = BTagEntry::OP_LOOSE;
+      else if(this_wp=="Medium") op = BTagEntry::OP_MEDIUM;
+      else if(this_wp=="Tight")	op = BTagEntry::OP_TIGHT;
+      else
+	{
+	  cerr << "[MCCorrection::ReadJetTaggingCVSs()] Wrong WP : " << this_wp << endl;
+	  exit(ENODATA);
+	}
+    
+      //==== When using iterativefit method, use BTagEntry::OP_RESHAPING
+      if(jetTaggingPars.at(i).j_MeasurmentType_Light==JetTagging::iterativefit ||
+	 jetTaggingPars.at(i).j_MeasurmentType_Heavy==JetTagging::iterativefit ) op = BTagEntry::OP_RESHAPING;
+      
+      string this_mt_L = JetTagging::MeasurmentTypeToString(jetTaggingPars.at(i).j_MeasurmentType_Light);
+      string this_mt_H = JetTagging::MeasurmentTypeToString(jetTaggingPars.at(i).j_MeasurmentType_Heavy);
+      
+      ifstream in(btagpath+"/csvmap.txt");
+      string btagline; // dummy
+      while(getline(in,btagline))
+	{
+	  std::istringstream is( btagline );
 
-    string this_mt_L = JetTagging::MeasurmentTypeToString(jetTaggingPars.at(i).j_MeasurmentType_Light);
-    string this_mt_H = JetTagging::MeasurmentTypeToString(jetTaggingPars.at(i).j_MeasurmentType_Heavy);
+	  TString tstring_btagline = btagline;
+	  if(tstring_btagline.Contains("#")) continue;
+	  
+	  int tmp_Year, tmp_Run_Start, tmp_Run_End;
+	  string tmp_tagger, tmp_pd, tmp_filename;
+	  
+	  is >> tmp_Year; // YEAR
+	  is >> tmp_tagger; // TAGGER
+	  is >> tmp_pd; // Period_dep
+	  is >> tmp_Run_Start; // Run_start
+	  is >> tmp_Run_End; // Run_end
+	  is >> tmp_filename; // csv file
+	  if( tmp_tagger != this_tagger ) continue;
+	  if( tmp_pd != "All") continue; // don't no period dep now
+	  
+	  //==== Get BTagCalibration objects for both heavy-method and light-method first
+	  //==== BTagCalibration() is where we read and addEntry from csv file, so it takes time
+	  //==== So let's not contruct it again if it already exists
+	  string this_key_L = tmp_tagger+"_"+this_mt_L;
+	  std::map< string, BTagCalibration >::const_iterator tmp_it_L = tmp_map_BTagCalibration.find( tmp_tagger+"_"+this_key_L );
+	  if(tmp_it_L==tmp_map_BTagCalibration.end()) tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_L] = BTagCalibration(tmp_tagger, this_mt_L, btagpath.Data()+tmp_filename);
+	  
+	  string this_key_H = tmp_tagger+"_"+this_mt_H;
+	  std::map< string, BTagCalibration >::const_iterator tmp_it_H = tmp_map_BTagCalibration.find( tmp_tagger+"_"+this_key_H );
+	  if(tmp_it_H==tmp_map_BTagCalibration.end()) tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_H] = BTagCalibration(tmp_tagger, this_mt_H, btagpath.Data()+tmp_filename);
+	  
+	  //==== Now, contructing BTagCalibrationReader object
 
-    ifstream in(btagpath+"/cvsmap.txt");
-    string btagline; // dummy
-    while(getline(in,btagline)){
-      std::istringstream is( btagline );
+	  std::vector<std::string> systvec_L = {"up", "up_correlated", "up_uncorrelated", "down", "down_correlated", "down_uncorrelated"};
+	  std::vector<std::string> systvec_C = {"up", "up_correlated", "up_uncorrelated", "down", "down_correlated", "down_uncorrelated"};
+	  std::vector<std::string> systvec_B = {"up", "up_correlated", "up_uncorrelated", "down", "down_correlated", "down_uncorrelated"};
+	  if(this_mt_L=="iterativefit"){
+	    systvec_L = {"up_hf","down_hf","up_jes","down_jes","up_lfstats1","down_lfstats1","up_lfstats2","down_lfstats2"};
+	    systvec_C = {"up_cferr1","down_cferr1","up_cferr2","down_cferr2"};
+	    systvec_B = {"up_hfstats1","down_hfstats1","up_hfstats2","down_hfstats2","up_lf","down_lf","up_jes","down_jes"};
+	  }
 
-      TString tstring_btagline = btagline;
-      if(tstring_btagline.Contains("#")) continue;
-
-      int tmp_Year, tmp_Run_Start, tmp_Run_End;
-      string tmp_tagger, tmp_pd, tmp_filename;
-
-      is >> tmp_Year; // YEAR
-      is >> tmp_tagger; // TAGGER
-      is >> tmp_pd; // Period_dep
-      is >> tmp_Run_Start; // Run_start
-      is >> tmp_Run_End; // Run_end
-      is >> tmp_filename; // csv file
-      if( tmp_tagger != this_tagger ) continue;
-      if( tmp_pd != "All") continue; // don't no period dep now
-
-      //==== Get BTagCalibration objects for both heavy-method and light-method first
-      //==== BTagCalibration() is where we read and addEntry from csv file, so it takes time
-      //==== So let's not contruct it again if it already exists
-      string this_key_L = tmp_tagger+"_"+this_mt_L;
-      std::map< string, BTagCalibration >::const_iterator tmp_it_L = tmp_map_BTagCalibration.find( tmp_tagger+"_"+this_key_L );
-      if(tmp_it_L==tmp_map_BTagCalibration.end()){
-        tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_L] = BTagCalibration(tmp_tagger, this_mt_L, btagpath.Data()+tmp_filename);
-      }
-      string this_key_H = tmp_tagger+"_"+this_mt_H;
-      std::map< string, BTagCalibration >::const_iterator tmp_it_H = tmp_map_BTagCalibration.find( tmp_tagger+"_"+this_key_H );
-      if(tmp_it_H==tmp_map_BTagCalibration.end()){
-        tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_H] = BTagCalibration(tmp_tagger, this_mt_H, btagpath.Data()+tmp_filename);
-      }
-
-      //==== Now, contructing BTagCalibrationReader obect
-
-      std::vector<std::string> systvec_L = {"up", "up_correlated", "up_uncorrelated", "down", "down_correlated", "down_uncorrelated"};
-      std::vector<std::string> systvec_C = {"up", "up_correlated", "up_uncorrelated", "down", "down_correlated", "down_uncorrelated"};
-      std::vector<std::string> systvec_B = {"up", "up_correlated", "up_uncorrelated", "down", "down_correlated", "down_uncorrelated"};
-      if(this_mt_L=="iterativefit"){
-        systvec_L = {"up_hf","down_hf","up_jes","down_jes","up_lfstats1","down_lfstats1","up_lfstats2","down_lfstats2"};
-        systvec_C = {"up_cferr1","down_cferr1","up_cferr2","down_cferr2"};
-        systvec_B = {"up_hfstats1","down_hfstats1","up_hfstats2","down_hfstats2","up_lf","down_lf","up_jes","down_jes"};
-      }
-
-      //==== Load L
-      map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_L_"+this_mt_L] = new BTagCalibrationReader(op, "central", systvec_L);
-      map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_L_"+this_mt_L]->load( tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_L], BTagEntry::FLAV_UDSG, this_mt_L);
-      //==== Load C
-      map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_C_"+this_mt_H] = new BTagCalibrationReader(op, "central", systvec_C);
-      map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_C_"+this_mt_H]->load( tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_H], BTagEntry::FLAV_C, this_mt_H);
-      //==== Load B
-      map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_B_"+this_mt_H] = new BTagCalibrationReader(op, "central", systvec_B);
-      map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_B_"+this_mt_H]->load( tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_H], BTagEntry::FLAV_B, this_mt_H);
-
-    }
+	  if(tmp_tagger.compare("DeepJet_C")==0)
+	    {
+	      systvec_L = {"up", "up_correlated", "up_uncorrelated", "down", "down_correlated", "down_uncorrelated"};
+	      systvec_C = {"up", "down"};
+	      systvec_B = {"up", "down"};
+	    }
 
 
-  } // END loop jetTaggingPars
+	  //==== Load L
+	  map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_L_"+this_mt_L] = new BTagCalibrationReader(op, "central", systvec_L);
+	  map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_L_"+this_mt_L]->load( tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_L], BTagEntry::FLAV_UDSG, this_mt_L);
+	  //==== Load C
+	  map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_C_"+this_mt_H] = new BTagCalibrationReader(op, "central", systvec_C);
+	  map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_C_"+this_mt_H]->load( tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_H], BTagEntry::FLAV_C, this_mt_H);
+	  //==== Load B
+	  map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_B_"+this_mt_H] = new BTagCalibrationReader(op, "central", systvec_B);
+	  map_BTagCalibrationReader[tmp_tagger+"_"+this_wp+"_B_"+this_mt_H]->load( tmp_map_BTagCalibration[tmp_tagger+"_"+this_key_H], BTagEntry::FLAV_B, this_mt_H);
+	  
+	}
 
+      
+    } // END loop jetTaggingPars
+  
   cout << "[MCCorrection::SetJetTaggingParameters] Printing all BTagCalibrationReader :" << endl;
   for(std::map< std::string, BTagCalibrationReader* >::iterator it=map_BTagCalibrationReader.begin(); it!=map_BTagCalibrationReader.end(); it++){
     cout << "[MCCorrection::SetJetTaggingParameters] key = " << it->first << endl;
@@ -1137,45 +1138,50 @@ double MCCorrection::GetJetTaggingCutValue(JetTagging::Tagger tagger, JetTagging
 
 }
 
-void MCCorrection::SetupMCJetTagEff(){
+void MCCorrection::SetupMCJetTagEff()
+{
   cout<<"[MCCorrection::SetupMCJetTagEff] setting MCJetTagEff"<<endl;
 
   TString datapath=getenv("DATA_DIR");
-  TString mcjetpath=datapath+"/"+DataEra+"/BTag/MeasureJetTaggingEfficiency_TTLL_TTLJ_hadded.root";
+  //TString mcjetpath=datapath+"/"+DataEra+"/BTag/MeasureJetTaggingEfficiency_TTLL_TTLJ_hadded.root";
+  TString mcjetpath=datapath+"/"+DataEra+"/BTag/MeasureJetTaggingEfficiency_TTLJ_powheg.root";
   ifstream fcheck(mcjetpath);
-  if(!fcheck.good()){
-    cout<<"[MCCorrection::SetupMCJetTagEff] no "+mcjetpath<<endl;
-    return;
-  }
+  if(!fcheck.good())
+    {
+      cout<<"[MCCorrection::SetupMCJetTagEff] no "+mcjetpath<<endl;
+      return;
+    }
   TFile fmcjet(mcjetpath);
   // Denominator histogram setup first
   vector<TString> jfs = {"B", "C", "Light"};
-  for(unsigned int i=0; i<jfs.size(); i++){
-    TString hden="Jet_"+DataEra+"_eff_"+jfs.at(i)+"_denom";
-    TH2F* this_hist=(TH2F*)fmcjet.Get(hden);
-    map_hist_mcjet[hden]=this_hist;
-    this_hist->SetDirectory(0);
-    cout<<"[MCCorrection::SetupMCJetTagEff] setting "<<hden<<endl;
-  }
+  for(unsigned int i=0; i<jfs.size(); i++)
+    {
+      TString hden="Jet_"+DataEra+"_eff_"+jfs.at(i)+"_denom";
+      TH2F* this_hist=(TH2F*)fmcjet.Get(hden);
+      map_hist_mcjet[hden]=this_hist;
+      this_hist->SetDirectory(0);
+      cout<<"[MCCorrection::SetupMCJetTagEff] setting "<<hden<<endl;
+    }
   // Numerator histogram setup and divided using "binomial option"
-  for(const auto& obj:*(fmcjet.GetListOfKeys())){
-    TH2F* this_hist=(TH2F*)((TKey*)obj)->ReadObj();
-    TString hnum=this_hist->GetName();
-    if(!hnum.Contains("num")) continue;
-    TString hden="";
-    if(hnum.Contains("_B_")) hden="Jet_"+DataEra+"_eff_B_denom";
-    else if(hnum.Contains("_C_")) hden="Jet_"+DataEra+"_eff_C_denom";
-    else hden="Jet_"+DataEra+"_eff_Light_denom";
-
-    this_hist->Divide(this_hist,map_hist_mcjet[hden],1.,1.,"b");
-    map_hist_mcjet[hnum]=this_hist;
-    this_hist->SetDirectory(0);
-    cout<<"[MCCorrection::SetupMCJetTagEff] setting "<<hnum<<endl;
-  }
+  for(const auto& obj:*(fmcjet.GetListOfKeys()))
+    {
+      TH2F* this_hist=(TH2F*)((TKey*)obj)->ReadObj();
+      TString hnum=this_hist->GetName();
+      if(!hnum.Contains("num")) continue;
+      TString hden="";
+      if(hnum.Contains("_B_num")) hden="Jet_"+DataEra+"_eff_B_denom";
+      else if(hnum.Contains("_C_num")) hden="Jet_"+DataEra+"_eff_C_denom";
+      else if(hnum.Contains("_Light_num")) hden="Jet_"+DataEra+"_eff_Light_denom";
+      
+      this_hist->Divide(this_hist,map_hist_mcjet[hden],1.,1.,"b");
+      map_hist_mcjet[hnum]=this_hist;
+      this_hist->SetDirectory(0);
+      cout<<"[MCCorrection::SetupMCJetTagEff] setting "<<hnum<<endl;
+    }
 }
 
-double MCCorrection::GetMCJetTagEff(JetTagging::Tagger tagger, JetTagging::WP wp, int JetFlavor, double JetPt, double JetEta, int sys){
-
+double MCCorrection::GetMCJetTagEff(JetTagging::Tagger tagger, JetTagging::WP wp, int JetFlavor, double JetPt, double JetEta, int sys)
+{
   if(IsDATA) return 1.;
 
   if(JetPt<20) JetPt = 20.;
@@ -1191,17 +1197,20 @@ double MCCorrection::GetMCJetTagEff(JetTagging::Tagger tagger, JetTagging::WP wp
     cout<<"[MCCorrection::GetMCJetTagEff] no JetFlavor"<<endl;
     exit(EXIT_FAILURE);
   }
-
+  
   double value = 1., error = 0., out = 1.;
   TString hnum="Jet_"+DataEra+"_"+JetTagging::TaggerToString(tagger)+"_"+JetTagging::WPToString(wp)+"_eff_"+jf+"_num";
+  
   TH2F *this_hist = map_hist_mcjet[hnum];
   int this_bin = this_hist->FindBin(fabs(JetEta),JetPt);
+  
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
-
+  
   out = value+double(sys)*error;
   if(out<=0.) out = 1E-10;
   if(out>=1.) out = 1.-1E-10;
+  
   return out;
 }
 
@@ -1321,6 +1330,8 @@ double MCCorrection::GetBTaggingReweight_1d(const vector<Jet>& jets, JetTagging:
 
 }
 
+//////////
+
 bool MCCorrection::IsBTagged_2a(JetTagging::Parameters jtp, const Jet& jet, string Syst){
 
   double this_discr = jet.GetTaggerResult(jtp.j_Tagger);
@@ -1379,6 +1390,55 @@ bool MCCorrection::IsBTagged_2a(JetTagging::Parameters jtp, const Jet& jet, stri
   return newBTag;
 
 }
+
+//////////
+
+double MCCorrection::GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Parameters jtp, string Syst)
+{
+  if(IsDATA) return 1.;
+  
+  double Prob_MC(1.), Prob_DATA(1.);
+
+  for(unsigned int i=0; i<jets.size(); i++)
+    {
+      int JetHadFlav = jets.at(i).hadronFlavour();
+      
+      double this_MC_Eff = GetMCJetTagEff(jtp.j_Tagger, jtp.j_WP, jets.at(i).hadronFlavour(), jets.at(i).Pt(), jets.at(i).Eta());
+      
+      double this_SF = GetJetTaggingSF(jtp,
+				       jets.at(i).hadronFlavour(),
+				       jets.at(i).Pt(),
+				       jets.at(i).Eta(),
+				       0,//jets.at(i).GetTaggerResult(jtp.j_Tagger), 
+				       //currently, I don't know how to handle two tagging discriminant for c-tagging. CSV has no dependence on tagging score. So I think it should be OK for a while
+				       "central" );
+      
+      double this_DATA_Eff = this_MC_Eff*this_SF;
+      
+      bool isTagged = false;
+      if( GetJetTaggingCutValue(JetTagging::DeepJet_CvsL, jtp.j_WP)<jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsL) && 
+	  GetJetTaggingCutValue(JetTagging::DeepJet_CvsB, jtp.j_WP)<jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsB) ) isTagged = true;  
+      
+      if(isTagged)
+	{
+	  Prob_MC *= this_MC_Eff;
+	  Prob_DATA *= this_DATA_Eff;
+	}
+      else
+	{
+	  Prob_MC *= 1.- this_MC_Eff;
+	  Prob_DATA *= 1.- this_DATA_Eff;
+	}
+    }//loop over n_jet
+
+  double SF(1.);
+  if(Prob_MC>0. && Prob_DATA>0.) SF=Prob_DATA/Prob_MC;
+  else SF=0.;
+  
+  return SF;
+}//double MCCorrection::GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Parameters jtp)
+
+//////////
 
 double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys)
 {

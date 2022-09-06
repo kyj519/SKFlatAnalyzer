@@ -41,42 +41,48 @@ BTagEntry::BTagEntry(const std::string &csvLine)
   std::vector<std::string> vec;
   std::string token;
   std::string word="";
-  while (std::getline(buff, token, ","[0])) {
-    word += BTagEntry::trimStr(token);
-    if (word.empty()) {
-      continue;
+  while (std::getline(buff, token, ","[0])) 
+    {
+      word += BTagEntry::trimStr(token);
+      if (word.empty()) 
+	{
+	  continue;
+	}
+      if(std::count(word.begin(),word.end(),'(')-std::count(word.begin(),word.end(),')')!=0)
+	{
+	  word+=",";
+	  continue;
+	}
+      vec.push_back(word);
+      word="";
     }
-    if(std::count(word.begin(),word.end(),'(')-std::count(word.begin(),word.end(),')')!=0){
-      word+=",";
-      continue;
+  if (vec.size() != 11) 
+    {
+      std::cerr << "ERROR in BTagCalibration: "
+		<< "Invalid csv line; num tokens != 11: "
+		<< csvLine;
+      throw std::exception();
     }
-    vec.push_back(word);
-    word="";
-  }
-  if (vec.size() != 11) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; num tokens != 11: "
-          << csvLine;
-throw std::exception();
-  }
 
   // clean string values
   char chars[] = " \"\n";
-  for (unsigned int i = 0; i < strlen(chars); ++i) {
-    vec[1].erase(remove(vec[1].begin(),vec[1].end(),chars[i]),vec[1].end());
-    vec[2].erase(remove(vec[2].begin(),vec[2].end(),chars[i]),vec[2].end());
-    vec[10].erase(remove(vec[10].begin(),vec[10].end(),chars[i]),vec[10].end());
-  }
-
+  for (unsigned int i = 0; i < strlen(chars); ++i) 
+    {
+      vec[1].erase(remove(vec[1].begin(),vec[1].end(),chars[i]),vec[1].end());
+      vec[2].erase(remove(vec[2].begin(),vec[2].end(),chars[i]),vec[2].end());
+      vec[10].erase(remove(vec[10].begin(),vec[10].end(),chars[i]),vec[10].end());
+    }
+  
   // make formula
   formula = vec[10];
   TF1 f1("", formula.c_str());  // compile formula to check validity
-  if (f1.IsZombie()) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; formula does not compile: "
-          << csvLine;
-throw std::exception();
-  }
+  if (f1.IsZombie()) 
+    {
+      std::cerr << "ERROR in BTagCalibration: "
+		<< "Invalid csv line; formula does not compile: "
+		<< csvLine;
+      throw std::exception();
+    }
 
   // make parameters
   unsigned op=10;
@@ -84,22 +90,25 @@ throw std::exception();
   else if(vec[0]=="M"    ) op = BTagEntry::OP_MEDIUM;
   else if(vec[0]=="T"    ) op = BTagEntry::OP_TIGHT;
   else if(vec[0]=="shape") op = BTagEntry::OP_RESHAPING;
-  if (op > 3) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; OperatingPoint > 3: "
-          << csvLine;
-throw std::exception();
-  }
+  if (op > 3) 
+    {
+      std::cerr << "ERROR in BTagCalibration: "
+		<< "Invalid csv line; OperatingPoint > 3: "
+		<< csvLine;
+      throw std::exception();
+    }
   unsigned jf = 10; 
   if     (vec[3]=="5") jf = BTagEntry::FLAV_B;
   else if(vec[3]=="4") jf = BTagEntry::FLAV_C;
   else if(vec[3]=="0") jf = BTagEntry::FLAV_UDSG;
-  if (jf > 2) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; JetFlavor > 2: "
-          << csvLine;
-throw std::exception();
-  }
+  if (jf > 2)
+    {
+      std::cerr << "ERROR in BTagCalibration: "
+		<< "Invalid csv line; JetFlavor > 2: "
+		<< csvLine;
+      throw std::exception();
+    }
+  
   params = BTagEntry::Parameters(
     BTagEntry::OperatingPoint(op),
     vec[1],

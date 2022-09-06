@@ -8,17 +8,19 @@ using namespace std;
 namespace JetTagging{
 
   enum Tagger{
-    DeepCSV, DeepCSV_CvsL, DeepCSV_CvsB,
-    DeepJet, DeepJet_CvsL, DeepJet_CvsB,
+    DeepCSV, DeepCSV_C, DeepCSV_CvsL, DeepCSV_CvsB,
+    DeepJet, DeepJet_C, DeepJet_CvsL, DeepJet_CvsB,
     particleNet_TvsQCD, particleNet_WvsQCD, particleNet_ZvsQCD, 
     particleNet_HbbvsQCD, particleNet_HccvsQCD, particleNet_H4qvsQCD, particleNet_QCD, 
     particleNetMD_Xbb, particleNetMD_Xcc, particleNetMD_Xqq, particleNetMD_QCD,
   };
   inline string TaggerToString(Tagger t){
     if(t == DeepCSV) return "DeepCSV";
+    if(t == DeepCSV_C) return "DeepCSV_C";
     if(t == DeepCSV_CvsL) return "DeepCSV_CvsL";
     if(t == DeepCSV_CvsB) return "DeepCSV_CvsB";
     if(t == DeepJet) return "DeepJet";
+    if(t == DeepJet_C) return "DeepJet_C";
     if(t == DeepJet_CvsL) return "DeepJet_CvsL";
     if(t == DeepJet_CvsB) return "DeepJet_CvsB";
     if(t == particleNet_TvsQCD) return "particleNet_TvsQCD";
@@ -63,6 +65,22 @@ namespace JetTagging{
     return DeepCSV;
   }
 
+  inline Tagger StringToTagger(string s, int i){
+    if(s == "DeepCSV_C"){
+      if(i==0) return DeepCSV_CvsL;
+      else if(i==1) return DeepCSV_CvsB;
+    }
+    else if(s == "DeepJet_C"){
+      if(i==0) return DeepJet_CvsL;
+      else if(i==1) return DeepJet_CvsB;
+    }
+    
+    cerr << "[JetTaggingParameters:: StringToTagger] Wrong tagger string : " << s << ", or wrong index : " << i << endl;
+    exit(ENODATA);
+    
+    return DeepCSV;
+  }
+  
   enum WP{
     Loose, Medium, Tight
   };
@@ -79,13 +97,14 @@ namespace JetTagging{
   }
 
   enum MeasurmentType{
-    incl, mujets, comb, iterativefit
+    incl, mujets, comb, wcharm, iterativefit 
   };
 
   inline string MeasurmentTypeToString(MeasurmentType mt){
     if(mt == incl) return "incl";
     if(mt == mujets) return "mujets";
     if(mt == comb) return "comb";
+    if(mt == wcharm) return "wcharm";
     if(mt == iterativefit) return "iterativefit";
 
     cerr << "[JetTaggingParameters::MeasurmentTypeToString] Wrong MeasurmentType enum : " << mt << endl;
