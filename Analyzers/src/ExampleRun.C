@@ -270,40 +270,40 @@ void ExampleRun::executeEventFromParameter(AnalyzerParameter param){
   if(param.syst_ == AnalyzerParameter::Central){
 
   }
-  else if(param.syst_ == AnalyzerParameter::JetResUp){
-    this_AllJets = SmearJets( this_AllJets, +1 );
-    //this_AllFatJets = SmearFatJets( this_AllFatJets, +1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::JetResDown){
-    this_AllJets = SmearJets( this_AllJets, -1 );
-    //this_AllFatJets = SmearFatJets( this_AllFatJets, -1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::JetEnUp){
-    this_AllJets = ScaleJets( this_AllJets, +1 );
-    //this_AllFatJets = ScaleFatJets( this_AllFatJets, +1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::JetEnDown){
-    this_AllJets = ScaleJets( this_AllJets, -1 );
-    //this_AllFatJets = ScaleFatJets( this_AllFatJets, -1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::MuonEnUp){
-    this_AllMuons = ScaleMuons( this_AllMuons, +1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::MuonEnDown){
-    this_AllMuons = ScaleMuons( this_AllMuons, -1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::ElectronResUp){
-    //this_AllElectrons = SmearElectrons( this_AllElectrons, +1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::ElectronResDown){
-    //this_AllElectrons = SmearElectrons( this_AllElectrons, -1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::ElectronEnUp){
-    //this_AllElectrons = ScaleElectrons( this_AllElectrons, +1 );
-  }
-  else if(param.syst_ == AnalyzerParameter::ElectronEnDown){
-    //this_AllElectrons = ScaleElectrons( this_AllElectrons, -1 );
-  }
+  // else if(param.syst_ == AnalyzerParameter::JetResUp){
+  //   this_AllJets = SmearJets( this_AllJets, +1 );
+  //   //this_AllFatJets = SmearFatJets( this_AllFatJets, +1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::JetResDown){
+  //   this_AllJets = SmearJets( this_AllJets, -1 );
+  //   //this_AllFatJets = SmearFatJets( this_AllFatJets, -1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::JetEnUp){
+  //   this_AllJets = ScaleJets( this_AllJets, +1 );
+  //   //this_AllFatJets = ScaleFatJets( this_AllFatJets, +1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::JetEnDown){
+  //   this_AllJets = ScaleJets( this_AllJets, -1 );
+  //   //this_AllFatJets = ScaleFatJets( this_AllFatJets, -1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::MuonEnUp){
+  //   this_AllMuons = ScaleMuons( this_AllMuons, +1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::MuonEnDown){
+  //   this_AllMuons = ScaleMuons( this_AllMuons, -1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::ElectronResUp){
+  //   //this_AllElectrons = SmearElectrons( this_AllElectrons, +1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::ElectronResDown){
+  //   //this_AllElectrons = SmearElectrons( this_AllElectrons, -1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::ElectronEnUp){
+  //   //this_AllElectrons = ScaleElectrons( this_AllElectrons, +1 );
+  // }
+  // else if(param.syst_ == AnalyzerParameter::ElectronEnDown){
+  //   //this_AllElectrons = ScaleElectrons( this_AllElectrons, -1 );
+  // }
   else{
     cout << "[ExampleRun::executeEventFromParameter] Wrong syst" << endl;
     exit(EXIT_FAILURE);

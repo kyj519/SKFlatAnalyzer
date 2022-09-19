@@ -1410,7 +1410,7 @@ double MCCorrection::GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Pa
 				       jets.at(i).Pt(),
 				       jets.at(i).Eta(),
 				       0,//jets.at(i).GetTaggerResult(jtp.j_Tagger), 
-				       //currently, I don't know how to handle two tagging discriminant for c-tagging. CSV has no dependence on tagging score. So I think it should be OK for a while
+				       //currently, I don't know how to handle two tagging discriminant for c-tagging. CSV has no dependence on tagging score currently.
 				       "central" );
       
       double this_DATA_Eff = this_MC_Eff*this_SF;
@@ -1429,12 +1429,13 @@ double MCCorrection::GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Pa
 	  Prob_MC *= 1.- this_MC_Eff;
 	  Prob_DATA *= 1.- this_DATA_Eff;
 	}
+      
     }//loop over n_jet
 
   double SF(1.);
   if(Prob_MC>0. && Prob_DATA>0.) SF=Prob_DATA/Prob_MC;
   else SF=0.;
-  
+ 
   return SF;
 }//double MCCorrection::GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Parameters jtp)
 
@@ -1490,7 +1491,7 @@ double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp
   return out;
 }//double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys)
 
-double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TString& wp, string Syst)
+double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TString& wp, const int sys)
 {
   if(IsDATA) return 1.;
   
@@ -1517,8 +1518,8 @@ double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TStrin
       //genjet matched
       if(matched)
 	{
-	  double mc_eff = PileupJetVeto_MCCorr("MC_Eff", wp, pt, eta, 0);
-	  double mc_eff_sf = PileupJetVeto_MCCorr("MC_Eff_SF", wp, pt, eta, 0);
+	  double mc_eff = PileupJetVeto_MCCorr("MC_Eff", wp, pt, eta, sys);
+	  double mc_eff_sf = PileupJetVeto_MCCorr("MC_Eff_SF", wp, pt, eta, sys);
 	  
 	  double data_eff = mc_eff*mc_eff_sf;
 	  
@@ -1536,8 +1537,8 @@ double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TStrin
       //genjet unmatched
       else
 	{
-	  double mc_mistag = PileupJetVeto_MCCorr("MC_Mistag", wp, pt, eta, 0);
-	  double mc_mistag_sf = PileupJetVeto_MCCorr("MC_Mistag_SF", wp, pt, eta, 0);
+	  double mc_mistag = PileupJetVeto_MCCorr("MC_Mistag", wp, pt, eta, sys);
+	  double mc_mistag_sf = PileupJetVeto_MCCorr("MC_Mistag_SF", wp, pt, eta, sys);
 
 	  double data_mistag = mc_mistag*mc_mistag_sf;
 

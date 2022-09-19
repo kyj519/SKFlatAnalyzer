@@ -693,25 +693,13 @@ void Vcb_Mu::executeEvent()
      //run syst
       if(run_syst)
 	{
-	  //basic variation defined in AnalyzerParameter
+	  //Variations for syst. estimation
 	  for(int it_syst=1; it_syst<AnalyzerParameter::NSyst; it_syst++)
 	    {
 	      param.syst_ = AnalyzerParameter::Syst(it_syst);
 	      param.Name = vec_mu_id.at(i) + "_" + "Syst_" + param.GetSystType();
 	      executeEventFromParameter(param);
 	    }
-
-	  //pileup reweight
-	  for(int i=0; i<2; i++)
-	    {
-	      
-	    }
-
-	  //prefire reweight
-	  for(int i=0; i<2; i++)
-	    {
-	    }
-	  
 	}//run syst
     }//loop over muon ids
 
@@ -735,21 +723,28 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
       decay_mode = Get_W_Decay_Mode(vec_gen);
       
       //lumi
-      //float lumi_weight = weight_norm_1invpb*ev.GetTriggerLumi("Full");
-      //weight *= lumi_weight;
-
+      weight_lumi = ev.GetTriggerLumi("Full");
+      weight *= weight_lumi;
+      
       //MCweight +1 or -1
-      float mc_weight = MCweight()*ev.GetTriggerLumi("Full");
-      weight *= mc_weight;
-
+      weight_mc = MCweight();
+      weight *= weight_mc;
+      
       //pileup reweight
-      float pileup_weight = mcCorr->GetPileUpWeight(nPileUp, 0);
-      weight *= pileup_weight;
-
+      int syst_pileup = 0;
+      if(param.syst_ == AnalyzerParameter::PileupReweightUp) syst_pileup = 1;
+      else if(param.syst_ == AnalyzerParameter::PileupReweightDown) syst_pileup = -1;
+      
+      weight_pileup = mcCorr->GetPileUpWeight(nPileUp, syst_pileup);
+      weight *= weight_pileup;
+      
       //L1 prefire
-      float prefire_weight = GetPrefireWeight(0);
-      weight *= prefire_weight;
-    
+      int syst_prefire = 0;
+      if(param.syst_ == AnalyzerParameter::PrefireReweightUp) syst_prefire = 1;
+      else if(param.syst_ == AnalyzerParameter::PrefireReweightDown) syst_prefire = -1;
+      weight_prefire = GetPrefireWeight(syst_prefire);
+      weight *= weight_prefire;
+      
       // if(!TMath::Finite(lumi_weight)) cout << lumi_weight << endl;
       // if(!TMath::Finite(mc_weight)) cout << mc_weight << endl;
       // if(!TMath::Finite(pileup_weight)) cout << pileup_weight << endl;
@@ -779,14 +774,13 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   
   met.SetPtEtaPhiE(met_corr.first, 0, met_corr.second, met_corr.first);
   
-  //syst basics for objects
-  // if(param.syst_ == AnalyzerParameter::Central){}
-  // else if(param.syst_ == AnalyzerParameter::JetResUp) vec_this_jet = SmearJets(vec_this_jet, +1);
-  // else if(param.syst_ == AnalyzerParameter::JetResDown) vec_this_jet = SmearJets(vec_this_jet, -1);
-  // else if(param.syst_ == AnalyzerParameter::JetEnUp) vec_this_jet = SmearJets(vec_this_jet, +1);
-  // else if(param.syst_ == AnalyzerParameter::JetEnDown) vec_this_jet = SmearJets(vec_this_jet, -1);
-  // else if(param.syst_ == AnalyzerParameter::MuonEnUp) vec_this_muon = ScaleMuons(vec_this_muon, +1);
-  // else if(param.syst_ == AnalyzerParameter::MuonEnDown) vec_this_muon = ScaleMuons(vec_this_muon, -1);
+  //syst for objects
+  if(param.syst_ == AnalyzerParameter::JetResUp) vec_this_jet = SmearJets(vec_this_jet, +1);
+  if(param.syst_ == AnalyzerParameter::JetResDown) vec_this_jet = SmearJets(vec_this_jet, -1);
+  if(param.syst_ == AnalyzerParameter::JetEnUp) vec_this_jet = SmearJets(vec_this_jet, +1);
+  if(param.syst_ == AnalyzerParameter::JetEnDown) vec_this_jet = SmearJets(vec_this_jet, -1);
+  if(param.syst_ == AnalyzerParameter::MuonEnUp) vec_this_muon = ScaleMuons(vec_this_muon, +1);
+  if(param.syst_ == AnalyzerParameter::MuonEnDown) vec_this_muon = ScaleMuons(vec_this_muon, -1);
   // else if(param.syst_ == AnalyzerParameter::ElectronResUp) return;
   // else if(param.syst_ == AnalyzerParameter::ElectronResDown) return;
   // else if(param.syst_ == AnalyzerParameter::ElectronEnUp) return;
@@ -844,7 +838,7 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   n_sel_jet = vec_sel_jet.size();
 
   vector<Jet> vec_sel_jet_match = SelectJets(vec_this_jet, param.Jet_ID, JET_PT_MATCH, JET_ETA_MATCH);
-  vec_sel_jet_match = SelectJets(vec_sel_jet_match, "LoosePileupJetVeto", JET_PT_MATCH, JET_ETA_MATCH);
+  vec_sel_jet_match = SelectJets(vec_sel_jet_match, "MediumPileupJetVeto", JET_PT_MATCH, JET_ETA_MATCH);
 
   //sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
@@ -856,13 +850,13 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   if(!IsData)
     {
       //SF for muon trigger effi
-      float sf_mu_trig_effi;
+      int syst_sf_mu_trig = 0;
+      if(param.syst_ == AnalyzerParameter::MuTrigUp) syst_sf_mu_trig = 1;
+      else if(param.syst_ == AnalyzerParameter::MuTrigDown) syst_sf_mu_trig = -1;
       
-      if(vec_sel_muon.size()==0) sf_mu_trig_effi = 1;
-      else sf_mu_trig_effi = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, 0);
+      sf_mu_trig = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, syst_sf_mu_trig);
+      weight *= sf_mu_trig;
       
-      weight *= sf_mu_trig_effi;
-
       // cout << "n_muon = " << vec_sel_muon.size() << endl;
       // for(int i=0; i<vec_sel_muon.size(); i++)
       //   {
@@ -888,14 +882,20 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   if(!IsData)
     {
       //SF for muon id
-      float sf_mu_id_effi = mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muon.Eta(), muon.MiniAODPt());
-      weight *= sf_mu_id_effi;
-
-      //if(run_debug) cout << "M ID SF = " << muon.Eta() << "\t" << muon.MiniAODPt() << "\t" << sf_mu_id_effi << endl;
-
+      int syst_sf_mu_id = 0;
+      if(param.syst_ == AnalyzerParameter::MuIDUp) syst_sf_mu_id = 1;
+      else if(param.syst_ == AnalyzerParameter::MuIDDown) syst_sf_mu_id = -1;
+      
+      sf_mu_id = mcCorr->MuonID_SF(param.Muon_ID_SF_Key, muon.Eta(), muon.MiniAODPt(), syst_sf_mu_id);
+      weight *= sf_mu_id;
+      
       //SF for muon iso
-      float sf_mu_iso_effi = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muon.Eta(), muon.MiniAODPt());
-      weight *= sf_mu_iso_effi;
+      int syst_sf_mu_iso = 0;
+      if(param.syst_ == AnalyzerParameter::MuISOUp) syst_sf_mu_iso = 1;
+      else if(param.syst_ == AnalyzerParameter::MuISODown) syst_sf_mu_iso = -1;
+      
+      sf_mu_iso = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, muon.Eta(), muon.MiniAODPt(), syst_sf_mu_iso);
+      weight *= sf_mu_iso;
       
       //if(run_debug) cout << "M ISO SF = " << muon.Eta() << "\t" << muon.MiniAODPt() << "\t" << sf_mu_iso_effi << endl;
     }
@@ -909,10 +909,13 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   if(!IsData)
     {
       //SF for PUJet Veto
-      float sf_pujet_veto = mcCorr->PileupJetVetoReweight(vec_sel_jet, "Loose", "");
+      int syst_sf_pujet_veto = 0;
+      if(param.syst_ == AnalyzerParameter::PileupJetVetoUp) syst_sf_pujet_veto = 1;
+      else if(param.syst_ == AnalyzerParameter::PileupJetVetoDown) syst_sf_pujet_veto = -1;
+
+      sf_pujet_veto = mcCorr->PileupJetVetoReweight(vec_sel_jet, "Medium", syst_sf_pujet_veto);
       weight *= sf_pujet_veto;
     }
-
 
   FillHist(param.Name+"/Cut_Flow", Cut_Flow::At_Least_Four_Jets, weight, n_cut_flow, 0, n_cut_flow);
   FillHist(param.Name+Form("/Cut_Flow_%d", decay_mode), Cut_Flow::At_Least_Four_Jets, weight, n_cut_flow, 0, n_cut_flow);
@@ -973,22 +976,44 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   if(!IsData)
     {
       //SF for b-tagging
-      float sf_b_tag = 1;
-      
-      if(run_debug) sf_b_tag *= mcCorr->GetBTaggingReweight_1a(vec_sel_jet, vec_jet_tagging_para.at(0));
-      else sf_b_tag *= mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0));
-      
+      if(run_debug) sf_b_tag = mcCorr->GetBTaggingReweight_1a(vec_sel_jet, vec_jet_tagging_para.at(0));
+      else
+	{
+	  string syst = "central";
+
+	  if(param.syst_==AnalyzerParameter::Up_HF) syst = "up_hf";
+	  else if(param.syst_==AnalyzerParameter::Down_HF) syst = "down_hf";
+	  
+	  if(param.syst_==AnalyzerParameter::Up_JES) syst = "up_jes";
+          else if(param.syst_==AnalyzerParameter::Down_JES) syst = "down_jes";
+	  
+	  if(param.syst_==AnalyzerParameter::Up_LFStats1) syst = "up_lfstats1";
+          else if(param.syst_==AnalyzerParameter::Down_LFStats1) syst = "down_lfstats1";
+	  
+	  if(param.syst_==AnalyzerParameter::Up_LFStats2) syst = "up_lfstats2";
+          else if(param.syst_==AnalyzerParameter::Down_LFStats2) syst = "down_lfstats2";
+
+	  if(param.syst_==AnalyzerParameter::Up_CFERR1) syst = "up_cferr1";
+          else if(param.syst_==AnalyzerParameter::Down_CFERR1) syst = "down_cferr1";
+
+          if(param.syst_==AnalyzerParameter::Up_CFERR2) syst = "up_cferr2";
+          else if(param.syst_==AnalyzerParameter::Down_CFERR2) syst = "down_cferr2";
+
+	  if(param.syst_==AnalyzerParameter::Up_HFStats1) syst = "up_hfstats1";
+	  else if(param.syst_==AnalyzerParameter::Down_HFStats1) syst = "down_hfstats1";
+	  
+	  if(param.syst_==AnalyzerParameter::Up_HFStats2) syst = "up_hfstats2";
+          else if(param.syst_==AnalyzerParameter::Down_HFStats2) syst = "down_hfstats2";
+	  
+	  sf_b_tag = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), syst);
+	}
       weight *= sf_b_tag;
     }
 
   if(!IsData)
     {
       //SF for c-tagging
-      float sf_c_tag = 1;
-      if(run_debug) sf_c_tag *= mcCorr->GetCTaggingReweight(vec_sel_jet, vec_jet_tagging_para.at(1));
-      
-      //cout << "sf_c_tag = " << sf_c_tag << endl;
-      
+      sf_c_tag = mcCorr->GetCTaggingReweight(vec_sel_jet, vec_jet_tagging_para.at(1));
       weight *= sf_c_tag;
     }
 
@@ -1011,33 +1036,33 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
   FillHist(param.Name+"/N_Real_Jets_After_PUJet_Veto", n_real_jet_after, weight, 20, 0, 20);
   FillHist(param.Name+"/N_PU_Jets_After_PUJet_Veto", n_pu_jet_after, weight, 20, 0, 20);
   
-  //Data and MC comparison
-  if(n_b_jet==2)
-    {
-      FillHist(param.Name+"/TwoB/Met", met.Vect().Mag(), weight, 50, 0, 300);
-      FillHist(param.Name+"/TwoB/N_Vertex", nPV, weight, 100, 0, 100);
-      FillHist(param.Name+"/TwoB/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
-      FillHist(param.Name+"/TwoB/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/TwoB/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/TwoB/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/TwoB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/TwoB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/TwoB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10); 
-      FillHist(param.Name+"/TwoB/N_BJet", n_b_jet, weight, 10, 0, 10);
-    }
-  else
-    {
-      FillHist(param.Name+"/ThreeB/Met", met.Vect().Mag(), weight, 50, 0, 300);
-      FillHist(param.Name+"/ThreeB/N_Vertex", nPV, weight, 100, 0, 100);
-      FillHist(param.Name+"/ThreeB/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
-      FillHist(param.Name+"/ThreeB/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/ThreeB/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/ThreeB/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/ThreeB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
-      FillHist(param.Name+"/ThreeB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
-      FillHist(param.Name+"/ThreeB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10);
-      FillHist(param.Name+"/ThreeB/N_BJet", n_b_jet, weight, 10, 0, 10);
-    }
+  // //Data and MC comparison
+  // if(n_b_jet==2)
+  //   {
+  //     FillHist(param.Name+"/TwoB/Met", met.Vect().Mag(), weight, 50, 0, 300);
+  //     FillHist(param.Name+"/TwoB/N_Vertex", nPV, weight, 100, 0, 100);
+  //     FillHist(param.Name+"/TwoB/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
+  //     FillHist(param.Name+"/TwoB/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
+  //     FillHist(param.Name+"/TwoB/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
+  //     FillHist(param.Name+"/TwoB/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
+  //     FillHist(param.Name+"/TwoB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
+  //     FillHist(param.Name+"/TwoB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
+  //     FillHist(param.Name+"/TwoB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10); 
+  //     FillHist(param.Name+"/TwoB/N_BJet", n_b_jet, weight, 10, 0, 10);
+  //   }
+  // else
+  //   {
+  //     FillHist(param.Name+"/ThreeB/Met", met.Vect().Mag(), weight, 50, 0, 300);
+  //     FillHist(param.Name+"/ThreeB/N_Vertex", nPV, weight, 100, 0, 100);
+  //     FillHist(param.Name+"/ThreeB/Muon_Pt", muon.Pt(), weight, 50, 0, 200);
+  //     FillHist(param.Name+"/ThreeB/Muon_Eta", muon.Eta(), weight, 60, -3, 3);
+  //     FillHist(param.Name+"/ThreeB/Leading_Jet_Pt", vec_sel_jet.at(0).Pt(), weight, 50, 0, 300);
+  //     FillHist(param.Name+"/ThreeB/Leading_Jet_Eta", vec_sel_jet.at(0).Eta(), weight, 60, -3, 3);
+  //     FillHist(param.Name+"/ThreeB/Subleading_Jet_Pt", vec_sel_jet.at(1).Pt(), weight, 50, 0, 300);
+  //     FillHist(param.Name+"/ThreeB/Subleading_Jet_Eta", vec_sel_jet.at(1).Eta(), weight, 60, -3, 3);
+  //     FillHist(param.Name+"/ThreeB/N_Jet", vec_sel_jet.size(), weight, 10, 0, 10);
+  //     FillHist(param.Name+"/ThreeB/N_BJet", n_b_jet, weight, 10, 0, 10);
+  //   }
   
   //Gen matching
   vector<int> vec_hf_flavour;
@@ -1903,7 +1928,24 @@ void Vcb_Mu::executeEventFromParameter(AnalyzerParameter param)
 	  else pu_conta_lep_t_b = false;
 	}//For MC
 
-      result_tree->Fill();
+      if(param.syst_==AnalyzerParameter::Central) result_tree->Fill();
+
+      Region_Setter();
+
+      FillHist(param.Name+"/"+region+"/N_Vertex", nPV, weight, 100, 0, 100);
+      FillHist(param.Name+"/"+region+"/Lepton_Pt", lepton_pt, weight, 50, 0, 300);
+      FillHist(param.Name+"/"+region+"/Lepton_Eta", lepton_eta, weight, 50, -3, 3);
+      FillHist(param.Name+"/"+region+"/N_Jets", n_sel_jet, weight, 30, 0, 30);
+      FillHist(param.Name+"/"+region+"/N_BJets", n_b_jet, weight, 30, 0, 30);
+      FillHist(param.Name+"/"+region+"/N_CJets", n_c_jet, weight, 30, 0, 30);
+      FillHist(param.Name+"/"+region+"/Pt_Leading_Jet", pt_leading_jet, weight, 50, 0, 300);
+      FillHist(param.Name+"/"+region+"/Pt_Subleading_Jet", pt_subleading_jet, weight, 50, 0, 300);
+      FillHist(param.Name+"/"+region+"/Eta_Leading_Jet", eta_leading_jet, weight, 50, -3, 3);
+      FillHist(param.Name+"/"+region+"/Eta_Subleading_Jet", eta_subleading_jet, weight, 50, -3, 3);
+      FillHist(param.Name+"/"+region+"/Met_Pt", met_pt, weight, 50, 0, 300);
+      FillHist(param.Name+"/"+region+"/Met_Phi", met_phi, weight, 80, -4, 4);
+      FillHist(param.Name+"/"+region+"/Best_MVA_Score_Pre", best_mva_score_pre, weight, 110, -1.1, 1.1);
+      FillHist(param.Name+"/"+region+"/Best_MVA_Score", best_mva_score, weight, 110, -1.1, 1.1);
 
       return;
     }//if(run_result)
@@ -2721,6 +2763,47 @@ Gen Vcb_Mu::Neutrino(const vector<Gen>& vec_gen)
   
   return gen;
 }//Gen Neutrino(const vector<Gen>& vec_gen)
+
+//////////
+
+void Vcb_Mu::Region_Setter()
+{
+  bool chk_b_tagged_had_t_b = mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium)<bvsc_had_t_b ? true : false;
+  bool chk_b_tagged_lep_t_b = mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium)<bvsc_lep_t_b ? true : false;
+  bool chk_best_mva_score = 0.9<best_mva_score ? true : false;
+  bool chk_n_b_tagged = 3<=n_b_jet ? true : false;
+  bool chk_n_c_tagged = n_c_jet==1 ? true : false;
+  bool chk_c_tagged_w_u = (mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet_CvsB, JetTagging::Medium)<cvsb_w_u && mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet_CvsL, JetTagging::Medium)<cvsl_w_u) ? true : false;
+  bool chk_b_tagged_w_d = mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium)<bvsc_w_d ? true : false;
+
+  //Control 0 : b-inversion
+  if(chk_b_tagged_had_t_b && chk_b_tagged_lep_t_b &&
+     chk_best_mva_score &&
+     chk_n_c_tagged &&
+     chk_c_tagged_w_u && 
+     !chk_n_b_tagged &&
+     !chk_b_tagged_w_d) region = "Control0"; 
+  
+  //Control 1 : c-inversion
+  else if(chk_b_tagged_had_t_b && chk_b_tagged_lep_t_b &&
+	  chk_best_mva_score &&
+	  !chk_n_c_tagged && 
+	  !chk_c_tagged_w_u &&
+	  chk_n_b_tagged && 
+	  chk_b_tagged_w_d) region = "Control1";
+  
+  //Control 2 : score inversion
+  else if(chk_b_tagged_had_t_b && chk_b_tagged_lep_t_b &&
+	  !chk_best_mva_score &&
+          chk_n_c_tagged &&
+          chk_c_tagged_w_u &&
+          chk_n_b_tagged &&
+          chk_b_tagged_w_d) region = "Control2";
+  
+  else region = "Other";
+  
+  return;
+}//void Vcb_Mu::Region_Setter()
 
 //////////
 

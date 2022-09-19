@@ -59,6 +59,15 @@ class Vcb_Mu : public AnalyzerCore
   vector<Electron> vec_electron;
   vector<Jet> vec_jet;
    
+  bool chk_reco_correct;
+  bool chk_included;
+  bool chk_matched_jets_only;
+  
+  bool pu_conta_had_t_b;
+  bool pu_conta_w_u;
+  bool pu_conta_w_d;
+  bool pu_conta_lep_t_b;
+
   int n_sel_jet;
   int n_b_jet;
   int n_c_jet;
@@ -71,20 +80,25 @@ class Vcb_Mu : public AnalyzerCore
   float n_c_jet_f;
 
   //Particle met;
-  XYMETCorrection_withUL17andUL18andUL16 xy_met_correction;
-  
-  float weight_prefire;
 
-  float weight;
-  
   float lepton_pt;
   float lepton_eta;
+  
   float met_pt;
   float met_phi;
-  
-  bool chk_reco_correct;
-  bool chk_included;
-  bool chk_matched_jets_only;
+
+  float sf_b_tag;
+  float sf_c_tag;
+  float sf_mu_id;
+  float sf_mu_iso;
+  float sf_mu_trig;
+  float sf_pujet_veto;
+
+  float weight;
+  float weight_lumi;
+  float weight_mc;
+  float weight_pileup;
+  float weight_prefire;
 
   float pt_leading_jet;
   float pt_subleading_jet;
@@ -97,12 +111,6 @@ class Vcb_Mu : public AnalyzerCore
   float pt_w_d;
   float pt_lep_t_b;
   
-
-  bool pu_conta_had_t_b;
-  bool pu_conta_w_u;
-  bool pu_conta_w_d;
-  bool pu_conta_lep_t_b;
-
   float del_phi_w_u_w_d;
   float del_phi_had_w_had_t_b;
   float del_phi_lep_neu;
@@ -139,10 +147,6 @@ class Vcb_Mu : public AnalyzerCore
   float m_w_u_b;
   float m_w_d_b;
 
-  TMVA::Reader* reader_swapper[2];
-  TMVA::Reader* reader_hf_contamination_lessthantwo;
-  TMVA::Reader* reader_hf_contamination_morethantwo;
-
   float had_t_mass;
   float had_w_mass;
   float lep_t_mass;
@@ -178,6 +182,8 @@ class Vcb_Mu : public AnalyzerCore
   bool chk_real_neu_pz;
   float nu_pz_sol_0;
   float nu_pz_sol_1;
+
+  TString region;
 
   TTree* permutation_tree_correct;
   TTree* permutation_tree_wrong;
@@ -218,10 +224,16 @@ class Vcb_Mu : public AnalyzerCore
 
   int swapped_truth;
   int swapped_mva;
+  
+  XYMETCorrection_withUL17andUL18andUL16 xy_met_correction;
 
   TTree* template_tree[5];
   TTree* template_truth_tree[5];
   TTree* result_tree;
+
+  TMVA::Reader* reader_swapper[2];
+  TMVA::Reader* reader_hf_contamination_lessthantwo;
+  TMVA::Reader* reader_hf_contamination_morethantwo;
 
   float Calculate_Mt(const Particle& lepton, const float& neu_px, const float& neu_py);
   int Chk_Included(const int index_matched_jet[4]);
@@ -235,6 +247,7 @@ class Vcb_Mu : public AnalyzerCore
   //void Index_Restorer(int& index_had_t_b, int& index_w_u, int& index_w_d, int& index_lep_t_b);
   void KF_Ambiguity_Remover(const vector<Jet>& vec_sel_jet, const int index_matched_jet[4]);
   Gen Neutrino(const vector<Gen>& vec_gen);
+  void Region_Setter();
   void Sol_Neutrino_Pz(const Particle& lepton, const Particle& met, float neutrino_pz_sol[2]);
 };
 
