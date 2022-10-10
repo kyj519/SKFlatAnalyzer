@@ -1101,6 +1101,29 @@ double AnalyzerCore::GetPDFReweight(int member){
 
 }
 
+double AnalyzerCore::GetPDFReweight(const TString& syst)
+{
+  if(syst=="As_Up") return GetPDFWeight(pdfReweight->NewPDFAlphaSUp)/GetPDFWeight(pdfReweight->ProdPDF);
+  else if(syst=="As_Down") return GetPDFWeight(pdfReweight->NewPDFAlphaSDown)/GetPDFWeight(pdfReweight->ProdPDF);
+  else
+    {
+      cout << "[AnalyzerCore::GetPDFReweight] Wrong syst " << syst << endl;
+      exit(ENODATA);
+    }
+  
+  return -1;
+}
+
+
+float AnalyzerCore::GetScaleVariation(const int& index)
+{  
+  int size = weight_Scale->size();
+ 
+  if(index<size) return weight_Scale->at(index);
+  
+  return 1;
+}//float AnalyzerCore::GetScaleVariation(cosnt int& index)
+
 bool AnalyzerCore::IsOnZ(double m, double width){
   if( fabs(m-M_Z) < width ) return true;
   else return false;

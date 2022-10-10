@@ -1,7 +1,7 @@
 #include "AnalyzerParameter.h"
 
-void AnalyzerParameter::Clear(){
-
+void AnalyzerParameter::Clear()
+{
   Name = "";
 
   MCCorrrectionIgnoreNoHist = false;
@@ -43,13 +43,15 @@ void AnalyzerParameter::Clear(){
 
   Jet_ID = "";
   FatJet_ID = "";
+  PUJet_Veto_ID = "";
 
   syst_ = Central;
+}//void AnalyzerParameter::Clear()
 
-}
+//////////
 
-AnalyzerParameter::AnalyzerParameter(){
-
+AnalyzerParameter::AnalyzerParameter()
+{
   Name = "Default";
 
   MCCorrrectionIgnoreNoHist = false;
@@ -71,11 +73,10 @@ AnalyzerParameter::AnalyzerParameter(){
   FatJet_ID = "HN";
 
   syst_ = Central;
+}//AnalyzerParameter::AnalyzerParameter()
 
-}
-
-TString AnalyzerParameter::GetSystType(){
-
+TString AnalyzerParameter::GetSystType()
+{
   if(syst_==Syst::Central) return "Central";
   else if(syst_==Syst::JetResUp) return "JetResUp";
   else if(syst_==Syst::JetResDown) return "JetResDown";
@@ -95,43 +96,11 @@ TString AnalyzerParameter::GetSystType(){
   // else if(syst_==Syst::ElectronEnDown){
   //   return "ElectronEnDown";
   // }
-  else if(syst_==Syst::PileupReweightUp) return "PileupReweightUp";
-  else if(syst_==Syst::PileupReweightDown) return "PileupReweightDown";
-  else if(syst_==Syst::PrefireReweightUp) return "PrefireReweightUp";
-  else if(syst_==Syst::PrefireReweightDown) return "PrefireReweightDown";
-  else if(syst_==Syst::MuTrigUp) return "MuTrigUp";
-  else if(syst_==Syst::MuTrigDown) return "MuTrigDown";
-  else if(syst_==Syst::MuIDUp) return "MuIDUp";
-  else if(syst_==Syst::MuIDDown) return "MuIDDown";
-  else if(syst_==Syst::MuISOUp) return "MuISOUp";
-  else if(syst_==Syst::MuISODown) return "MuISODown";
-  else if(syst_==Syst::PileupJetVetoUp) return "PileupJetVetoUp";
-  else if(syst_==Syst::PileupJetVetoDown) return "PileupJetVetoDown";
-  else if(syst_==Syst::Up_HF) return "Up_HF";
-  else if(syst_==Syst::Down_HF) return "Down_HF";
-  else if(syst_==Syst::Up_JES) return "Up_JES";
-  else if(syst_==Syst::Down_JES) return "Down_JES";
-  else if(syst_==Syst::Up_LFStats1) return "Up_LFStats1";
-  else if(syst_==Syst::Down_LFStats1) return "Down_LFStats1";
-  else if(syst_==Syst::Up_LFStats2) return "Up_LFStats2";
-  else if(syst_==Syst::Down_LFStats2) return "Down_LFStats2";
-  else if(syst_==Syst::Up_CFERR1) return "Up_CFERR1";
-  else if(syst_==Syst::Down_CFERR1) return "Down_CFERR1";
-  else if(syst_==Syst::Up_CFERR2) return "Up_CFERR2";
-  else if(syst_==Syst::Down_CFERR2) return "Down_CFERR2";
-  else if(syst_==Syst::Up_HFStats1) return "Up_HFStats1";
-  else if(syst_==Syst::Down_HFStats1) return "Down_HFStats1";
-  else if(syst_==Syst::Up_HFStats2) return "Up_HFStats2";
-  else if(syst_==Syst::Down_HFStats2) return "Down_HFStats2";
-  else if(syst_==Syst::Up_LF) return "Up_LF";
-  else if(syst_==Syst::Down_LF) return "Down_LF";
-
-  else{
-    cout << "[AnalyzerParameter::GetSystType] Wrong Syst " << syst_ << endl;
-    exit(ENODATA);
-    return "ERROR";
-  }
-
+  
+  cout << "[AnalyzerParameter::GetSystType] Wrong Syst " << syst_ << endl;
+ 
+  exit(ENODATA);
+  return "ERROR";
 }
 
 AnalyzerParameter::~AnalyzerParameter(){

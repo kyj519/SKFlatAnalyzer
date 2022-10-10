@@ -6,14 +6,14 @@
 
 using namespace std;
 
-class AnalyzerParameter{
-
-public:
-
+class AnalyzerParameter
+{
+ public:
+  
   TString Name;
-
+  
   bool MCCorrrectionIgnoreNoHist;
-
+  
   TString Electron_Tight_ID, Electron_Loose_ID, Electron_Veto_ID;
   TString Electron_ID_SF_Key, Electron_Trigger_SF_Key;
   TString Electron_FR_ID, Electron_FR_Key;
@@ -29,34 +29,22 @@ public:
   double Muon_Tight_RelIso, Muon_Loose_RelIso, Muon_Veto_RelIso;
   bool Muon_UseMini, Muon_UsePtCone, Muon_UseTuneP;
   double Muon_MinPt;
-
-  TString Jet_ID, FatJet_ID;
-
-  enum Syst{
+  
+  TString Jet_ID, FatJet_ID, PUJet_Veto_ID;
+  
+  //syst which affect selection
+  enum Syst
+  {
     Central,
     JetResUp, JetResDown, 
     JetEnUp, JetEnDown,
     /* MuonEnUp, MuonEnDown,  */
     /* ElectronResUp, ElectronResDown, */
     /* ElectronEnUp, ElectronEnDown, */
-    PileupReweightUp, PileupReweightDown,
-    PrefireReweightUp, PrefireReweightDown,
-    MuTrigUp, MuTrigDown,
-    MuIDUp, MuIDDown,
-    MuISOUp, MuISODown,
-    PileupJetVetoUp, PileupJetVetoDown,
-    Up_HF, Down_HF, 
-    Up_JES, Down_JES, 
-    Up_LFStats1, Down_LFStats1,
-    Up_LFStats2, Down_LFStats2,
-    Up_CFERR1, Down_CFERR1,
-    Up_CFERR2, Down_CFERR2,
-    Up_HFStats1, Down_HFStats1,  
-    Up_HFStats2, Down_HFStats2,
-    Up_LF, Down_LF,
     NSyst
   };
   Syst syst_;
+  
   TString GetSystType();
 
   void Clear();

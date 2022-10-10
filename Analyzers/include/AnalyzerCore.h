@@ -162,6 +162,11 @@ public:
   double GetPDFReweight();
   //==== NewErrorSet/ProdCentral
   double GetPDFReweight(int member);
+  //==== NewCentralAs/ProdCentral
+  double GetPDFReweight(const TString& syst);
+
+  //=== Scale variation
+  float GetScaleVariation(const int& index);
 
   //================
   //==== Functions

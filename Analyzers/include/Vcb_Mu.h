@@ -31,10 +31,14 @@ class Vcb_Mu : public AnalyzerCore
   bool run_permutation_tree;
   bool run_hf_contamination_tree;
   bool run_chi;
-  bool run_template;
-  bool run_template_truth;
   bool run_result;
   bool run_syst;
+  bool run_jes_down;
+  bool run_jes_up;
+  bool run_jec_down;
+  bool run_jec_up;
+  bool run_template;
+  bool run_template_truth;
   bool rm_wm_constraint;
   bool rm_bjet_energy_reg_nn;
 
@@ -58,7 +62,29 @@ class Vcb_Mu : public AnalyzerCore
   vector<Muon> vec_muon;
   vector<Electron> vec_electron;
   vector<Jet> vec_jet;
-   
+  
+  vector<Muon> vec_this_muon;
+  vector<Electron> vec_this_electron;
+  vector<Jet> vec_this_jet;
+
+  /* vector<Muon> vec_sel_muon; */
+  /* vector<Muon> vec_muon_veto; */
+  /* vector<Electron> vec_electron_veto; */
+  vector<Jet> vec_sel_jet; 
+  vector<Jet> vec_sel_jet_match; 
+  
+  vector<bool> vec_btag;
+  vector<bool> vec_btag_match;
+  vector<bool> vec_ctag;
+  
+  Muon muon;
+  Particle met;
+ 
+  int index_matched_jet[4];
+  int index_matched_jet_match[4];
+  
+  AnalyzerParameter param;
+
   bool chk_reco_correct;
   bool chk_included;
   bool chk_matched_jets_only;
@@ -79,26 +105,74 @@ class Vcb_Mu : public AnalyzerCore
   float n_b_jet_f;
   float n_c_jet_f;
 
-  //Particle met;
-
   float lepton_pt;
   float lepton_eta;
   
   float met_pt;
   float met_phi;
-
-  float sf_b_tag;
-  float sf_c_tag;
+  
   float sf_mu_id;
+  float sf_mu_id_down;
+  float sf_mu_id_up;
+  
   float sf_mu_iso;
-  float sf_mu_trig;
-  float sf_pujet_veto;
+  float sf_mu_iso_down;
+  float sf_mu_iso_up;
 
+  float sf_mu_trig;
+  float sf_mu_trig_down;
+  float sf_mu_trig_up;
+  
   float weight;
+    
+  float weight_b_tag;
+  float weight_b_tag_down_hf;
+  float weight_b_tag_up_hf;
+  float weight_b_tag_down_jes;
+  float weight_b_tag_up_jes;
+  float weight_b_tag_down_lfstats1;
+  float weight_b_tag_up_lfstats1;
+  float weight_b_tag_down_lfstats2;
+  float weight_b_tag_up_lfstats2;
+  float weight_b_tag_down_cferr1;
+  float weight_b_tag_up_cferr1;
+  float weight_b_tag_down_cferr2;
+  float weight_b_tag_up_cferr2;
+  float weight_b_tag_down_hfstats1;
+  float weight_b_tag_up_hfstats1;
+  float weight_b_tag_down_hfstats2;
+  float weight_b_tag_up_hfstats2;
+
+  float weight_c_tag;
+
   float weight_lumi;
   float weight_mc;
+
+  float weight_pdf_alternative;
+  float weight_pdf_error_set[100];
+  float weight_pdf_as_down;
+  float weight_pdf_as_up;
+
   float weight_pileup;
+  float weight_pileup_down;
+  float weight_pileup_up;
+  
   float weight_prefire;
+  float weight_prefire_down;
+  float weight_prefire_up;
+
+  float weight_pujet_veto;
+  float weight_pujet_veto_down;
+  float weight_pujet_veto_up;
+
+  float weight_scale_variation_1;
+  float weight_scale_variation_2;
+  float weight_scale_variation_3;
+  float weight_scale_variation_4;
+  float weight_scale_variation_6;
+  float weight_scale_variation_8;
+  
+  float weight_top_pt;
 
   float pt_leading_jet;
   float pt_subleading_jet;
@@ -236,6 +310,7 @@ class Vcb_Mu : public AnalyzerCore
   TMVA::Reader* reader_hf_contamination_morethantwo;
 
   float Calculate_Mt(const Particle& lepton, const float& neu_px, const float& neu_py);
+  void Clear();
   int Chk_Included(const int index_matched_jet[4]);
   bool Compare_Jet(const Jet& jet0, const Jet& jet1);
   int Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2]);
@@ -246,8 +321,20 @@ class Vcb_Mu : public AnalyzerCore
   void Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4]);
   //void Index_Restorer(int& index_had_t_b, int& index_w_u, int& index_w_d, int& index_lep_t_b);
   void KF_Ambiguity_Remover(const vector<Jet>& vec_sel_jet, const int index_matched_jet[4]);
+  void Make_HF_Contamination_Tree();
+  void Make_Permutation_Tree();
+  void Make_Template_Tree();
+  void Make_Template_Truth_Tree();
   Gen Neutrino(const vector<Gen>& vec_gen);
-  void Region_Setter();
+  Particle Rebalance_Met();
+  void Set_HF_Contamination_Tree();
+  void Set_Permutation_Tree();
+  void Set_Reader_HF_Contamination();
+  void Set_Reader_Swapper();
+  void Set_Reco_Eval_Tree();
+  void Set_Region();
+  void Set_Result_Tree();
+  void Set_Template_Truth_Tree();
   void Sol_Neutrino_Pz(const Particle& lepton, const Particle& met, float neutrino_pz_sol[2]);
 };
 

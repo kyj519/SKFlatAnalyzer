@@ -1448,7 +1448,7 @@ double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp
   if(pt<20) pt = 20.;
   if(pt>=50.) pt = 49.9;
   if(eta>=5.0) eta = 4.49;
-  if(eta < -5.0) eta = -4.49;
+  if(eta<-5.0) eta = -4.49;
   
   TString target;
   if(type=="MC_Eff") target = "eff_mcUL";
@@ -1462,15 +1462,15 @@ double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp
     }
 
   TString wp_key= "";
-  if(wp=="Tight") wp_key = "_T";
-  else if(wp=="Medium") wp_key = "_M";
-  else if(wp=="Loose") wp_key = "_L";
+  if(wp.Contains("Tight")) wp_key = "_T";
+  else if(wp.Contains("Medium")) wp_key = "_M";
+  else if(wp.Contains("Loose")) wp_key = "_L";
   else 
     {
       cout << "[MCCorrection::PileupJetVeto_MCCorr] Wrong " << wp << ". Abort." << endl;
       exit(ENODATA);
     }
-
+  
   TString key = target + GetEra() + wp_key;
   TH2F* this_hist = map_hist_pujet_veto[key];
   if(!this_hist)
@@ -1478,20 +1478,20 @@ double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp
       cerr << "[MCCorrection::PileupJetVeto_MCCorr] No " << key << endl;
       exit(ENODATA);
     }
-
+  
   int bin = this_hist->FindBin(pt, eta);
-
+  
   double value = this_hist->GetBinContent(bin);
   double error = this_hist->GetBinError(bin);
 
   double out = value + double(sys)*error;
   if(out<=0.) out = 0.0001;
-  if(out>=1. && (type=="Eff" || type=="Mistag")) out = 0.9999;
+  if(out>=1. && !type.Contains("SF")) out = 0.9999;
 
   return out;
 }//double MCCorrection::PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys)
 
-double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TString& wp, const int sys)
+double MCCorrection::PileupJetVeto_Reweight(const vector<Jet>& jets, const TString& wp, const int sys)
 {
   if(IsDATA) return 1.;
   
@@ -1507,22 +1507,22 @@ double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TStrin
       int hf_flavour = jet.GenHFHadronMatcherFlavour();
       int hf_origin = jet.GenHFHadronMatcherOrigin();
       
-      bool matched = false;
-      if(hf_flavour!=-999 || hf_origin!=-999) matched = true;
+      bool gen_matched = true;
+      if(hf_flavour==-999) gen_matched = false;
       
       bool passed = jet.Pass_PileupJetVeto(wp);
-     
+      
       double pt = jet.Pt();
       double eta = jet.Eta();
       
       //genjet matched
-      if(matched)
+      if(gen_matched)
 	{
 	  double mc_eff = PileupJetVeto_MCCorr("MC_Eff", wp, pt, eta, sys);
 	  double mc_eff_sf = PileupJetVeto_MCCorr("MC_Eff_SF", wp, pt, eta, sys);
 	  
 	  double data_eff = mc_eff*mc_eff_sf;
-	  
+	  	  
 	  if(passed)
 	    {
 	      prob_mc *= mc_eff;
@@ -1554,7 +1554,7 @@ double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, const TStrin
 	    }
 	}//genjet unmatched
     }//loop over jets
-  
+    
   return prob_data/prob_mc;
-}//double MCCorrection::PileupJetVetoReweight(const vector<Jet>& jets, string wp, string Syst)
+}//double MCCorrection::PileupJetVeto_Reweight(const vector<Jet>& jets, string wp, string Syst)
 

@@ -102,10 +102,10 @@ bool Jet::Pass_PileupJetVeto(const TString& wp) const {
   float eta = this->Eta();
   
   unsigned int pt_bin = 0;
-  if(10.<=pt && pt < 20.) pt_bin = 1;
-  else if(20.<=pt && pt < 30.) pt_bin = 5;
-  else if(30.<=pt && pt < 40.) pt_bin = 9;
-  else if(40.<=pt && pt < 50.) pt_bin = 13;
+  if(10.<=pt && pt < 20.) pt_bin = 0;
+  else if(20.<=pt && pt < 30.) pt_bin = 4;
+  else if(30.<=pt && pt < 40.) pt_bin = 8;
+  else if(40.<=pt && pt < 50.) pt_bin = 12;
   
   unsigned int eta_bin = 0;
   if( fabs(eta) < 2.5) eta_bin = 0;
@@ -116,31 +116,31 @@ bool Jet::Pass_PileupJetVeto(const TString& wp) const {
   unsigned int bin = pt_bin + eta_bin;
 
   double wp_cut[16][3] = {{ 0.77,  0.26, -0.95},
-			  { 0.38, -0.33, -0.72},
-			  {-0.31, -0.54, -0.68},
-			  {-0.21, -0.37, -0.47},
-			  { 0.90,  0.68, -0.88},
-			  { 0.60, -0.04, -0.55},
-			  {-0.12, -0.43, -0.60},
-			  {-0.13, -0.30, -0.43},
-			  { 0.96,  0.90, -0.63},
-			  { 0.82,  0.36, -0.18},
-			  { 0.20, -0.16, -0.43},
-			  { 0.09, -0.09, -0.24},
-			  { 0.98,  0.96, -0.19},
-			  { 0.92,  0.61,  0.22},
-			  { 0.47,  0.14, -0.13},
-			  { 0.29,  0.12, -0.03}}; 
-		    
-  if(wp=="Tight"){ 
+  			  { 0.38, -0.33, -0.72},
+  			  {-0.31, -0.54, -0.68},
+  			  {-0.21, -0.37, -0.47},
+  			  { 0.90,  0.68, -0.88},
+  			  { 0.60, -0.04, -0.55},
+  			  {-0.12, -0.43, -0.60},
+  			  {-0.13, -0.30, -0.43},
+  			  { 0.96,  0.90, -0.63},
+  			  { 0.82,  0.36, -0.18},
+  			  { 0.20, -0.16, -0.43},
+  			  { 0.09, -0.09, -0.24},
+  			  { 0.98,  0.96, -0.19},
+  			  { 0.92,  0.61,  0.22},
+  			  { 0.47,  0.14, -0.13},
+  			  { 0.29,  0.12, -0.03}}; 
+
+  if(wp.Contains("Tight")){ 
     if(wp_cut[bin][0]<j_PileupJetId) return true;
     else return false;
   }
-  else if(wp=="Medium"){
+  else if(wp.Contains("Medium")){
     if(wp_cut[bin][1]<j_PileupJetId) return true;
     else return false;
   }
-  else if(wp=="Loose"){
+  else if(wp.Contains("Loose")){
     if(wp_cut[bin][2]<j_PileupJetId) return true;
     else return false;
   }
