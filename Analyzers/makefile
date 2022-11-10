@@ -3,7 +3,7 @@ OBJDIR = obj
 DEPDIR = $(OBJDIR)/dep
 SRCDIR = src
 INCDIR = include
-ADDITIONAL_ROOTMAPLIBRARY =  -rml libDataFormats.so -rml libKinematicFitter.so -rml libAnalyzerTools.so -rml libGEScaleSyst.so -rml libTree.so -rml libTMVA.so
+ADDITIONAL_ROOTMAPLIBRARY =  -rml libDataFormats.so -rml libKinematicFitter.so -rml libAnalyzerTools.so -rml libGEScaleSyst.so -rml libTree.so -rml libTMVA.so -rml libLHAPDF.so
 
 include $(SKFlat_WD)/makefile.common
 

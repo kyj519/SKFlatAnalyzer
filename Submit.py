@@ -28,8 +28,26 @@ else:
 print(f"Selected analyzer is {analyzer}")
 
 # key:[njob for SkimTree, njob Vcb Analyzer]
-data_list = {"SingleMuon":[300,20], "EGamma":[300,20]}
-mc_list = {"TTLJ_powheg":[300,200], "TTLL_powheg":[300,100], "TTBB":[200,100], "SingleTop_tW_antitop_NoFullyHad":[100,20], "SingleTop_tW_top_NoFullyHad":[100,20], "DYJets_MG":[20,5], "WJets_MG":[20,1], "TTLJ_WtoCB_powheg":[40:20] }
+data_list = {"SingleMuon":[300,50], "EGamma":[300,50]}
+mc_list = {
+    "TTLJ_WtoCB_powheg":[40,20],
+    "TTLJ_powheg":[300,300], 
+    "TTLL_powheg":[300,100], 
+    #"TTBB":[200,100], 
+    "SingleTop_tW_antitop_NoFullyHad":[100,10], 
+    "SingleTop_tW_top_NoFullyHad":[100,10], 
+    "DYJets_MG":[20,10], 
+    "WJets_MG":[20,10],
+    "QCD_bEnriched_HT100to200": [40,10],
+    "QCD_bEnriched_HT200to300": [40,10],
+    "QCD_bEnriched_HT300to500": [40,10],
+    "QCD_bEnriched_HT500to700": [40,10],
+    "QCD_bEnriched_HT700to1000": [40,10],
+    "QCD_bEnriched_HT1000to1500": [40,10],
+    "QCD_bEnriched_HT1500to2000": [40,10],
+    "QCD_bEnriched_HT2000toInf": [40,10],
+    "TTLJ_powheg_CP5Down":[300,300],
+}
 
 operation = ""
 
@@ -58,7 +76,7 @@ if args.Channel == "El" or args.Channel == "Mu":
     if args.Channel == "El": data = "EGamma"
     elif args.Channel == "Mu": data = "SingleMuon"
         
-    operation = f"nohup SKFlat.py -a Vcb_{args.Channel} -i SkimTree_Vcb_{data} -n {data_list[data][1]} -e {args.Era} &"
+    operation = f"nohup SKFlat.py -a Vcb_{args.Channel} -i {data} -n {data_list[data][1]} -e {args.Era} --userflag RunResult &"
       
     if args.data == True:
         print(operation)
@@ -66,8 +84,13 @@ if args.Channel == "El" or args.Channel == "Mu":
     
     # mc
     for mc in mc_list:
-        operation =  f"nohup SKFlat.py -a Vcb_{args.Channel} -i {mc}_Skim -n {mc_list[mc][1]} -e {args.Era} &"
-        
+        #operation =  f"nohup SKFlat.py -a Vcb_{args.Channel} -i {mc} -n {mc_list[mc][1]} -e {args.Era} --userflag RunDebug,RunRecoEval &"
+        #operation =  f"nohup SKFlat.py -a Vcb_{args.Channel} -i {mc} -n {mc_list[mc][1]} -e {args.Era} --userflag RunResult,RunSyst &"
+        #operation =  f"nohup SKFlat.py -a Vcb_{args.Channel} -i {mc} -n {mc_list[mc][1]} -e {args.Era} --userflag RunResult,RunJesDown &"
+        #operation =  f"nohup SKFlat.py -a Vcb_{args.Channel} -i {mc} -n {mc_list[mc][1]} -e {args.Era} --userflag RunResult,RunJesUp &"
+        #operation =  f"nohup SKFlat.py -a Vcb_{args.Channel} -i {mc} -n {mc_list[mc][1]} -e {args.Era} --userflag RunResult,RunJecDown &"
+        operation =  f"nohup SKFlat.py -a Vcb_{args.Channel} -i {mc} -n {mc_list[mc][1]} -e {args.Era} --userflag RunResult,RunJecUp &"
+
         if args.mc == True: 
             print(operation)
             os.system(operation)
