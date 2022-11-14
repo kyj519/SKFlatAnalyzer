@@ -129,7 +129,10 @@ public:
   std::map<TString, TH2F*> map_hist_pujet_veto;
   double PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys);
   double PileupJetVeto_Reweight(const vector<Jet>& jets, const TString& wp, const int sys);
-  
+  //CTagIterFit SF
+  std::map<TString, TH2F*> map_hist_ctag_iterfit;
+  double GetCTaggingReweight_1d(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst);
 };
+
 
 #endif
