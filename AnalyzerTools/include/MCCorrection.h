@@ -29,15 +29,15 @@
 #include "BTagCalibrationStandalone.h"
 #include "TRandom3.h"
 
-class MCCorrection{
+class MCCorrection
+{
 
 public:
-
   MCCorrection();
   ~MCCorrection();
 
   TDirectory *histDir;
-  static vector<TString> Split(TString s,TString del);
+  static vector<TString> Split(TString s, TString del);
   void ReadHistograms();
 
   TString MCSample;
@@ -45,9 +45,10 @@ public:
 
   int DataYear;
   TString DataEra;
-  void SetEra(TString era){
-    DataEra=era;
-    DataYear=TString(era(0,4)).Atoi();
+  void SetEra(TString era)
+  {
+    DataEra = era;
+    DataYear = TString(era(0, 4)).Atoi();
   }
   TString GetEra() const { return DataEra; }
   int GetYear() const { return DataYear; }
@@ -55,7 +56,7 @@ public:
   bool IsDATA;
   void SetIsDATA(bool b);
 
-  int run,lumi,event;
+  int run, lumi, event;
   void SetEventInfo(int r, int l, int e);
 
   bool IsFastSim;
@@ -63,35 +64,35 @@ public:
 
   bool IgnoreNoHist;
 
-  double MuonReco_SF(TString key, double eta, double p, int sys=0);
-  double MuonID_SF(TString ID, double eta, double pt, int sys=0);
-  double MuonISO_SF(TString ID, double eta, double pt, int sys=0);
-  double MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, double eta, double pt, int sys=0);
-  double MuonTrigger_SF(TString ID, TString trig, const std::vector<Muon>& muons, int sys=0);
-  double MuonTrigger_SF(TString ID, TString trig, const std::vector<Muon *>& muons, int sys=0);
+  double MuonReco_SF(TString key, double eta, double p, int sys = 0);
+  double MuonID_SF(TString ID, double eta, double pt, int sys = 0);
+  double MuonISO_SF(TString ID, double eta, double pt, int sys = 0);
+  double MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, double eta, double pt, int sys = 0);
+  double MuonTrigger_SF(TString ID, TString trig, const std::vector<Muon> &muons, int sys = 0);
+  double MuonTrigger_SF(TString ID, TString trig, const std::vector<Muon *> &muons, int sys = 0);
 
-  std::map< TString, TH2F* > map_hist_Muon;
+  std::map<TString, TH2F *> map_hist_Muon;
 
-  double ElectronReco_SF(double sceta, double pt, int sys=0);
-  double ElectronID_SF(TString ID, double sceta, double pt, int sys=0);
-  double ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC, double eta, double pt, int sys=0);
-  double ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron>& electrons, int sys=0);
-  double ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron *>& electrons, int sys=0);
-  std::map< TString, TH2F* > map_hist_Electron;
-  std::map< TString, TGraphAsymmErrors* > map_graph_Electron;
+  double ElectronReco_SF(double sceta, double pt, int sys = 0);
+  double ElectronID_SF(TString ID, double sceta, double pt, int sys = 0);
+  double ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC, double eta, double pt, int sys = 0);
+  double ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron> &electrons, int sys = 0);
+  double ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron *> &electrons, int sys = 0);
+  std::map<TString, TH2F *> map_hist_Electron;
+  std::map<TString, TGraphAsymmErrors *> map_graph_Electron;
 
-  std::map< TString, TH2F* > map_hist_prefire;
-  double GetPrefireWeight(const std::vector<Photon>& photons, const std::vector<Jet>& jets, int sys);
+  std::map<TString, TH2F *> map_hist_prefire;
+  double GetPrefireWeight(const std::vector<Photon> &photons, const std::vector<Jet> &jets, int sys);
 
-  std::map< TString, TH1D* > map_hist_pileup;
+  std::map<TString, TH1D *> map_hist_pileup;
   double GetPileUpWeightBySampleName(int N_pileup, int syst);
   double GetPileUpWeight(int N_pileup, int syst);
 
-  double GetTopPtReweight(const std::vector<Gen>& gens);
+  double GetTopPtReweight(const std::vector<Gen> &gens);
 
   TH2D *hist_DYPtReweight_2D;
   GenFinderForDY *genFinderDY;
-  double GetOfficialDYReweight(const vector<Gen>& gens, int sys=0);
+  double GetOfficialDYReweight(const vector<Gen> &gens, int sys = 0);
 
   //==== b tagging
 
@@ -100,39 +101,38 @@ public:
   std::vector<JetTagging::Parameters> jetTaggingPars;
   void SetJetTaggingParameters(std::vector<JetTagging::Parameters> v);
 
-  std::map< std::string, BTagCalibrationReader* > map_BTagCalibrationReader;
+  std::map<std::string, BTagCalibrationReader *> map_BTagCalibrationReader;
   void SetupJetTagging();
 
   TH2D *hist_JetTagEff_B;
   TH2D *hist_JetTagEff_C;
   TH2D *hist_JetTagEff_Light;
 
-  std::map< TString, TH2F* > map_hist_mcjet;
+  std::map<TString, TH2F *> map_hist_mcjet;
   void SetupMCJetTagEff();
-  double GetMCJetTagEff(JetTagging::Tagger tagger, JetTagging::WP wp, int JetFlavor, double JetPt, double JetEta, int sys=0);
-  double GetJetTaggingSF(JetTagging::Parameters jtp, int JetFlavor, double JetPt, double JetEta, double Jetdiscr, string Syst="central");
+  double GetMCJetTagEff(JetTagging::Tagger tagger, JetTagging::WP wp, int JetFlavor, double JetPt, double JetEta, int sys = 0);
+  double GetJetTaggingSF(JetTagging::Parameters jtp, int JetFlavor, double JetPt, double JetEta, double Jetdiscr, string Syst = "central");
 
   //==== https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagSFMethods
 
   //==== 1a) Event reweighting using scale factors and MC b-tagging efficiencies
-  double GetBTaggingReweight_1a(const vector<Jet>& jets, JetTagging::Parameters jtp, string Syst="central");
+  double GetBTaggingReweight_1a(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst = "central");
   //==== 1d) Event reweighting using discriminator-dependent scale factors
-  double GetBTaggingReweight_1d(const vector<Jet>& jets, JetTagging::Parameters jtp, string Syst="central");
+  double GetBTaggingReweight_1d(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst = "central");
 
   //==== 2a) Jet-by-jet updating of the b-tagging status
-  bool IsBTagged_2a(JetTagging::Parameters jtp, const Jet& jet, string Syst="central");
+  bool IsBTagged_2a(JetTagging::Parameters jtp, const Jet &jet, string Syst = "central");
 
-  //c tagging SF
-  double GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Parameters jtp, string Syst="central");
+  // c tagging SF
+  double GetCTaggingReweight(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst = "central");
 
-  //Pileup Jet Veto
-  std::map<TString, TH2F*> map_hist_pujet_veto;
-  double PileupJetVeto_MCCorr(const TString& type, const TString& wp, double pt, double eta, const int sys);
-  double PileupJetVeto_Reweight(const vector<Jet>& jets, const TString& wp, const int sys);
-  //CTagIterFit SF
-  std::map<TString, TH2F*> map_hist_ctag_iterfit;
-  double GetCTaggingReweight_1d(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst);
+  // Pileup Jet Veto
+  std::map<TString, TH2F *> map_hist_pujet_veto;
+  double PileupJetVeto_MCCorr(const TString &type, const TString &wp, double pt, double eta, const int sys);
+  double PileupJetVeto_Reweight(const vector<Jet> &jets, const TString &wp, const int sys);
+  // CTagIterFit SF
+  std::map<TString, TH2F *> map_hist_ctag_iterfit;
+  double GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTagging::Parameters &jtp, const string &Syst);
 };
-
 
 #endif

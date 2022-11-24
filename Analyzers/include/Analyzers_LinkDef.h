@@ -19,7 +19,7 @@
 #pragma link C++ class MeasureJetTaggingEfficiency+;
 #pragma link C++ class SkimTree_Dilepton+;
 #pragma link C++ class SkimTree_Vcb+;
-#pragma link C++ class Vcb_Mu+;
+#pragma link C++ class Vcb+;
 #pragma link C++ class Vcb_El+;
 #pragma link C++ class XYMETCorrection_withUL17andUL18andUL16+;
 

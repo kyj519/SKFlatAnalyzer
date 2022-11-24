@@ -209,11 +209,18 @@ void MCCorrection::ReadHistograms()
   delete file_pileupJetVetoPath;
   origDir->cd();
 
+  // == Get CTagging
   TString CTagShapeCorrPath = datapath + "/" + GetEra() + "/CTag/CTag_iterfit_ULRun2_" + TString::Itoa(DataYear, 10) + ".root";
   TFile *file_CTagShapeCorrPath = new TFile(CTagShapeCorrPath);
   histDir->cd();
   std::vector<std::string> flav = {"b", "c", "l"};
-  std::vector<std::string> cTagSyst = {"Extrap", "Interp", "LHEScaleWeight_muF", "LHEScaleWeight_muR", "PSWeightFSRFixed", "PSWeightISRFixed", "PUWeight", "Stat", "XSec_BRUnc_DYJets_b", "XSec_BRUnc_DYJets_c", "XSec_BRUnc_WJets_c", "jer", "jesTotal"};
+  std::vector<std::string> cTagSyst = {"Extrap", "Interp",
+                                       "LHEScaleWeight_muF", "LHEScaleWeight_muR",
+                                       "PSWeightFSRFixed", "PSWeightISRFixed",
+                                       "PUWeight",
+                                       "Stat",
+                                       "XSec_BRUnc_DYJets_b", "XSec_BRUnc_DYJets_c", "XSec_BRUnc_WJets_c",
+                                       "jer", "jesTotal"};
   std::vector<std::string> sysUporDown = {"Up", "Down"};
   std::vector<std::string>::iterator iter;
   std::vector<std::string>::iterator jter;
@@ -230,7 +237,7 @@ void MCCorrection::ReadHistograms()
     {
       for (kter = sysUporDown.begin(); kter != sysUporDown.end(); kter++)
       {
-        key = *iter + "_" + *jter + *kter;
+        key = *iter + "_" + *jter + "_" + *kter;
         histkey = "SF" + *iter + "_hist_" + *jter + *kter;
         cout << histkey << endl;
         map_hist_ctag_iterfit[key] = (TH2F *)file_CTagShapeCorrPath->Get(histkey)->Clone();
@@ -1042,8 +1049,10 @@ void MCCorrection::SetupJetTagging()
   for (unsigned int i = 0; i < jetTaggingPars.size(); i++)
   {
     //==== (DeepCSV,Medium,incl,comb
+    if (JetTagging::TaggerToString(jetTaggingPars.at(i).j_Tagger).find("_C") != std::string::npos)
+      continue;
 
-    cout << "[MCCorrection::SetJetTaggingParameters] Contructing BTagCalibrationReader with ";
+    cout << "[MCCorrection::SetJetTaggingParameters] Constructing BTagCalibrationReader with ";
     jetTaggingPars.at(i).Print();
     string this_tagger = JetTagging::TaggerToString(jetTaggingPars.at(i).j_Tagger);
 
@@ -1942,7 +1951,7 @@ double MCCorrection::PileupJetVeto_Reweight(const vector<Jet> &jets, const TStri
   return prob_data / prob_mc;
 } // double MCCorrection::PileupJetVeto_Reweight(const vector<Jet>& jets, string wp, string Syst)
 
-double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst)
+double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTagging::Parameters &jtp, const string &Syst)
 {
 
   if (IsDATA)
@@ -1954,8 +1963,8 @@ double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, JetTagging:
     cout << "[MCCorrection::GetCTaggingReweight_1d] This method only works for iterativefit method" << endl;
     cout << "[MCCorrection::GetCTaggingReweight_1d] jtp.j_MeasurmentType_Light = " << jtp.j_MeasurmentType_Light << endl;
     cout << "[MCCorrection::GetCTaggingReweight_1d] jtp.j_MeasurmentType_Heavy = " << jtp.j_MeasurmentType_Heavy << endl;
+
     exit(ENODATA);
-    return 1.;
   }
 
   double rew(1.);
@@ -1967,19 +1976,14 @@ double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, JetTagging:
     TString tmp_Syst(Syst);
     TString str_hadFlavour = 'c';
     if (abs_hadFlavour == 4)
-    {
       str_hadFlavour = 'c';
-    }
     else if (abs_hadFlavour == 5)
-    {
       str_hadFlavour = 'b';
-    }
     else
-    {
       str_hadFlavour = 'l';
-    }
+
     TString key = str_hadFlavour + "_" + tmp_Syst;
-    cout << key << endl;
+    // cout << key << endl;
     TH2F *this_hist = map_hist_ctag_iterfit[key];
     double CvsLval = jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsL);
     double CvsBval = jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsB);
@@ -1988,5 +1992,6 @@ double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, JetTagging:
     double this_SF = this_hist->GetBinContent(xbin, ybin);
     rew *= this_SF;
   }
+
   return rew;
 }
