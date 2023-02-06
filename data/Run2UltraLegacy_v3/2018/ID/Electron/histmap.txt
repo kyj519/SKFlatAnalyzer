@@ -10,3 +10,6 @@ ID	SF	passLooseID	egammaEffi.txt_Ele_Loose_EGM2D.root	EGamma_SF2D	TH2F
 ID	SF	passVetoID	egammaEffi.txt_Ele_Veto_EGM2D.root	EGamma_SF2D	TH2F
 RECO	SF	ptgt20	egammaEffi_ptAbove20.txt_EGM2D_UL2018.root	EGamma_SF2D	TH2F
 RECO	SF	ptlt20	egammaEffi_ptBelow20.txt_EGM2D_UL2018.root	EGamma_SF2D	TH2F
+Trigger SF      Ele32   egammaEffi.txt_EGM2D.root                       EGamma_SF2D     TH2F
+Trigger Eff_DATA Ele32 egammaEffi.txt_EGM2D.root EGamma_EffData2D TH2F
+Trigger Eff_MC Ele32 egammaEffi.txt_EGM2D.root EGamma_EffMC2D TH2F	

@@ -63,6 +63,9 @@ def CheckJobStatus(logfiledir, cycle, jobnumber, hostname):
     if "WARNING: Not mounting" in e_l:
       length_log_e -= 1
       is_not_mounting_err = True
+    elif "Error in <TDecompLU::InvertLU>: matrix is singular" in e_l:
+      length_log_e -= 1
+      continue
     else:
       length_log_e += 1
     

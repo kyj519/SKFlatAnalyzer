@@ -28,9 +28,9 @@ mc_list = {#'TTLJ_powheg':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
            #'TTLJ_powheg_hdampUp':'TTToSemiLeptonic_hdampUP_TuneCP5_13TeV-powheg-pythia8',
            #'TTLJ_powheg_m171p5':'TTToSemiLeptonic_mtop171p5_TuneCP5_13TeV-powheg-pythia8',
            #'TTLJ_powheg_m173p5':'TTToSemiLeptonic_mtop173p5_TuneCP5_13TeV-powheg-pythia8',
-           'TTLJ_powheg_CP5Down':'TTToSemiLeptonic_TuneCP5down_13TeV-powheg-pythia8',
-           'TTLJ_powheg_CP5Up':'TTToSemiLeptonic_TuneCP5up_13TeV-powheg-pythia8',
-           #'TTbb':'TTbb_4f_TTToSemiLeptonic_TuneCP5-Powheg-Openloops-Pythia8',
+           #'TTLJ_powheg_CP5Down':'TTToSemiLeptonic_TuneCP5down_13TeV-powheg-pythia8',
+           #'TTLJ_powheg_CP5Up':'TTToSemiLeptonic_TuneCP5up_13TeV-powheg-pythia8',
+           'TTbb':'TTbb_4f_TTToSemiLeptonic_TuneCP5-Powheg-Openloops-Pythia8',
 }
 
 ssh_key = "ssh isyoon@cms01.knu.ac.kr"

@@ -39,8 +39,8 @@ class AnalyzerParameter
     JetResUp, JetResDown, 
     JetEnUp, JetEnDown,
     /* MuonEnUp, MuonEnDown,  */
-    /* ElectronResUp, ElectronResDown, */
-    /* ElectronEnUp, ElectronEnDown, */
+    ElectronResUp, ElectronResDown, 
+    ElectronEnUp, ElectronEnDown, 
     NSyst
   };
   Syst syst_;

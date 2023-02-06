@@ -84,19 +84,11 @@ TString AnalyzerParameter::GetSystType()
   else if(syst_==Syst::JetEnDown) return "JetEnDown";
   // else if(syst_==Syst::MuonEnUp) return "MuonEnUp";
   // else if(syst_==Syst::MuonEnDown) return "MuonEnDown";
-  // else if(syst_==Syst::ElectronResUp){
-  //   return "ElectronResUp";
-  // }
-  // else if(syst_==Syst::ElectronResDown){
-  //   return "ElectronResDown";
-  // }
-  // else if(syst_==Syst::ElectronEnUp){
-  //   return "ElectronEnUp";
-  // }
-  // else if(syst_==Syst::ElectronEnDown){
-  //   return "ElectronEnDown";
-  // }
-  
+  else if(syst_==Syst::ElectronResUp) return "ElectronResUp";
+  else if(syst_==Syst::ElectronResDown) return "ElectronResDown";
+  else if(syst_==Syst::ElectronEnUp) return "ElectronEnUp";
+  else if(syst_==Syst::ElectronEnDown) return "ElectronEnDown";
+   
   cout << "[AnalyzerParameter::GetSystType] Wrong Syst " << syst_ << endl;
  
   exit(ENODATA);

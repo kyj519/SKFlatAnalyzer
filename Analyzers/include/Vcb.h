@@ -29,16 +29,19 @@ protected:
   bool run_mu_ch;
   bool run_el_ch;
   bool run_debug;
-  bool run_reco_eval;
   bool run_permutation_tree;
   bool run_hf_contamination_tree;
   bool run_chi;
   bool run_result;
   bool run_syst;
-  bool run_jes_down;
-  bool run_jes_up;
   bool run_jec_down;
   bool run_jec_up;
+  bool run_jer_down;
+  bool run_jer_up;
+  bool run_eec_down;
+  bool run_eec_up;
+  bool run_eer_down;
+  bool run_eer_up;
   bool run_template;
   bool run_template_truth;
   bool rm_wm_constraint;
@@ -62,17 +65,29 @@ protected:
   vector<TString> vec_mu_iso_sf_key;
   vector<TString> vec_mu_trig;
   TString mu_trig;
-  float trig_safe_pt_cut;
+  float mu_trig_safe_pt_cut;
+
+  vector<TString> vec_el_id;
+  vector<TString> vec_el_id_sf_key;
+  vector<TString> vec_el_trig;
+  TString el_trig;
+  float el_trig_safe_pt_cut;
+
+  vector<TString> vec_sl_trig; // single lepton
+  TString sl_trig;
+  float sl_trig_safe_pt_cut;
 
   vector<JetTagging::Parameters> vec_jet_tagging_para;
 
   JME::JetResolution jet_resolution;
   JME::JetResolutionScaleFactor jet_resolution_sf;
 
+  TString channel;
   TKinFitterDriver *fitter_driver;
 
   vector<Muon> vec_muon;
   vector<Electron> vec_electron;
+  vector<Lepton> vec_lepton;
   vector<Jet> vec_jet;
 
   vector<Muon> vec_this_muon;
@@ -90,6 +105,8 @@ protected:
   vector<bool> vec_ctag;
 
   Muon muon;
+  Electron electron;
+  Lepton lepton;
   Particle met;
 
   int index_matched_jet[4];
@@ -99,6 +116,8 @@ protected:
 
   bool chk_reco_correct;
   bool chk_included;
+  bool chk_gentau_conta;
+  bool chk_tau_conta;
   bool chk_matched_jets_only;
 
   bool pu_conta_had_t_b;
@@ -123,6 +142,8 @@ protected:
   float met_pt;
   float met_phi;
 
+  float pt_ratio;
+
   float sf_mu_id;
   float sf_mu_id_down;
   float sf_mu_id_up;
@@ -131,9 +152,17 @@ protected:
   float sf_mu_iso_down;
   float sf_mu_iso_up;
 
-  float sf_mu_trig;
-  float sf_mu_trig_down;
-  float sf_mu_trig_up;
+  float sf_el_id;
+  float sf_el_id_down;
+  float sf_el_id_up;
+
+  float sf_el_reco;
+  float sf_el_reco_down;
+  float sf_el_reco_up;
+
+  float sf_sl_trig;
+  float sf_sl_trig_down;
+  float sf_sl_trig_up;
 
   float weight;
 
@@ -218,10 +247,23 @@ protected:
   float eta_leading_jet;
   float eta_subleading_jet;
 
+  float bvsc_leading_jet;
+  float cvsb_leading_jet;
+  float cvsl_leading_jet;
+
+  float bvsc_subleading_jet;
+  float cvsb_subleading_jet;
+  float cvsl_subleading_jet;
+
   float pt_had_t_b;
   float pt_w_u;
   float pt_w_d;
   float pt_lep_t_b;
+
+  float eta_had_t_b;
+  float eta_w_u;
+  float eta_w_d;
+  float eta_lep_t_b;
 
   float del_phi_w_u_w_d;
   float del_phi_had_w_had_t_b;
@@ -352,6 +394,7 @@ protected:
   int Chk_Included(const int index_matched_jet[4]);
   bool Compare_Jet(const Jet &jet0, const Jet &jet1);
   int Compare_Jet_Pair(const Jet jet0[2], const Jet jet1[2]);
+  bool Gen_Match_Lepton(const Lepton &lepton, const vector<Gen> &vec_gen, bool &chk_gentau_conta);
   void Gen_Match_Residual(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, const vector<int> &vec_hf_flavour, const vector<int> &vec_hf_origin, const vector<float> &vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
   void Gen_Match_TT(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, const vector<int> &vec_hf_flavour, const vector<int> &vec_hf_origin, const vector<float> &vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
   int Gen_Match_W(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, const vector<int> &vec_hf_flavour, const vector<int> &vec_hf_origin, const vector<float> &vec_jer, int index_gen[2], int index_matched_jet[2], bool surely_matched[2], float dr_return[2]);
@@ -361,6 +404,7 @@ protected:
   void KF_Ambiguity_Remover(const vector<Jet> &vec_sel_jet, const int index_matched_jet[4]);
   void Make_HF_Contamination_Tree();
   void Make_Permutation_Tree();
+  void Make_Result_Tree();
   void Make_Template_Tree();
   void Make_Template_Truth_Tree();
   Gen Neutrino(const vector<Gen> &vec_gen);
@@ -369,7 +413,6 @@ protected:
   void Set_Permutation_Tree();
   void Set_Reader_HF_Contamination();
   void Set_Reader_Swapper();
-  void Set_Reco_Eval_Tree();
   void Set_Region();
   void Set_Result_Tree();
   void Set_Template_Truth_Tree();

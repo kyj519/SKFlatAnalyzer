@@ -790,20 +790,26 @@ double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC,
 
 double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron> &electrons, int sys)
 {
+   if (electrons.size() == 0)
+    return 1;
+
   if (ID == "Default")
     return 1.;
   if (trig == "Default")
     return 1.;
 
-  double value = 1.;
-  double error = 0.;
-
   // single electron trigger eff sf for Vcb  analysis
+  TH2F *histo_eff_data;
+  TH2F *histo_eff_mc;
   if (trig == "Ele27" || trig == "Ele35" || trig == "Ele32")
   {
-    TString histkey = "Trigger_SF_" + trig;
-    TH2F *this_hist = map_hist_Electron[histkey];
-    if (!this_hist)
+    TString histkey = "Trigger_Eff_DATA_" + trig;
+    histo_eff_data = map_hist_Electron[histkey];
+
+    histkey = "Trigger_Eff_MC_" + trig;
+    histo_eff_mc = map_hist_Electron[histkey];
+
+    if (!histo_eff_data || !histo_eff_mc)
     {
       if (IgnoreNoHist)
         return 1.;
@@ -813,10 +819,16 @@ double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vec
         exit(ENODATA);
       }
     }
+  }
 
-    float sceta = electrons[0].scEta();
-    float pt = electrons[0].UncorrPt();
-
+  double eff_data = 1;
+  double eff_mc = 1;
+  
+  for (unsigned int i = 0; i < electrons.size(); i++)
+  {
+    float sceta = electrons[i].scEta();
+    float pt = electrons[i].UncorrPt();
+    
     if (DataYear == 2018)
     {
       if (sceta < -2.5)
@@ -830,13 +842,18 @@ double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vec
         pt = 199.;
     }
 
-    int this_bin = this_hist->FindBin(sceta, pt);
+    int bin = histo_eff_data->FindBin(sceta, pt);
 
-    value = this_hist->GetBinContent(this_bin);
-    error = this_hist->GetBinError(this_bin);
+    eff_data *= (1 - histo_eff_data->GetBinContent(bin) - sys * histo_eff_data->GetBinError(bin));
+    eff_mc *= (1 - histo_eff_mc->GetBinContent(bin) - sys * histo_eff_mc->GetBinError(bin));
   }
+  
+  eff_data = 1 - eff_data;
+  eff_mc = 1 - eff_mc;
 
-  return value + double(sys) * error;
+  double value = eff_data/eff_mc;
+
+  return value;
 } // double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron>& electrons, int sys)
 
 double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron *> &electrons, int sys)
@@ -1953,7 +1970,6 @@ double MCCorrection::PileupJetVeto_Reweight(const vector<Jet> &jets, const TStri
 
 double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTagging::Parameters &jtp, const string &Syst)
 {
-
   if (IsDATA)
     return 1.;
 
@@ -1971,7 +1987,6 @@ double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTa
 
   for (unsigned int i = 0; i < jets.size(); i++)
   {
-
     int abs_hadFlavour = abs(jets.at(i).hadronFlavour());
     TString tmp_Syst(Syst);
     TString str_hadFlavour = 'c';
