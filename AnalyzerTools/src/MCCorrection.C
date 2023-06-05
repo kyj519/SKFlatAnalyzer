@@ -16,6 +16,7 @@ vector<TString> MCCorrection::Split(TString s, TString del)
   array->Delete();
   return out;
 }
+
 void MCCorrection::ReadHistograms()
 {
 
@@ -173,6 +174,7 @@ void MCCorrection::ReadHistograms()
     delete file;
     origDir->cd();
   }
+
   /*
     cout << "[MCCorrection::MCCorrection] map_hist_pileup :" << endl;
     for(std::map< TString, TH1D* >::iterator it=map_hist_pileup.begin(); it!=map_hist_pileup.end(); it++){
@@ -190,27 +192,55 @@ void MCCorrection::ReadHistograms()
   origDir->cd();
 
   // == Get Pileup Jet Veto
-  TString pileupJetVetoPath = datapath + "/" + GetEra() + "/PileupJetVeto/PUID_ULRun2_" + TString::Itoa(DataYear, 10) + ".root";
+  TString pileupJetVetoPath = datapath + "/" + GetEra() + "/PileupJetVeto/PUID_ULRun2_" + DataEra + ".root";
   TFile *file_pileupJetVetoPath = new TFile(pileupJetVetoPath);
   histDir->cd();
-  map_hist_pujet_veto["eff_mcUL2018_T"] = (TH2F *)file_pileupJetVetoPath->Get("h2_eff_mcUL2018_T")->Clone();
-  map_hist_pujet_veto["eff_mcUL2018_M"] = (TH2F *)file_pileupJetVetoPath->Get("h2_eff_mcUL2018_M")->Clone();
-  map_hist_pujet_veto["eff_mcUL2018_L"] = (TH2F *)file_pileupJetVetoPath->Get("h2_eff_mcUL2018_L")->Clone();
-  map_hist_pujet_veto["mistag_mcUL2018_T"] = (TH2F *)file_pileupJetVetoPath->Get("h2_mistag_mcUL2018_T")->Clone();
-  map_hist_pujet_veto["mistag_mcUL2018_M"] = (TH2F *)file_pileupJetVetoPath->Get("h2_mistag_mcUL2018_M")->Clone();
-  map_hist_pujet_veto["mistag_mcUL2018_L"] = (TH2F *)file_pileupJetVetoPath->Get("h2_mistag_mcUL2018_L")->Clone();
-  map_hist_pujet_veto["eff_sfUL2018_T"] = (TH2F *)file_pileupJetVetoPath->Get("h2_eff_sfUL2018_T")->Clone();
-  map_hist_pujet_veto["eff_sfUL2018_M"] = (TH2F *)file_pileupJetVetoPath->Get("h2_eff_sfUL2018_M")->Clone();
-  map_hist_pujet_veto["eff_sfUL2018_L"] = (TH2F *)file_pileupJetVetoPath->Get("h2_eff_sfUL2018_L")->Clone();
-  map_hist_pujet_veto["mistag_sfUL2018_T"] = (TH2F *)file_pileupJetVetoPath->Get("h2_mistag_sfUL2018_T")->Clone();
-  map_hist_pujet_veto["mistag_sfUL2018_M"] = (TH2F *)file_pileupJetVetoPath->Get("h2_mistag_sfUL2018_M")->Clone();
-  map_hist_pujet_veto["mistag_sfUL2018_L"] = (TH2F *)file_pileupJetVetoPath->Get("h2_mistag_sfUL2018_L")->Clone();
+
+  vector<TString> pileupjetveto_wp = {"T", "M", "L"};
+  for (unsigned int i = 0; i < pileupjetveto_wp.size(); i++)
+  {
+    TString period_alt_name = DataEra;
+    if (DataEra == "2016preVFP")
+      period_alt_name = "2016APV";
+    else if (DataEra == "2016postVFP")
+      period_alt_name = "2016";
+
+    TString key = "eff_mcUL" + DataEra + "_" + pileupjetveto_wp[i];
+    TString target = "h2_eff_mcUL" + period_alt_name + "_" + pileupjetveto_wp[i];
+    map_hist_pujet_veto[key] = (TH2F *)file_pileupJetVetoPath->Get(target)->Clone();
+
+    key = "mistag_mcUL" + DataEra + "_" + pileupjetveto_wp[i];
+    target = "h2_mistag_mcUL" + period_alt_name + "_" + pileupjetveto_wp[i];
+    map_hist_pujet_veto[key] = (TH2F *)file_pileupJetVetoPath->Get(target)->Clone();
+
+    key = "eff_sfUL" + DataEra + "_" + pileupjetveto_wp[i];
+    target = "h2_eff_sfUL" + period_alt_name + "_" + pileupjetveto_wp[i];
+    map_hist_pujet_veto[key] = (TH2F *)file_pileupJetVetoPath->Get(target)->Clone();
+
+    key = "mistag_sfUL" + DataEra + "_" + pileupjetveto_wp[i];
+    target = "h2_mistag_sfUL" + period_alt_name + "_" + pileupjetveto_wp[i];
+    map_hist_pujet_veto[key] = (TH2F *)file_pileupJetVetoPath->Get(target)->Clone();
+  }
+
   file_pileupJetVetoPath->Close();
   delete file_pileupJetVetoPath;
   origDir->cd();
 
   // == Get CTagging
-  TString CTagShapeCorrPath = datapath + "/" + GetEra() + "/CTag/CTag_iterfit_ULRun2_" + TString::Itoa(DataYear, 10) + ".root";
+  // TString CTagShapeCorrPath = datapath + "/" + GetEra() + "/CTag/CTag_iterfit_ULRun2_" + TString::Itoa(DataYear, 10) + ".root";
+  TString CTagShapeCorrPath = datapath + "/" + GetEra() + "/CTag/DeepJet_ctagSF_Summer20UL";
+
+  if (DataEra == "2016preVFP")
+    CTagShapeCorrPath += "16PreVFP";
+  else if (DataEra == "2016postVFP")
+    CTagShapeCorrPath += "16PostVFP";
+  else if (DataEra == "2017")
+    CTagShapeCorrPath += "17";
+  else if (DataEra == "2018")
+    CTagShapeCorrPath += "18";
+
+  CTagShapeCorrPath += "_interp_withJEC.root";
+
   TFile *file_CTagShapeCorrPath = new TFile(CTagShapeCorrPath);
   histDir->cd();
   std::vector<std::string> flav = {"b", "c", "l"};
@@ -449,85 +479,37 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   //==== 2016
   if (DataYear == 2016)
   {
-    if (trig == "IsoMu24")
-    {
-      if (pt < 26.)
-        return 1.; // FIXME
-      if (eta >= 2.4)
-        eta = 2.39;
+    if (pt < 26.)
+      return 1.; // FIXME
+    if (eta >= 2.4)
+      eta = 2.39;
 
-      if (pt > 200.)
-        pt = 199.;
-    }
-    else if (trig == "Mu50")
-    {
-      if (pt < 52.)
-        return 1.; // FIXME
-      if (eta >= 2.4)
-        eta = 2.39;
-
-      if (pt > 1000.)
-        pt = 999.;
-    }
-    else
-    {
-    }
+    if (pt > 200.)
+      pt = 199.;
   }
   else if (DataYear == 2017)
   {
-    if (trig == "IsoMu27")
-    {
-      //==== FIXME MiniAODPt Pt
-      //==== FIXME 28.9918  29.0363
-      //==== FIXME This event pass pt>29GeV cut, but MiniAOD pt < 29 GeV
-      //==== FIXME So when I return 0., SF goes nan.. let's return 1 for now..
-      if (pt < 29.)
-        return 1.; // FIXME
-      if (eta >= 2.4)
-        eta = 2.39;
+    //==== FIXME MiniAODPt Pt
+    //==== FIXME 28.9918  29.0363
+    //==== FIXME This event pass pt>29GeV cut, but MiniAOD pt < 29 GeV
+    //==== FIXME So when I return 0., SF goes nan.. let's return 1 for now..
+    if (pt < 29.)
+      return 1.; // FIXME
+    if (eta >= 2.4)
+      eta = 2.39;
 
-      if (pt > 200.)
-        pt = 199.;
-    }
-    else if (trig == "Mu50")
-    {
-      if (pt < 52.)
-        return 1.; // FIXME
-      if (eta >= 2.4)
-        eta = 2.39;
-
-      if (pt > 1000.)
-        pt = 999.;
-    }
-    else
-    {
-    }
+    if (pt > 200.)
+      pt = 199.;
   }
   else if (DataYear == 2018)
   {
-    if (trig == "IsoMu24")
-    {
-      if (pt < 26.)
-        return 1.; // FIXME
-      if (eta >= 2.4)
-        eta = 2.39;
+    if (pt < 26.)
+      return 1.; // FIXME
+    if (eta >= 2.4)
+      eta = 2.39;
 
-      if (pt > 200.)
-        pt = 199.;
-    }
-    else if (trig == "Mu50")
-    {
-      if (pt < 52.)
-        return 1.; // FIXME
-      if (eta >= 2.4)
-        eta = 2.39;
-
-      if (pt > 1000.)
-        pt = 999.;
-    }
-    else
-    {
-    }
+    if (pt > 200.)
+      pt = 199.;
   }
   else
   {
@@ -574,7 +556,8 @@ double MCCorrection::MuonTrigger_SF(TString ID, TString trig, const std::vector<
 
   double value = 1.;
 
-  if (trig == "IsoMu24" || trig == "IsoMu27" || trig == "Mu50")
+  // single muon trigger for Vcb analysis
+  if (trig == "IsoMu24" || trig == "IsoMu27")
   {
 
     double eff_DATA = 1.;
@@ -583,7 +566,7 @@ double MCCorrection::MuonTrigger_SF(TString ID, TString trig, const std::vector<
     for (unsigned int i = 0; i < muons.size(); i++)
     {
       eff_DATA *= (1. - MuonTrigger_Eff(ID, trig, 0, muons.at(i).Eta(), muons.at(i).MiniAODPt(), sys));
-      eff_MC *= (1. - MuonTrigger_Eff(ID, trig, 1, muons.at(i).Eta(), muons.at(i).MiniAODPt(), -sys));
+      eff_MC *= (1. - MuonTrigger_Eff(ID, trig, 1, muons.at(i).Eta(), muons.at(i).MiniAODPt(), sys));
     }
 
     eff_DATA = 1. - eff_DATA;
@@ -774,14 +757,66 @@ double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC,
   if (trig == "Default")
     return 1.;
 
-  // cout << "[MCCorrection::ElectronTrigger_Eff] ID = " << ID << "\t" << "trig = " << trig << endl;
-  // cout << "[MCCorrection::ElectronTrigger_Eff] DataOrMC = " << DataOrMC << endl;
-  // cout << "[MCCorrection::ElectronTrigger_Eff] sceta = " << sceta << ", pt = " << pt << endl;
-
   double value = 1.;
   double error = 0.;
 
-  // cout << "[MCCorrection::ElectronTrigger_SF] value = " << value << endl;
+  if (DataYear == 2016)
+  {
+    if (sceta < -2.5)
+      sceta = -2.49;
+    if (2.5 < sceta)
+      sceta = 2.49;
+
+    if (pt < 24)
+      pt = 24.1;
+    if (500 < pt)
+      pt = 499.9;
+  }
+  else if (DataYear == 2017)
+  {
+    if (sceta < -2.5)
+      sceta = -2.49;
+    if (2.5 < sceta)
+      sceta = 2.49;
+
+    if (pt < 35)
+      pt = 35.1;
+    if (500 < pt)
+      pt = 499.9;
+  }
+  else if (DataYear == 2018)
+  {
+    if (sceta < -2.5)
+      sceta = -2.49;
+    if (2.5 < sceta)
+      sceta = 2.49;
+
+    if (pt < 10)
+      pt = 10.1;
+    if (500 < pt)
+      pt = 499.9;
+  }
+
+  TString histkey = "Trigger_Eff_DATA_" + trig;
+  if (DataOrMC == 1)
+    histkey = "Trigger_Eff_MC_" + trig;
+
+  TH2F *this_hist = map_hist_Electron[histkey];
+  if (!this_hist)
+  {
+    if (IgnoreNoHist)
+      return 1.;
+    else
+    {
+      cerr << "[MCCorrection::ElectronTrigger_Eff] No " << histkey << endl;
+      exit(ENODATA);
+    }
+  }
+
+  int this_bin = this_hist->FindBin(sceta, pt);
+
+  value = this_hist->GetBinContent(this_bin);
+  error = this_hist->GetBinError(this_bin);
 
   return value + double(sys) * error;
 } // double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC, double sceta, double pt, int sys)
@@ -790,7 +825,7 @@ double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC,
 
 double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron> &electrons, int sys)
 {
-   if (electrons.size() == 0)
+  if (electrons.size() == 0)
     return 1;
 
   if (ID == "Default")
@@ -798,60 +833,28 @@ double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vec
   if (trig == "Default")
     return 1.;
 
+  double value;
+
   // single electron trigger eff sf for Vcb  analysis
-  TH2F *histo_eff_data;
-  TH2F *histo_eff_mc;
   if (trig == "Ele27" || trig == "Ele35" || trig == "Ele32")
   {
-    TString histkey = "Trigger_Eff_DATA_" + trig;
-    histo_eff_data = map_hist_Electron[histkey];
+    double eff_data = 1;
+    double eff_mc = 1;
 
-    histkey = "Trigger_Eff_MC_" + trig;
-    histo_eff_mc = map_hist_Electron[histkey];
-
-    if (!histo_eff_data || !histo_eff_mc)
+    for (unsigned int i = 0; i < electrons.size(); i++)
     {
-      if (IgnoreNoHist)
-        return 1.;
-      else
-      {
-        cerr << "[MCCorrection::ElectronTrigger_SF] No " << histkey << endl;
-        exit(ENODATA);
-      }
-    }
-  }
+      float sceta = electrons[i].scEta();
+      float pt = electrons[i].UncorrPt();
 
-  double eff_data = 1;
-  double eff_mc = 1;
-  
-  for (unsigned int i = 0; i < electrons.size(); i++)
-  {
-    float sceta = electrons[i].scEta();
-    float pt = electrons[i].UncorrPt();
-    
-    if (DataYear == 2018)
-    {
-      if (sceta < -2.5)
-        sceta = -2.49;
-      if (2.5 < sceta)
-        sceta = 2.49;
-
-      if (pt < 35)
-        pt = 35.1;
-      if (200 < pt)
-        pt = 199.;
+      eff_data *= ElectronTrigger_Eff(ID, trig, 0, electrons[i].scEta(), electrons[i].UncorrPt(), sys);
+      eff_mc *= ElectronTrigger_Eff(ID, trig, 0, electrons[i].scEta(), electrons[i].UncorrPt(), sys);
     }
 
-    int bin = histo_eff_data->FindBin(sceta, pt);
+    eff_data = 1 - eff_data;
+    eff_mc = 1 - eff_mc;
 
-    eff_data *= (1 - histo_eff_data->GetBinContent(bin) - sys * histo_eff_data->GetBinError(bin));
-    eff_mc *= (1 - histo_eff_mc->GetBinContent(bin) - sys * histo_eff_mc->GetBinError(bin));
+    value = eff_data / eff_mc;
   }
-  
-  eff_data = 1 - eff_data;
-  eff_mc = 1 - eff_mc;
-
-  double value = eff_data/eff_mc;
 
   return value;
 } // double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vector<Electron>& electrons, int sys)
@@ -868,6 +871,42 @@ double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vec
 
   return ElectronTrigger_SF(ID, trig, muvec, sys);
 }
+
+//////////
+
+// Single muon and single eletron combined trigger for Vcb_DL
+double MCCorrection::SingleLepton_Trigger_SF(const TString &mu_id, const TString &mu_trig, const vector<Muon> &muons, const int &mu_sys,
+                                             const TString &el_id, const TString &el_trig, const vector<Electron> &electrons, const int &el_sys)
+{
+  double eff_data = 1;
+  double eff_mc = 1;
+
+  if (muons.size() == 0 && electrons.size() == 0)
+    return 1;
+
+  // muon trigger eff
+  for (unsigned int i = 0; i < muons.size(); i++)
+  {
+    eff_data *= (1. - MuonTrigger_Eff(mu_id, mu_trig, 0, muons.at(i).Eta(), muons.at(i).MiniAODPt(), mu_sys));
+    eff_mc *= (1. - MuonTrigger_Eff(mu_id, mu_trig, 1, muons.at(i).Eta(), muons.at(i).MiniAODPt(), mu_sys));
+  }
+
+  // eletron trigger eff
+  for (unsigned int i = 0; i < electrons.size(); i++)
+  {
+    eff_data *= (1. - ElectronTrigger_Eff(el_id, el_trig, 0, electrons.at(i).scEta(), electrons.at(i).UncorrPt(), el_sys));
+    eff_mc *= (1. - ElectronTrigger_Eff(el_id, el_trig, 1, electrons.at(i).scEta(), electrons.at(i).UncorrPt(), el_sys));
+  }
+
+  eff_data = 1 - eff_data;
+  eff_mc = 1 - eff_mc;
+
+  double sf = eff_data / eff_mc;
+
+  return sf;
+} // double MCCorrection::SingleLepton_Trigger_SF()
+
+//////////
 
 double MCCorrection::GetPrefireWeight(const std::vector<Photon> &photons, const std::vector<Jet> &jets, int sys)
 {
@@ -1066,6 +1105,8 @@ void MCCorrection::SetupJetTagging()
   for (unsigned int i = 0; i < jetTaggingPars.size(); i++)
   {
     //==== (DeepCSV,Medium,incl,comb
+
+    // skip c-tagging
     if (JetTagging::TaggerToString(jetTaggingPars.at(i).j_Tagger).find("_C") != std::string::npos)
       continue;
 
@@ -1097,6 +1138,7 @@ void MCCorrection::SetupJetTagging()
 
     ifstream in(btagpath + "/csvmap.txt");
     string btagline; // dummy
+
     while (getline(in, btagline))
     {
       std::istringstream is(btagline);
@@ -1114,6 +1156,7 @@ void MCCorrection::SetupJetTagging()
       is >> tmp_Run_Start; // Run_start
       is >> tmp_Run_End;   // Run_end
       is >> tmp_filename;  // csv file
+
       if (tmp_tagger != this_tagger)
         continue;
       if (tmp_pd != "All")
@@ -1643,7 +1686,6 @@ double MCCorrection::GetBTaggingReweight_1a(const vector<Jet> &jets, JetTagging:
 
 double MCCorrection::GetBTaggingReweight_1d(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst)
 {
-
   if (IsDATA)
     return 1.;
 
@@ -2002,11 +2044,35 @@ double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTa
     TH2F *this_hist = map_hist_ctag_iterfit[key];
     double CvsLval = jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsL);
     double CvsBval = jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsB);
-    int xbin = this_hist->GetXaxis()->FindBin(CvsLval);
-    int ybin = this_hist->GetYaxis()->FindBin(CvsBval);
-    double this_SF = this_hist->GetBinContent(xbin, ybin);
+    int bin = this_hist->FindBin(CvsLval, CvsBval);
+    double this_SF = this_hist->GetBinContent(bin);
     rew *= this_SF;
   }
 
   return rew;
 }
+
+//////////
+
+double MCCorrection::HEMVeto(const vector<Jet> &jets)
+{
+  if (DataYear != 2018)
+  {
+    return 1.;
+  }
+
+  // define HEM region
+  bool IsHEMPeriod = false;
+  bool IsHEMJets = false;
+  if (IsDATA)
+  {
+    // for period C, D return true
+    //if (DataPeriod == "C" || DataPeriod == "D")
+    //  IsHEMPeriod = true;
+  }
+  else
+    IsHEMPeriod = true;
+
+  // check if there're jets in HEM region
+
+} // double MCCorrection::HEMVeto(const vector<Jet> &jets)

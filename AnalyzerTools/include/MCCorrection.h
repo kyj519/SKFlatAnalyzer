@@ -81,6 +81,9 @@ public:
   std::map<TString, TH2F *> map_hist_Electron;
   std::map<TString, TGraphAsymmErrors *> map_graph_Electron;
 
+  double SingleLepton_Trigger_SF(const TString &mu_id, const TString &mu_trig, const vector<Muon> &muons, const int &mu_sys,
+                                 const TString &el_id, const TString &el_trig, const vector<Electron> &electrons, const int &el_sys);
+
   std::map<TString, TH2F *> map_hist_prefire;
   double GetPrefireWeight(const std::vector<Photon> &photons, const std::vector<Jet> &jets, int sys);
 
@@ -133,6 +136,8 @@ public:
   // CTagIterFit SF
   std::map<TString, TH2F *> map_hist_ctag_iterfit;
   double GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTagging::Parameters &jtp, const string &Syst);
+
+  double HEMVeto(const vector<Jet> &jets);
 };
 
 #endif

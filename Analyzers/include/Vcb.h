@@ -63,18 +63,20 @@ protected:
   vector<TString> vec_mu_id;
   vector<TString> vec_mu_id_sf_key;
   vector<TString> vec_mu_iso_sf_key;
-  vector<TString> vec_mu_trig;
-  TString mu_trig;
-  float mu_trig_safe_pt_cut;
 
   vector<TString> vec_el_id;
   vector<TString> vec_el_id_sf_key;
-  vector<TString> vec_el_trig;
-  TString el_trig;
-  float el_trig_safe_pt_cut;
 
+  vector<TString> vec_el_trig;
+  vector<TString> vec_mu_trig;
   vector<TString> vec_sl_trig; // single lepton
+
+  TString el_trig;
+  TString mu_trig;
   TString sl_trig;
+
+  float el_trig_safe_pt_cut;
+  float mu_trig_safe_pt_cut;
   float sl_trig_safe_pt_cut;
 
   vector<JetTagging::Parameters> vec_jet_tagging_para;
@@ -125,6 +127,9 @@ protected:
   bool pu_conta_w_d;
   bool pu_conta_lep_t_b;
 
+  float lepton_pt;
+  float lepton_eta;
+
   int n_sel_jet;
   int n_b_jet;
   int n_c_jet;
@@ -136,110 +141,10 @@ protected:
   float n_b_jet_f;
   float n_c_jet_f;
 
-  float lepton_pt;
-  float lepton_eta;
-
   float met_pt;
   float met_phi;
 
   float pt_ratio;
-
-  float sf_mu_id;
-  float sf_mu_id_down;
-  float sf_mu_id_up;
-
-  float sf_mu_iso;
-  float sf_mu_iso_down;
-  float sf_mu_iso_up;
-
-  float sf_el_id;
-  float sf_el_id_down;
-  float sf_el_id_up;
-
-  float sf_el_reco;
-  float sf_el_reco_down;
-  float sf_el_reco_up;
-
-  float sf_sl_trig;
-  float sf_sl_trig_down;
-  float sf_sl_trig_up;
-
-  float weight;
-
-  float weight_b_tag;
-  float weight_b_tag_down_hf;
-  float weight_b_tag_up_hf;
-  float weight_b_tag_down_jes;
-  float weight_b_tag_up_jes;
-  float weight_b_tag_down_lfstats1;
-  float weight_b_tag_up_lfstats1;
-  float weight_b_tag_down_lfstats2;
-  float weight_b_tag_up_lfstats2;
-  float weight_b_tag_down_cferr1;
-  float weight_b_tag_up_cferr1;
-  float weight_b_tag_down_cferr2;
-  float weight_b_tag_up_cferr2;
-  float weight_b_tag_down_hfstats1;
-  float weight_b_tag_up_hfstats1;
-  float weight_b_tag_down_hfstats2;
-  float weight_b_tag_up_hfstats2;
-
-  float weight_c_tag;
-  float weight_c_tag_down_extrap;
-  float weight_c_tag_up_extrap;
-  float weight_c_tag_down_interp;
-  float weight_c_tag_up_interp;
-  float weight_c_tag_down_lhe_scale_muf;
-  float weight_c_tag_up_lhe_scale_muf;
-  float weight_c_tag_down_lhe_scale_mur;
-  float weight_c_tag_up_lhe_scale_mur;
-  float weight_c_tag_down_ps_fsr_fixed;
-  float weight_c_tag_up_ps_fsr_fixed;
-  float weight_c_tag_down_ps_isr_fixed;
-  float weight_c_tag_up_ps_isr_fixed;
-  float weight_c_tag_down_pu;
-  float weight_c_tag_up_pu;
-  float weight_c_tag_down_stat;
-  float weight_c_tag_up_stat;
-  float weight_c_tag_down_xsec_brunc_dyjets_b;
-  float weight_c_tag_up_xsec_brunc_dyjets_b;
-  float weight_c_tag_down_xsec_brunc_dyjets_c;
-  float weight_c_tag_up_xsec_brunc_dyjets_c;
-  float weight_c_tag_down_xsec_brunc_wjets_c;
-  float weight_c_tag_up_xsec_brunc_wjets_c;
-  float weight_c_tag_down_jer;
-  float weight_c_tag_up_jer;
-  float weight_c_tag_down_jes_total;
-  float weight_c_tag_up_jes_total;
-
-  float weight_lumi;
-  float weight_mc;
-
-  float weight_pdf_alternative;
-  float weight_pdf_error_set[100];
-  float weight_pdf_as_down;
-  float weight_pdf_as_up;
-
-  float weight_pileup;
-  float weight_pileup_down;
-  float weight_pileup_up;
-
-  float weight_prefire;
-  float weight_prefire_down;
-  float weight_prefire_up;
-
-  float weight_pujet_veto;
-  float weight_pujet_veto_down;
-  float weight_pujet_veto_up;
-
-  float weight_scale_variation_1;
-  float weight_scale_variation_2;
-  float weight_scale_variation_3;
-  float weight_scale_variation_4;
-  float weight_scale_variation_6;
-  float weight_scale_variation_8;
-
-  float weight_top_pt;
 
   float pt_leading_jet;
   float pt_subleading_jet;
@@ -298,6 +203,11 @@ protected:
   float w_u_b_bscore;
   float w_d_b_bscore;
 
+  float m_had_t;
+  float m_had_w;
+  float m_lep_t;
+  float m_lep_w;
+
   float m_w_u_b;
   float m_w_d_b;
 
@@ -337,6 +247,103 @@ protected:
   float nu_pz_sol_0;
   float nu_pz_sol_1;
 
+  float weight;
+
+  float weight_b_tag;
+  float weight_b_tag_down_hf;
+  float weight_b_tag_up_hf;
+  float weight_b_tag_down_jes;
+  float weight_b_tag_up_jes;
+  float weight_b_tag_down_lfstats1;
+  float weight_b_tag_up_lfstats1;
+  float weight_b_tag_down_lfstats2;
+  float weight_b_tag_up_lfstats2;
+  float weight_b_tag_down_cferr1;
+  float weight_b_tag_up_cferr1;
+  float weight_b_tag_down_cferr2;
+  float weight_b_tag_up_cferr2;
+  float weight_b_tag_down_hfstats1;
+  float weight_b_tag_up_hfstats1;
+  float weight_b_tag_down_hfstats2;
+  float weight_b_tag_up_hfstats2;
+
+  float weight_c_tag;
+  float weight_c_tag_down_extrap;
+  float weight_c_tag_up_extrap;
+  float weight_c_tag_down_interp;
+  float weight_c_tag_up_interp;
+  float weight_c_tag_down_lhe_scale_muf;
+  float weight_c_tag_up_lhe_scale_muf;
+  float weight_c_tag_down_lhe_scale_mur;
+  float weight_c_tag_up_lhe_scale_mur;
+  float weight_c_tag_down_ps_fsr_fixed;
+  float weight_c_tag_up_ps_fsr_fixed;
+  float weight_c_tag_down_ps_isr_fixed;
+  float weight_c_tag_up_ps_isr_fixed;
+  float weight_c_tag_down_pu;
+  float weight_c_tag_up_pu;
+  float weight_c_tag_down_stat;
+  float weight_c_tag_up_stat;
+  float weight_c_tag_down_xsec_brunc_dyjets_b;
+  float weight_c_tag_up_xsec_brunc_dyjets_b;
+  float weight_c_tag_down_xsec_brunc_dyjets_c;
+  float weight_c_tag_up_xsec_brunc_dyjets_c;
+  float weight_c_tag_down_xsec_brunc_wjets_c;
+  float weight_c_tag_up_xsec_brunc_wjets_c;
+  float weight_c_tag_down_jer;
+  float weight_c_tag_up_jer;
+  float weight_c_tag_down_jes_total;
+  float weight_c_tag_up_jes_total;
+
+  float weight_el_id;
+  float weight_el_id_down;
+  float weight_el_id_up;
+
+  float weight_el_reco;
+  float weight_el_reco_down;
+  float weight_el_reco_up;
+
+  float weight_lumi;
+  float weight_mc;
+
+  float weight_mu_id;
+  float weight_mu_id_down;
+  float weight_mu_id_up;
+
+  float weight_mu_iso;
+  float weight_mu_iso_down;
+  float weight_mu_iso_up;
+
+  float weight_pdf_alternative;
+  float weight_pdf_error_set[100];
+  float weight_pdf_as_down;
+  float weight_pdf_as_up;
+
+  float weight_pileup;
+  float weight_pileup_down;
+  float weight_pileup_up;
+
+  float weight_prefire;
+  float weight_prefire_down;
+  float weight_prefire_up;
+
+  float weight_pujet_veto;
+  float weight_pujet_veto_down;
+  float weight_pujet_veto_up;
+
+  float weight_scale_variation_1;
+  float weight_scale_variation_2;
+  float weight_scale_variation_3;
+  float weight_scale_variation_4;
+  float weight_scale_variation_6;
+  float weight_scale_variation_8;
+
+  float weight_sl_trig;
+  float weight_sl_trig_down;
+  float weight_sl_trig_up;
+
+  float weight_top_pt;
+
   TString region;
 
   TTree *permutation_tree_correct;
@@ -348,6 +355,7 @@ protected:
   float best_chi2;
   float best_mva_score_pre;
   float best_mva_score;
+  float ht;
   float mt;
   float mva_hf_score;
 
@@ -389,6 +397,7 @@ protected:
   TMVA::Reader *reader_hf_contamination_lessthantwo;
   TMVA::Reader *reader_hf_contamination_morethantwo;
 
+  float Calculate_HT(const vector<Jet> &vec_jet);
   float Calculate_Mt(const Particle &lepton, const float &neu_px, const float &neu_py);
   void Clear();
   int Chk_Included(const int index_matched_jet[4]);

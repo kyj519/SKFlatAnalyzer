@@ -6,6 +6,8 @@ const float T_WIDTH = 1.5;
 const float W_MASS = 80.379;
 const float W_WIDTH = 2.085;
 
+const float Z_MASS = 91.1876;
+
 const float MUON_PT = 20.;
 const float MUON_PT_VETO = 15.;
 const float MUON_ETA = 2.4;
@@ -23,6 +25,7 @@ const float JET_PT_MATCH = 10;
 const float JET_ETA_MATCH = 10;
 
 const float MET_PT = 20.;
+const float MET_PT_DL = 40.;
 
 //selection variables for making SkimTree.
 //to veto events with at least two tight leptons

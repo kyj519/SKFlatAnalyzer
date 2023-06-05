@@ -58,6 +58,8 @@ public:
   // vector<Muon> muons = GetMuons(~~~);
   // std::sort(muons.begin(), muons.end(), PtComparing);
   //==== ** Recommend you to do the same for other objects (Electron, Jet, FatJet, ...) **
+
+  inline static bool BvsCComparing(const Jet &jet1, const Jet &jet2) { return (jet1.GetTaggerResult(JetTagging::DeepJet) > jet2.GetTaggerResult(JetTagging::DeepJet)); }
   inline static bool PtComparing(const Particle &p1, const Particle &p2) { return (p1.Pt() > p2.Pt()); }
   inline static bool PtComparingPtr(Particle *p1, Particle *p2) { return (p1->Pt() > p2->Pt()); }
 
@@ -155,7 +157,7 @@ public:
 
   //==== Using new PDF set
   PDFReweight *pdfReweight = NULL;
-  double GetPDFWeight(LHAPDF::PDF *pdf_, bool chk_print=false);
+  double GetPDFWeight(LHAPDF::PDF *pdf_, bool chk_print = false);
   //==== NewCentral/ProdCentral
   double GetPDFReweight();
   //==== NewErrorSet/ProdCentral
