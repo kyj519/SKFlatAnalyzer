@@ -1879,13 +1879,12 @@ double MCCorrection::GetCTaggingReweight(const vector<Jet> &jets, JetTagging::Pa
 
 double MCCorrection::PileupJetVeto_MCCorr(const TString &type, const TString &wp, double pt, double eta, const int sys)
 {
-  if (IsDATA)
-    return 1.;
+
 
   if (pt < 20)
     pt = 20.;
   if (pt >= 50.)
-    pt = 49.9;
+    return 1.;
   if (eta >= 5.0)
     eta = 4.49;
   if (eta < -5.0)
