@@ -2010,6 +2010,8 @@ double MCCorrection::PileupJetVeto_Reweight(const vector<Jet> &jets, const TStri
   return prob_data / prob_mc;
 } // double MCCorrection::PileupJetVeto_Reweight(const vector<Jet>& jets, string wp, string Syst)
 
+//////////
+
 double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTagging::Parameters &jtp, const string &Syst)
 {
   if (IsDATA)
@@ -2053,26 +2055,3 @@ double MCCorrection::GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTa
 }
 
 //////////
-
-double MCCorrection::HEMVeto(const vector<Jet> &jets)
-{
-  if (DataYear != 2018)
-  {
-    return 1.;
-  }
-
-  // define HEM region
-  bool IsHEMPeriod = false;
-  bool IsHEMJets = false;
-  if (IsDATA)
-  {
-    // for period C, D return true
-    //if (DataPeriod == "C" || DataPeriod == "D")
-    //  IsHEMPeriod = true;
-  }
-  else
-    IsHEMPeriod = true;
-
-  // check if there're jets in HEM region
-
-} // double MCCorrection::HEMVeto(const vector<Jet> &jets)
