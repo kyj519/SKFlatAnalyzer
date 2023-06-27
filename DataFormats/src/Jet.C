@@ -100,6 +100,14 @@ void Jet::SetTightLepVetoJetID(double b){
 bool Jet::Pass_PileupJetVeto(const TString& wp) const {
   float pt = this->Pt();
   float eta = this->Eta();
+
+  //PU Jet veto ID should be applied under 10<pt<50
+  if(pt < 10. || pt >= 50.){
+    return true;
+  }
+  //same for eta
+  if(fabs(eta) >= 5.0) return true;
+
   
   unsigned int pt_bin = 0;
   if(10.<=pt && pt < 20.) pt_bin = 0;
