@@ -46,7 +46,7 @@ void AnalyzerParameter::Clear()
   PUJet_Veto_ID = "";
 
   syst_ = Central;
-}//void AnalyzerParameter::Clear()
+} // void AnalyzerParameter::Clear()
 
 //////////
 
@@ -73,27 +73,41 @@ AnalyzerParameter::AnalyzerParameter()
   FatJet_ID = "HN";
 
   syst_ = Central;
-}//AnalyzerParameter::AnalyzerParameter()
+} // AnalyzerParameter::AnalyzerParameter()
 
 TString AnalyzerParameter::GetSystType()
 {
-  if(syst_==Syst::Central) return "Central";
-  else if(syst_==Syst::JetResUp) return "JetResUp";
-  else if(syst_==Syst::JetResDown) return "JetResDown";
-  else if(syst_==Syst::JetEnUp) return "JetEnUp";
-  else if(syst_==Syst::JetEnDown) return "JetEnDown";
+  if (syst_ == Syst::Central)
+    return "Central";
+  else if (syst_ == Syst::JetResUp)
+    return "JetResUp";
+  else if (syst_ == Syst::JetResDown)
+    return "JetResDown";
+  else if (syst_ == Syst::JetEnUp)
+    return "JetEnUp";
+  else if (syst_ == Syst::JetEnDown)
+    return "JetEnDown";
   // else if(syst_==Syst::MuonEnUp) return "MuonEnUp";
   // else if(syst_==Syst::MuonEnDown) return "MuonEnDown";
-  else if(syst_==Syst::ElectronResUp) return "ElectronResUp";
-  else if(syst_==Syst::ElectronResDown) return "ElectronResDown";
-  else if(syst_==Syst::ElectronEnUp) return "ElectronEnUp";
-  else if(syst_==Syst::ElectronEnDown) return "ElectronEnDown";
-   
+  else if (syst_ == Syst::ElectronResUp)
+    return "ElectronResUp";
+  else if (syst_ == Syst::ElectronResDown)
+    return "ElectronResDown";
+  else if (syst_ == Syst::ElectronEnUp)
+    return "ElectronEnUp";
+  else if (syst_ == Syst::ElectronEnDown)
+    return "ElectronEnDown";
+  else if (syst_ == Syst::UnclusteredEnergyUp)
+    return "UEUp";
+  else if (syst_ == Syst::UnclusteredEnergyDown)
+    return "UEDown";
+
   cout << "[AnalyzerParameter::GetSystType] Wrong Syst " << syst_ << endl;
- 
+
   exit(ENODATA);
   return "ERROR";
 }
 
-AnalyzerParameter::~AnalyzerParameter(){
+AnalyzerParameter::~AnalyzerParameter()
+{
 }

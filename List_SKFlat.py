@@ -8,6 +8,9 @@ parser.add_argument('-p', dest='Chk_Private', type=bool, default=False)
 parser.add_argument('-s', dest='Sample', default='')
 args = parser.parse_args()
 
+if args.Era=="2016a": args.Era="2016preVFP"
+if args.Era=="2016b": args.Era="2016postVFP"
+
 mc_list = {'TTLJ_powheg':['TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8'],
            'TTLL_powheg':['TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8'],
            'tw_antitop':['ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8'],
@@ -29,14 +32,29 @@ mc_list = {'TTLJ_powheg':['TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8'],
            'TTLJ_powheg_mtop173p5':['TTToSemiLeptonic_mtop173p5_TuneCP5_13TeV-powheg-pythia8'],
            'TTLJ_powheg_CP5Down':['TTToSemiLeptonic_TuneCP5down_13TeV-powheg-pythia8'],
            'TTLJ_powheg_CP5Up':['TTToSemiLeptonic_TuneCP5up_13TeV-powheg-pythia8'],
+           'TTLL_powheg_hdampDown':['TTTo2L2Nu_hdampDOWN_TuneCP5_13TeV-powheg-pythia8'],
+           'TTLL_powheg_hdampUp':['TTTo2L2Nu_hdampUP_TuneCP5_13TeV-powheg-pythia8'],
+           'TTLL_powheg_mtop171p5':['TTTo2L2Nu_mtop171p5_TuneCP5_13TeV-powheg-pythia8'],
+           'TTLL_powheg_mtop173p5':['TTTo2L2Nu_mtop173p5_TuneCP5_13TeV-powheg-pythia8'],
+           'TTLL_powheg_CP5Down':['TTTo2L2Nu_TuneCP5down_13TeV-powheg-pythia8'],
+           'TTLL_powheg_CP5Up':['TTTo2L2Nu_TuneCP5up_13TeV-powheg-pythia8'],
            'TTbb':['TTbb_4f_TTToSemiLeptonic_TuneCP5-Powheg-Openloops-Pythia8'],
+           'ttHTobb':['ttHTobb_M125_TuneCP5_13TeV-powheg-pythia8'],
 }
 
 #for private only sample
 if args.Chk_Private == False:
-    if args.Sample == 'TTLJ_WtoCB_powheg' or args.Sample == 'TTLJ_powheg_hdampDown' or args.Sample == 'TTLJ_powheg_hdampUp' or args.Sample == 'TTLJ_powheg_m171p5' or args.Sample == 'TTLJ_powheg_m173p5' or args.Sample == 'TTLJ_powheg_CP5Down' or args.Sample == 'TTLJ_powheg_CP5Up' or args.Sample == 'TTbb':
+    if args.Sample == 'TTLJ_WtoCB_powheg' or args.Sample == 'TTLJ_powheg_hdampDown' or args.Sample == 'TTLJ_powheg_hdampUp' or args.Sample == 'TTLJ_powheg_m171p5' or args.Sample == 'TTLJ_powheg_m173p5' or args.Sample == 'TTLJ_powheg_CP5Down' or args.Sample == 'TTLJ_powheg_CP5Up' or args.Sample == 'TTbb' or args.Sample == 'ttHtobb':
         print(f"{args.Sample} is private only sample. Check argument first. Add -p 1")
         exit(1)
+
+if args.Sample == 'TTLJ_WtoCB_powheg':
+    if args.Era == '2017':
+        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL17_9M_Events'];
+    elif args.Era == '2016postVFP':
+        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL16_9M_Events'];
+    elif args.Era == '2016preVFP':
+        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL16APV_9M_Events'];
 
 target_mc_list = list()
 for mc in mc_list:
@@ -62,6 +80,10 @@ if args.Chk_Private:
         
         #find lastest crab output
         result = os.listdir(path)
+
+        #ingore folder end with Skip. It's only for archiving
+        result = [folder for folder in result if not folder.endswith("Skip")]
+        
         path += str(result[-1])
         
         find = subprocess.Popen(['find', path, '-type', 'f'], stdout=subprocess.PIPE)

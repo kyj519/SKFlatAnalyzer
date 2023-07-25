@@ -41,6 +41,7 @@ class AnalyzerParameter
     /* MuonEnUp, MuonEnDown,  */
     ElectronResUp, ElectronResDown, 
     ElectronEnUp, ElectronEnDown, 
+    UnclusteredEnergyUp, UnclusteredEnergyDown,
     NSyst
   };
   Syst syst_;

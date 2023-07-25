@@ -520,7 +520,8 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   TString histkey = "Trigger_Eff_DATA_" + trig + "_" + ID;
   if (DataOrMC == 1)
     histkey = "Trigger_Eff_MC_" + trig + "_" + ID;
-  // cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
+   //cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
+  
   TH2F *this_hist = map_hist_Muon[histkey];
   if (!this_hist)
   {
@@ -687,7 +688,6 @@ double MCCorrection::ElectronID_SF(TString ID, double sceta, double pt, int sys)
   }
   else
   {
-
     TH2F *this_hist = map_hist_Electron["ID_SF_" + ID];
     if (!this_hist)
     {
@@ -750,6 +750,8 @@ double MCCorrection::ElectronReco_SF(double sceta, double pt, int sys)
   return value + double(sys) * error;
 }
 
+//////////
+
 double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC, double sceta, double pt, int sys)
 {
   if (ID == "Default")
@@ -800,6 +802,8 @@ double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC,
   TString histkey = "Trigger_Eff_DATA_" + trig;
   if (DataOrMC == 1)
     histkey = "Trigger_Eff_MC_" + trig;
+
+  //cout << "Electron " << histkey << endl;
 
   TH2F *this_hist = map_hist_Electron[histkey];
   if (!this_hist)
@@ -1592,6 +1596,8 @@ double MCCorrection::GetMCJetTagEff(JetTagging::Tagger tagger, JetTagging::WP wp
   return out;
 }
 
+//////////
+
 double MCCorrection::GetBTaggingReweight_1a(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst)
 {
   // Syst. usage ex.: "SystUpHTag"(all component variation for heavy flav(b,c).),
@@ -1682,7 +1688,9 @@ double MCCorrection::GetBTaggingReweight_1a(const vector<Jet> &jets, JetTagging:
     SF = 0.;
 
   return SF;
-}
+} // double MCCorrection::GetBTaggingReweight_1a(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst
+
+//////////
 
 double MCCorrection::GetBTaggingReweight_1d(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst)
 {
@@ -1751,7 +1759,59 @@ double MCCorrection::GetBTaggingReweight_1d(const vector<Jet> &jets, JetTagging:
   }
 
   return rew;
-}
+} // double MCCorrection::GetBTaggingReweight_1d(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst)
+
+//////////
+
+double MCCorrection::GetCTaggingReweight(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst)
+{
+  if (IsDATA)
+    return 1.;
+
+  double Prob_MC(1.), Prob_DATA(1.);
+
+  for (unsigned int i = 0; i < jets.size(); i++)
+  {
+    int JetHadFlav = jets.at(i).hadronFlavour();
+
+    double this_MC_Eff = GetMCJetTagEff(jtp.j_Tagger, jtp.j_WP, jets.at(i).hadronFlavour(), jets.at(i).Pt(), jets.at(i).Eta());
+
+    double this_SF = GetJetTaggingSF(jtp,
+                                     jets.at(i).hadronFlavour(),
+                                     jets.at(i).Pt(),
+                                     jets.at(i).Eta(),
+                                     0, // jets.at(i).GetTaggerResult(jtp.j_Tagger),
+                                     // currently, I don't know how to handle two tagging discriminant for c-tagging. CSV has no dependence on tagging score currently.
+                                     "central");
+
+    double this_DATA_Eff = this_MC_Eff * this_SF;
+
+    bool isTagged = false;
+    if (GetJetTaggingCutValue(JetTagging::DeepJet_CvsL, jtp.j_WP) < jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsL) &&
+        GetJetTaggingCutValue(JetTagging::DeepJet_CvsB, jtp.j_WP) < jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsB))
+      isTagged = true;
+
+    if (isTagged)
+    {
+      Prob_MC *= this_MC_Eff;
+      Prob_DATA *= this_DATA_Eff;
+    }
+    else
+    {
+      Prob_MC *= 1. - this_MC_Eff;
+      Prob_DATA *= 1. - this_DATA_Eff;
+    }
+
+  } // loop over n_jet
+
+  double SF(1.);
+  if (Prob_MC > 0. && Prob_DATA > 0.)
+    SF = Prob_DATA / Prob_MC;
+  else
+    SF = 0.;
+
+  return SF;
+} // double MCCorrection::GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Parameters jtp)
 
 //////////
 
@@ -1825,62 +1885,8 @@ bool MCCorrection::IsBTagged_2a(JetTagging::Parameters jtp, const Jet &jet, stri
 
 //////////
 
-double MCCorrection::GetCTaggingReweight(const vector<Jet> &jets, JetTagging::Parameters jtp, string Syst)
-{
-  if (IsDATA)
-    return 1.;
-
-  double Prob_MC(1.), Prob_DATA(1.);
-
-  for (unsigned int i = 0; i < jets.size(); i++)
-  {
-    int JetHadFlav = jets.at(i).hadronFlavour();
-
-    double this_MC_Eff = GetMCJetTagEff(jtp.j_Tagger, jtp.j_WP, jets.at(i).hadronFlavour(), jets.at(i).Pt(), jets.at(i).Eta());
-
-    double this_SF = GetJetTaggingSF(jtp,
-                                     jets.at(i).hadronFlavour(),
-                                     jets.at(i).Pt(),
-                                     jets.at(i).Eta(),
-                                     0, // jets.at(i).GetTaggerResult(jtp.j_Tagger),
-                                     // currently, I don't know how to handle two tagging discriminant for c-tagging. CSV has no dependence on tagging score currently.
-                                     "central");
-
-    double this_DATA_Eff = this_MC_Eff * this_SF;
-
-    bool isTagged = false;
-    if (GetJetTaggingCutValue(JetTagging::DeepJet_CvsL, jtp.j_WP) < jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsL) &&
-        GetJetTaggingCutValue(JetTagging::DeepJet_CvsB, jtp.j_WP) < jets.at(i).GetTaggerResult(JetTagging::DeepJet_CvsB))
-      isTagged = true;
-
-    if (isTagged)
-    {
-      Prob_MC *= this_MC_Eff;
-      Prob_DATA *= this_DATA_Eff;
-    }
-    else
-    {
-      Prob_MC *= 1. - this_MC_Eff;
-      Prob_DATA *= 1. - this_DATA_Eff;
-    }
-
-  } // loop over n_jet
-
-  double SF(1.);
-  if (Prob_MC > 0. && Prob_DATA > 0.)
-    SF = Prob_DATA / Prob_MC;
-  else
-    SF = 0.;
-
-  return SF;
-} // double MCCorrection::GetCTaggingReweight(const vector<Jet>& jets, JetTagging::Parameters jtp)
-
-//////////
-
 double MCCorrection::PileupJetVeto_MCCorr(const TString &type, const TString &wp, double pt, double eta, const int sys)
 {
-
-
   if (pt < 20)
     pt = 20.;
   if (pt >= 50.)

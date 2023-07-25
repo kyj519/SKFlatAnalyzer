@@ -26,26 +26,20 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
 
 protected:
+  vector<AnalyzerParameter::Syst> vec_syst_type;
+
   bool run_debug;
   bool run_ee;
   bool run_me;
   bool run_mm;
   bool run_syst;
-  bool run_jec_down;
-  bool run_jec_up;
-  bool run_jer_down;
-  bool run_jer_up;
-  bool run_eec_down;
-  bool run_eec_up;
-  bool run_eer_down;
-  bool run_eer_up;
 
   vector<TString> vec_mu_id;
   vector<TString> vec_mu_id_sf_key;
   vector<TString> vec_mu_iso_sf_key;
 
-  vector<TString> vec_el_id;
-  vector<TString> vec_el_id_sf_key;
+  // vector<TString> vec_el_id;
+  // vector<TString> vec_el_id_sf_key;
 
   vector<TString> vec_el_trig;
   vector<TString> vec_mu_trig;
@@ -92,7 +86,12 @@ protected:
   float ht;
 
   float leading_jet_bvsc;
+  float leading_jet_cvsb;
+  float leading_jet_cvsl;
+
   float subleading_jet_bvsc;
+  float subleading_jet_cvsb;
+  float subleading_jet_cvsl;
 
   float met_pt;
   float met_phi;
@@ -159,6 +158,7 @@ protected:
   float weight_el_reco_down;
   float weight_el_reco_up;
 
+  float weight_hem_veto;
   float weight_lumi;
   float weight_mc;
 
@@ -183,6 +183,8 @@ protected:
   float weight_prefire_down;
   float weight_prefire_up;
 
+  float weight_ps[4];
+
   float weight_pujet_veto;
   float weight_pujet_veto_down;
   float weight_pujet_veto_up;
@@ -202,14 +204,14 @@ protected:
 
   float weight_top_pt;
 
-  TTree *result_tree;
+  map<AnalyzerParameter::Syst, TTree *> map_result_tree;
 
   XYMETCorrection_withUL17andUL18andUL16 xy_met_correction;
 
   float Calculate_HT(const vector<Jet> &vec_jet);
   int Check_Process(const vector<Gen> &vec_gen);
   void Clear();
-  void Make_Result_Tree();
+  void Make_Result_Tree(const AnalyzerParameter &param);
   Particle Rebalance_Met();
   void Set_Result_Tree();
 };

@@ -15,7 +15,6 @@ AnalyzerCore::AnalyzerCore()
 
 AnalyzerCore::~AnalyzerCore()
 {
-
   //=== hist maps
 
   for (std::map<TString, TH1D *>::iterator mapit = maphist_TH1D.begin(); mapit != maphist_TH1D.end(); mapit++)
@@ -1062,6 +1061,31 @@ std::vector<FatJet> AnalyzerCore::SmearSDMassFatJets(const std::vector<FatJet> &
   return out;
 }
 
+//////////
+
+void AnalyzerCore::Met_Syst_Unclustered(Particle &met, int sys)
+{
+  int index;
+  if (sys == 1)
+    index = 10;
+  else if (sys == -1)
+    index = 11;
+  else
+  {
+    cerr << "[AnalyzerCore::Met_Syst_Unclustered]: Unknown index. Abort process." << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  float met_pt = PuppiMET_Type1_pt_shifts->at(index);
+  float met_phi = PuppiMET_Type1_phi_shifts->at(index);
+
+  met.SetPtEtaPhiE(met_pt, 0, met_phi, met_pt);
+
+  return;
+} // void AnalyzerCore::Met_Syst_Unclustered(Particle &met, int sys)
+
+//////////
+
 bool AnalyzerCore::PassMETFilter()
 {
 
@@ -1093,7 +1117,30 @@ bool AnalyzerCore::PassMETFilter()
   }
 
   return true;
-}
+} // bool AnalyzerCore::PassMETFilter()
+
+//////////
+
+bool AnalyzerCore::HLT_SE_Filter_2017(const std::vector<Electron> &electrons)
+{
+  if (IsData)
+    return true;
+
+  if (DataEra != "2017")
+    return true;
+
+  for (unsigned int i = 0; i < electrons.size(); i++)
+  {
+    Electron electron = electrons[i];
+
+    if (electron.PassFilter("hltEle32L1DoubleEGWPTightGsfTrackIsoFilter") && electron.PassFilter("hltEGL1SingleEGOrFilter"))
+      return true;
+  }
+
+  return false;
+} // bool AnalyzerCore::HLT_SE_Fillter_2017(const vector<Electron> &electrons)
+
+//////////
 
 void AnalyzerCore::initializeAnalyzerTools()
 {
@@ -1191,6 +1238,23 @@ double AnalyzerCore::GetPileUpWeight(int N_pileup, int syst)
     return mcCorr->GetPileUpWeight(N_pileup, syst);
 }
 
+//////////
+
+void AnalyzerCore::Get_Reweight_PS(float *weight_ps)
+{
+  if (weight_PSSyst->size() != 4)
+    return;
+
+  weight_ps[0] = weight_PSSyst->at(0);
+  weight_ps[1] = weight_PSSyst->at(1);
+  weight_ps[2] = weight_PSSyst->at(2);
+  weight_ps[3] = weight_PSSyst->at(3);
+
+  return;
+} // void AnalyzerCore::Get_Reweight_PS(float* weight_ps)
+
+//////////
+
 double AnalyzerCore::GetPDFWeight(LHAPDF::PDF *pdf_, bool chk_print)
 {
 
@@ -1243,6 +1307,7 @@ double AnalyzerCore::GetPDFReweight(const TString &syst)
   return -1;
 }
 
+// https://indico.cern.ch/event/494682/contributions/1172505/attachments/1223578/1800218/mcaod-Feb15-2016.pdf
 float AnalyzerCore::GetScaleVariation(const int &index)
 {
   int size = weight_Scale->size();
@@ -1605,6 +1670,57 @@ Particle AnalyzerCore::AddFatJetAndLepton(const FatJet &fatjet, const Lepton &le
     return fatjet + lep;
   }
 }
+
+//////////
+
+float AnalyzerCore::Weight_HEM_Veto(const vector<Jet> &jets)
+{
+  if (DataYear != 2018)
+    return 1.;
+
+  // define HEM region
+  // period
+  bool is_hem_period = false;
+  if (IsDATA)
+  {
+    // for period B(only runnumber 319077),  C, D return true
+    if (run <= 319077)
+      is_hem_period = true;
+  }
+  else
+    is_hem_period = true;
+
+  // check if there're jets in HEM region
+  bool is_hem_jets_contained = false;
+  if (is_hem_period)
+  {
+    for (unsigned int i = 0; i < jets.size(); i++)
+    {
+      Jet jet = jets.at(i);
+
+      float eta = jet.Eta();
+      float phi = jet.Phi();
+
+      if (-3.0 < eta && eta < -1.3 && -1.57 < phi && phi < -0.87)
+      {
+        is_hem_jets_contained = true;
+        break;
+      }
+    } // loop over for loop
+  }   // if (is_hem_period)
+
+  if (is_hem_jets_contained)
+  {
+    if (IsData)
+      return 0.;
+    else
+      return 38.546 / 58.827; // run 319077 lumi 0.01637, 2018 lumi except period B+C lumi 38.562
+  }
+
+  return 1.;
+} // float AnalyzerCore::HEM_Veto(cosnt vector<Jet> &jet)
+
+//////////
 
 //=========================================================
 //==== Gen Matching Tools

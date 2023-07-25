@@ -1,6 +1,8 @@
 #ifndef __Vcb_Tagging_RF_DL_h__
 #define __Vcb_Tagging_RF_DL_h__
 
+#include <map>
+
 #include "AnalyzerCore.h"
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
 
@@ -24,21 +26,23 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
 
 protected:
+  vector<AnalyzerParameter::Syst> vec_syst_type;
+
   bool run_mm_ch;
   bool run_ee_ch;
   bool run_me_ch;
 
   bool run_debug;
 
-  vector<TString> vec_mu_id;
-  vector<TString> vec_mu_id_sf_key;
-  vector<TString> vec_mu_iso_sf_key;
+  // vector<TString> vec_mu_id;
+  // vector<TString> vec_mu_id_sf_key;
+  // vector<TString> vec_mu_iso_sf_key;
   vector<TString> vec_mu_trig;
   TString mu_trig;
   float mu_trig_safe_pt_cut;
 
-  vector<TString> vec_el_id;
-  vector<TString> vec_el_id_sf_key;
+  // vector<TString> vec_el_id;
+  // vector<TString> vec_el_id_sf_key;
   vector<TString> vec_el_trig;
   TString el_trig;
   float el_trig_safe_pt_cut;
@@ -102,12 +106,25 @@ protected:
 
   float weight;
 
+  float weight_hem_veto;
   float weight_lumi;
   float weight_mc;
+
   float weight_pileup;
+  float weight_pileup_down;
+  float weight_pileup_up;
+
+  float weight_ps[4];
   float weight_prefire;
   float weight_top_pt;
   float weight_pujet_veto;
+
+  float weight_scale_variation_1;
+  float weight_scale_variation_2;
+  float weight_scale_variation_3;
+  float weight_scale_variation_4;
+  float weight_scale_variation_6;
+  float weight_scale_variation_8;
 
   float weight_b_tag;
   float weight_b_tag_down_hf;
@@ -164,11 +181,12 @@ protected:
 
   float weight_sl_trig;
 
-  TTree *result_tree;
+  map<AnalyzerParameter::Syst, TTree *> map_result_tree;
 
   float Calculate_HT(const vector<Jet> &jet);
   int Check_Process(const vector<Gen> &vec_gen);
   void Clear();
+  Particle Rebalance_Met();
   void Set_Result_Tree();
 };
 

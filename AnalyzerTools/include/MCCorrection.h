@@ -136,8 +136,6 @@ public:
   // CTagIterFit SF
   std::map<TString, TH2F *> map_hist_ctag_iterfit;
   double GetCTaggingReweight_1d(const vector<Jet> &jets, const JetTagging::Parameters &jtp, const string &Syst);
-
-  double HEMVeto(const vector<Jet> &jets);
 };
 
 #endif

@@ -26,6 +26,8 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
 
 protected:
+  vector<AnalyzerParameter::Syst> vec_syst_type;
+
   bool run_mu_ch;
   bool run_el_ch;
   bool run_debug;
@@ -34,14 +36,6 @@ protected:
   bool run_chi;
   bool run_result;
   bool run_syst;
-  bool run_jec_down;
-  bool run_jec_up;
-  bool run_jer_down;
-  bool run_jer_up;
-  bool run_eec_down;
-  bool run_eec_up;
-  bool run_eer_down;
-  bool run_eer_up;
   bool run_template;
   bool run_template_truth;
   bool rm_wm_constraint;
@@ -64,8 +58,8 @@ protected:
   vector<TString> vec_mu_id_sf_key;
   vector<TString> vec_mu_iso_sf_key;
 
-  vector<TString> vec_el_id;
-  vector<TString> vec_el_id_sf_key;
+  // vector<TString> vec_el_id;
+  // vector<TString> vec_el_id_sf_key;
 
   vector<TString> vec_el_trig;
   vector<TString> vec_mu_trig;
@@ -239,6 +233,7 @@ protected:
   float met_rebalance_py;
   float neutrino_pz_sol;
   float neutrino_pz_sol_unrebal;
+  float neutrino_p;
   float mt_gen;
   float mt_met;
   float mt_met_rebalance;
@@ -303,6 +298,7 @@ protected:
   float weight_el_reco_down;
   float weight_el_reco_up;
 
+  float weight_hem_veto;
   float weight_lumi;
   float weight_mc;
 
@@ -326,6 +322,8 @@ protected:
   float weight_prefire;
   float weight_prefire_down;
   float weight_prefire_up;
+
+  float weight_ps[4];
 
   float weight_pujet_veto;
   float weight_pujet_veto_down;
@@ -391,7 +389,8 @@ protected:
 
   TTree *template_tree[5];
   TTree *template_truth_tree[5];
-  TTree *result_tree;
+
+  map<AnalyzerParameter::Syst, TTree *> map_result_tree;
 
   TMVA::Reader *reader_swapper[2];
   TMVA::Reader *reader_hf_contamination_lessthantwo;
@@ -413,7 +412,7 @@ protected:
   void KF_Ambiguity_Remover(const vector<Jet> &vec_sel_jet, const int index_matched_jet[4]);
   void Make_HF_Contamination_Tree();
   void Make_Permutation_Tree();
-  void Make_Result_Tree();
+  void Make_Result_Tree(const AnalyzerParameter &param);
   void Make_Template_Tree();
   void Make_Template_Truth_Tree();
   Gen Neutrino(const vector<Gen> &vec_gen);

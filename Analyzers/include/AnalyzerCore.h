@@ -124,11 +124,15 @@ public:
   std::vector<FatJet> ScaleSDMassFatJets(const std::vector<FatJet> &jets, int sys);
   std::vector<FatJet> SmearSDMassFatJets(const std::vector<FatJet> &jets, int sys);
 
+  // systematics variation of Met due to unclustered energy up/down
+  void Met_Syst_Unclustered(Particle &met, int sys);
+
   //====================
   //==== Event Filters
   //====================
 
   bool PassMETFilter();
+  bool HLT_SE_Filter_2017(const std::vector<Electron> &electrons);
 
   //============
   //==== Tools
@@ -150,6 +154,9 @@ public:
 
   //==== PU Reweight
   double GetPileUpWeight(int N_pileup, int syst);
+
+  //==== Parton Shower Reweight
+  void Get_Reweight_PS(float *weight_ps);
 
   //==== Muon GeneralizedEngpoint momentum scaling
   GeneralizedEndpoint *muonGE = NULL;
@@ -192,6 +199,8 @@ public:
   std::vector<FatJet> FatJetsVetoLeptonInside(const std::vector<FatJet> &jets, const std::vector<Electron> &els, const std::vector<Muon> &mus, double dR = 0.8);
   std::vector<Jet> JetsAwayFromPhoton(const std::vector<Jet> &jets, const std::vector<Photon> &photons, double mindr);
   Particle AddFatJetAndLepton(const FatJet &fatjet, const Lepton &lep);
+
+  float Weight_HEM_Veto(const vector<Jet> &jets);
 
   //==== GenMatching
 

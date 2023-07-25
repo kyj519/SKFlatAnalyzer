@@ -100,6 +100,7 @@ protected:
 
   float weight;
 
+  float weight_hem_veto;
   float weight_lumi;
   float weight_mc;
   float weight_pileup;
