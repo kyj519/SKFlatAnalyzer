@@ -9,8 +9,7 @@ parser = argparse.ArgumentParser(description='SKFlat -a Vcb Command')
 parser.add_argument('-e', dest='era', default="2018")
 parser.add_argument('-data', action='store_true', default="")
 parser.add_argument('-mc', action='store_true', default="")
-parser.add_argument('-mu', action='store_true', default="")
-parser.add_argument('-el', action='store_true', default="")
+parser.add_argument('-ch', dest='channel', default="")
 args = parser.parse_args()
 
 if args.era=="2016a": args.era="2016preVFP"
@@ -75,9 +74,8 @@ if args.data == True:
 # mc
 if args.mc == True:
     for mc in mc_list:
-        if args.el == True: operation =  f"nohup SKFlat.py -a Vcb_Tagging_RF -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag RunEl &"
-        elif args.mu == True: operation =  f"nohup SKFlat.py -a Vcb_Tagging_RF -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag RunMu &"
-
+        operation =  f"nohup SKFlat.py -a Vcb_Tagging_RF -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel} &"
+        
         print(operation)
         os.system(operation)
     

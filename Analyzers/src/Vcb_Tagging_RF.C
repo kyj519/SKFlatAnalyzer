@@ -144,31 +144,31 @@ void Vcb_Tagging_RF::executeEvent()
   vec_electron = GetAllElectrons();
   vec_jet = GetAllJets();
 
-  param.Clear();
+  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  {
+    param.Clear();
 
-  param.syst_ = AnalyzerParameter::Central;
+    param.Muon_Tight_ID = "POGTightWithTightIso";
+    param.Muon_Loose_ID = "POGLoose";
 
-  param.Muon_Tight_ID = "POGTightWithTightIso";
-  param.Muon_Loose_ID = "POGLoose";
+    param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
+    param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
 
-  param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
-  param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
+    // param.Electron_Tight_ID = "passTightID";
+    // param.Electron_Loose_ID = "passLooseID";
 
-  // param.Electron_Tight_ID = "passTightID";
-  // param.Electron_Loose_ID = "passLooseID";
+    param.Electron_Tight_ID = "passMVAID_iso_WP80";
+    param.Electron_Loose_ID = "passMVAID_iso_WP90";
 
-  param.Electron_Tight_ID = "passMVAID_iso_WP80";
-  param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    param.Jet_ID = "tight";
+    param.PUJet_Veto_ID = "LoosePileupJetVeto";
 
-  if (run_mu_ch)
-    param.Name = param.Muon_Tight_ID + "_" + param.GetSystType();
-  else if (run_el_ch)
-    param.Name = param.Electron_Tight_ID + "_" + param.GetSystType();
+    param.syst_ = vec_syst_type.at(i);
 
-  param.Jet_ID = "tight";
-  param.PUJet_Veto_ID = "LoosePileupJetVeto";
+    param.Name = param.GetSystType();
 
-  executeEventFromParameter(param);
+    executeEventFromParameter(param);
+  }
 
   return;
 } // void Vcb_Tagging_RF::executeEvent()
@@ -193,6 +193,11 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
 
     // pileup reweight
     weight_pileup = mcCorr->GetPileUpWeight(nPileUp, 0);
+    if (param.syst_ == AnalyzerParameter::Central)
+    {
+      weight_pileup_down = mcCorr->GetPileUpWeight(nPileUp, -1);
+      weight_pileup_up = mcCorr->GetPileUpWeight(nPileUp, +1);
+    }
     weight *= weight_pileup;
 
     // L1 prefire
@@ -203,6 +208,20 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
     vec_gen = GetGens();
     weight_top_pt = mcCorr->GetTopPtReweight(vec_gen);
     weight *= weight_top_pt;
+
+    // Scale Variation
+    if (param.syst_ == AnalyzerParameter::Central)
+    {
+      weight_scale_variation_1 = GetScaleVariation(1);
+      weight_scale_variation_2 = GetScaleVariation(2);
+      weight_scale_variation_3 = GetScaleVariation(3);
+      weight_scale_variation_4 = GetScaleVariation(4);
+      weight_scale_variation_6 = GetScaleVariation(6);
+      weight_scale_variation_8 = GetScaleVariation(8);
+    }
+
+    // PS Reweight
+    Get_Reweight_PS(weight_ps);
   }
 
   // met filter
@@ -223,11 +242,37 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
 
   met.SetPtEtaPhiE(met_corr.first, 0, met_corr.second, met_corr.first);
 
+  //////////////////////
+  /* syst for objects */
+  //////////////////////
+
+  if (param.syst_ == AnalyzerParameter::JetEnDown)
+  {
+    vec_this_jet = ScaleJets(vec_jet, -1);
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnUp)
+  {
+    vec_this_jet = ScaleJets(vec_jet, +1);
+    met = Rebalance_Met();
+  }
+
+  if (param.syst_ == AnalyzerParameter::JetResDown)
+  {
+    vec_this_jet = SmearJets(vec_jet, -1);
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetResUp)
+  {
+    vec_this_jet = SmearJets(vec_jet, +1);
+    met = Rebalance_Met();
+  }
+
   /////////////////
   /*Setup Objects*/
   /////////////////
 
-  // for
+  // for lepton
   vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, sl_trig_safe_pt_cut, MUON_ETA);
   vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, sl_trig_safe_pt_cut, ELECTRON_ETA);
 
@@ -247,14 +292,22 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   vec_sel_jet = JetsVetoLeptonInside(vec_sel_jet, vec_electron_veto, vec_muon_veto, DR_LEPTON_VETO);
   n_sel_jet = vec_sel_jet.size();
 
-  weight_hem_veto = Weight_HEM_Veto(vec_sel_jet);
-
   // sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
 
+  weight_hem_veto = Weight_HEM_Veto(vec_sel_jet);
+
   // single lepton trigger
-  if (!ev.PassTrigger(vec_sl_trig))
-    return;
+  if (run_mu_ch)
+  {
+    if (!ev.PassTrigger(vec_mu_trig))
+      return;
+  }
+  else if (run_el_ch)
+  {
+    if (!ev.PassTrigger(vec_el_trig) || !HLT_SE_Filter_2017(vec_sel_electron))
+      return;
+  }
 
   if (!IsData)
   {
@@ -387,31 +440,37 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   if (!IsData)
   {
     // SF for b-tagging
-    weight_b_tag = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "central");
+    if (param.syst_ == AnalyzerParameter::Central)
+    {
+      weight_b_tag = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "central");
 
-    weight_b_tag_down_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hf");
-    weight_b_tag_up_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hf");
+      weight_b_tag_down_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hf");
+      weight_b_tag_up_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hf");
 
-    weight_b_tag_down_jes = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_jes");
-    weight_b_tag_up_jes = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_jes");
+      weight_b_tag_down_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lfstats1");
+      weight_b_tag_up_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lfstats1");
 
-    weight_b_tag_down_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lfstats1");
-    weight_b_tag_up_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lfstats1");
+      weight_b_tag_down_lfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lfstats2");
+      weight_b_tag_up_lfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lfstats2");
 
-    weight_b_tag_down_lfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lfstats2");
-    weight_b_tag_up_lfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lfstats2");
+      weight_b_tag_down_cferr1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_cferr1");
+      weight_b_tag_up_cferr1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_cferr1");
 
-    weight_b_tag_down_cferr1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_cferr1");
-    weight_b_tag_up_cferr1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_cferr1");
+      weight_b_tag_down_cferr2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_cferr2");
+      weight_b_tag_up_cferr2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_cferr2");
 
-    weight_b_tag_down_cferr2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_cferr2");
-    weight_b_tag_up_cferr2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_cferr2");
+      weight_b_tag_down_hfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hfstats1");
+      weight_b_tag_up_hfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hfstats1");
 
-    weight_b_tag_down_hfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hfstats1");
-    weight_b_tag_up_hfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hfstats1");
-
-    weight_b_tag_down_hfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hfstats2");
-    weight_b_tag_up_hfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hfstats2");
+      weight_b_tag_down_hfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hfstats2");
+      weight_b_tag_up_hfstats2 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hfstats2");
+    }
+    else if (param.syst_ == AnalyzerParameter::JetEnDown)
+      weight_b_tag_down_jes = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_jes");
+    else if (param.syst_ == AnalyzerParameter::JetEnUp)
+      weight_b_tag_up_jes = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_jes");
+    else
+      weight_b_tag = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "central");
 
     weight *= weight_b_tag;
   }
@@ -419,47 +478,54 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   if (!IsData)
   {
     // SF for c-tagging
-    weight_c_tag = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "central");
+    if (param.syst_ == AnalyzerParameter::Central)
+    {
+      weight_c_tag = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "central");
 
-    weight_c_tag_down_extrap = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Extrap_Down");
-    weight_c_tag_up_extrap = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Extrap_Up");
+      weight_c_tag_down_extrap = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Extrap_Down");
+      weight_c_tag_up_extrap = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Extrap_Up");
 
-    weight_c_tag_down_interp = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Interp_Down");
-    weight_c_tag_up_interp = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Interp_Up");
+      weight_c_tag_down_interp = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Interp_Down");
+      weight_c_tag_up_interp = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Interp_Up");
 
-    weight_c_tag_down_lhe_scale_muf = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muF_Down");
-    weight_c_tag_up_lhe_scale_muf = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muF_Up");
+      weight_c_tag_down_lhe_scale_muf = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muF_Down");
+      weight_c_tag_up_lhe_scale_muf = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muF_Up");
 
-    weight_c_tag_down_lhe_scale_mur = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muR_Down");
-    weight_c_tag_up_lhe_scale_mur = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muR_Up");
+      weight_c_tag_down_lhe_scale_mur = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muR_Down");
+      weight_c_tag_up_lhe_scale_mur = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muR_Up");
 
-    weight_c_tag_down_ps_fsr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightFSRFixed_Down");
-    weight_c_tag_up_ps_fsr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightFSRFixed_Up");
+      weight_c_tag_down_ps_fsr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightFSRFixed_Down");
+      weight_c_tag_up_ps_fsr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightFSRFixed_Up");
 
-    weight_c_tag_down_ps_isr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightISRFixed_Down");
-    weight_c_tag_up_ps_isr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightISRFixed_Up");
+      weight_c_tag_down_ps_isr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightISRFixed_Down");
+      weight_c_tag_up_ps_isr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightISRFixed_Up");
 
-    weight_c_tag_down_pu = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PUWeight_Down");
-    weight_c_tag_up_pu = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PUWeight_Up");
+      weight_c_tag_down_pu = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PUWeight_Down");
+      weight_c_tag_up_pu = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PUWeight_Up");
 
-    weight_c_tag_down_stat = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Stat_Down");
-    weight_c_tag_up_stat = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Stat_Up");
+      weight_c_tag_down_stat = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Stat_Down");
+      weight_c_tag_up_stat = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Stat_Up");
 
-    weight_c_tag_down_xsec_brunc_dyjets_b = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_b_Down");
-    weight_c_tag_up_xsec_brunc_dyjets_b = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_b_Up");
+      weight_c_tag_down_xsec_brunc_dyjets_b = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_b_Down");
+      weight_c_tag_up_xsec_brunc_dyjets_b = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_b_Up");
 
-    weight_c_tag_down_xsec_brunc_dyjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_c_Down");
-    weight_c_tag_up_xsec_brunc_dyjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_c_Up");
+      weight_c_tag_down_xsec_brunc_dyjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_c_Down");
+      weight_c_tag_up_xsec_brunc_dyjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_c_Up");
 
-    weight_c_tag_down_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Down");
-    weight_c_tag_up_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Up");
-
-    weight_c_tag_down_jer = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jer_Down");
-    weight_c_tag_up_jer = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jer_Up");
-
-    weight_c_tag_down_jes_total = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jesTotal_Down");
-    weight_c_tag_up_jes_total = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jesTotal_Up");
-
+      weight_c_tag_down_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Down");
+      weight_c_tag_up_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Up");
+    }
+    else if (param.syst_ == AnalyzerParameter::JetEnDown)
+      weight_c_tag_down_jes_total = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jesTotal_Down");
+    else if (param.syst_ == AnalyzerParameter::JetEnUp)
+      weight_c_tag_up_jes_total = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jesTotal_Up");
+    else if (param.syst_ == AnalyzerParameter::JetResDown)
+      weight_c_tag_down_jer = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jer_Down");
+    else if (param.syst_ == AnalyzerParameter::JetResUp)
+      weight_c_tag_up_jer = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jer_Up");
+    else
+      weight_c_tag = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "central");
+   
     weight *= weight_c_tag;
   }
 
@@ -488,7 +554,7 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
 
   ht = Calculate_HT(vec_sel_jet);
 
-  result_tree->Fill();
+  map_result_tree[param.syst_]->Fill();
 
   return;
 } // Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
@@ -544,13 +610,39 @@ void Vcb_Tagging_RF::Clear()
 
 //////////
 
+Particle Vcb_Tagging_RF::Rebalance_Met()
+{
+  Particle met_rebal;
+  met_rebal += met;
+
+  // before
+  for (auto &muon : vec_muon)
+    met_rebal += muon;
+  for (auto &electron : vec_electron)
+    met_rebal += electron;
+  for (auto &jet : vec_jet)
+    met_rebal += jet;
+
+  // after
+  for (auto &muon : vec_this_muon)
+    met_rebal -= muon;
+  for (auto &electron : vec_this_electron)
+    met_rebal -= electron;
+  for (auto &jet : vec_this_jet)
+    met_rebal -= jet;
+
+  return met_rebal;
+} // Particle Vcb_Tagging_RF::Rebalance_Met()
+
+//////////
+
 void Vcb_Tagging_RF::Set_Result_Tree()
 {
   for (unsigned int i = 0; i < vec_syst_type.size(); i++)
   {
     AnalyzerParameter::Syst syst_type = vec_syst_type.at(i);
 
-    Tree *result_tree = new TTree("Result_Tree", "Result_Tree");
+    TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
 
     result_tree->Branch("sf_mu_id", &sf_mu_id);
     result_tree->Branch("sf_mu_iso", &sf_mu_iso);
@@ -611,10 +703,7 @@ void Vcb_Tagging_RF::Set_Result_Tree()
       result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_c", &weight_c_tag_up_xsec_brunc_dyjets_c);
       result_tree->Branch("weight_c_tag_down_xsec_brunc_wjets_c", &weight_c_tag_down_xsec_brunc_wjets_c);
       result_tree->Branch("weight_c_tag_up_xsec_brunc_wjets_c", &weight_c_tag_up_xsec_brunc_wjets_c);
-      result_tree->Branch("weight_c_tag_down_jer", &weight_c_tag_down_jer);
-      result_tree->Branch("weight_c_tag_up_jer", &weight_c_tag_up_jer);
     }
-
     else if (syst_type == AnalyzerParameter::JetEnDown)
       result_tree->Branch("weight_c_tag_down_jes_total", &weight_c_tag_down_jes_total);
     else if (syst_type == AnalyzerParameter::JetEnUp)
@@ -629,7 +718,27 @@ void Vcb_Tagging_RF::Set_Result_Tree()
     result_tree->Branch("weight_hem_veto", &weight_hem_veto);
     result_tree->Branch("weight_lumi", &weight_lumi);
     result_tree->Branch("weight_mc", &weight_mc);
+
     result_tree->Branch("weight_pileup", &weight_pileup);
+    if (syst_type == AnalyzerParameter::Central)
+    {
+      result_tree->Branch("weight_pileup_down", &weight_pileup_down);
+      result_tree->Branch("weight_pileup_up", &weight_pileup_up);
+    }
+
+    if (syst_type == AnalyzerParameter::Central)
+      result_tree->Branch("weight_ps", weight_ps, "weight_ps[4]");
+
+    if (syst_type == AnalyzerParameter::Central)
+    {
+      result_tree->Branch("weight_scale_variation_1", &weight_scale_variation_1);
+      result_tree->Branch("weight_scale_variation_2", &weight_scale_variation_2);
+      result_tree->Branch("weight_scale_variation_3", &weight_scale_variation_3);
+      result_tree->Branch("weight_scale_variation_4", &weight_scale_variation_4);
+      result_tree->Branch("weight_scale_variation_6", &weight_scale_variation_6);
+      result_tree->Branch("weight_scale_variation_8", &weight_scale_variation_8);
+    }
+
     result_tree->Branch("weight_prefire", &weight_prefire);
     result_tree->Branch("weight_pujet_veto", &weight_pujet_veto);
     result_tree->Branch("weight_top_pt", &weight_top_pt);

@@ -267,10 +267,10 @@ void Vcb::initializeAnalyzer()
                      AnalyzerParameter::UnclusteredEnergyUp};
     if (run_el_ch)
     {
-      vec_syst_type.push_back(AnalyzerParameter::ElectronEnDown);
-      vec_syst_type.push_back(AnalyzerParameter::ElectronEnUp);
-      vec_syst_type.push_back(AnalyzerParameter::ElectronResDown);
-      vec_syst_type.push_back(AnalyzerParameter::ElectronResUp);
+      //vec_syst_type.push_back(AnalyzerParameter::ElectronEnDown);
+      //vec_syst_type.push_back(AnalyzerParameter::ElectronEnUp);
+      //vec_syst_type.push_back(AnalyzerParameter::ElectronResDown);
+      //vec_syst_type.push_back(AnalyzerParameter::ElectronResUp);
     }
   }
   else
@@ -463,23 +463,23 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   // syst for objects
   if (param.syst_ == AnalyzerParameter::JetEnDown)
   {
-    vec_this_jet = ScaleJets(vec_jet, +1);
+    vec_this_jet = ScaleJets(vec_jet, -1);
     met = Rebalance_Met();
   }
   else if (param.syst_ == AnalyzerParameter::JetEnUp)
   {
-    vec_this_jet = ScaleJets(vec_jet, -1);
+    vec_this_jet = ScaleJets(vec_jet, +1);
     met = Rebalance_Met();
   }
 
   if (param.syst_ == AnalyzerParameter::JetResDown)
   {
-    vec_this_jet = SmearJets(vec_jet, +1);
+    vec_this_jet = SmearJets(vec_jet, -1);
     met = Rebalance_Met();
   }
   else if (param.syst_ == AnalyzerParameter::JetResUp)
   {
-    vec_this_jet = SmearJets(vec_jet, -1);
+    vec_this_jet = SmearJets(vec_jet, +1);
     met = Rebalance_Met();
   }
 

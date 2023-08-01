@@ -26,6 +26,8 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
 
 protected:
+  vector<AnalyzerParameter::Syst> vec_syst_type;
+
   bool run_mu_ch;
   bool run_el_ch;
   bool run_debug;
@@ -103,10 +105,23 @@ protected:
   float weight_hem_veto;
   float weight_lumi;
   float weight_mc;
+
   float weight_pileup;
+  float weight_pileup_down;
+  float weight_pileup_up;
+
+  float weight_ps[4];
+
   float weight_prefire;
   float weight_top_pt;
   float weight_pujet_veto;
+
+  float weight_scale_variation_1;
+  float weight_scale_variation_2;
+  float weight_scale_variation_3;
+  float weight_scale_variation_4;
+  float weight_scale_variation_6;
+  float weight_scale_variation_8;
 
   float weight_b_tag;
   float weight_b_tag_down_hf;
@@ -163,10 +178,11 @@ protected:
 
   float sf_sl_trig;
 
-  TTree *result_tree;
+  map<AnalyzerParameter::Syst, TTree *> map_result_tree;
 
   float Calculate_HT(const vector<Jet> &jet);
   void Clear();
+  Particle Rebalance_Met();
   void Set_Result_Tree();
 };
 

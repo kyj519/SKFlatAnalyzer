@@ -270,23 +270,23 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
 
   if (param.syst_ == AnalyzerParameter::JetEnDown)
   {
-    vec_this_jet = ScaleJets(vec_jet, +1);
+    vec_this_jet = ScaleJets(vec_jet, -1);
     met = Rebalance_Met();
   }
   else if (param.syst_ == AnalyzerParameter::JetEnUp)
   {
-    vec_this_jet = ScaleJets(vec_jet, -1);
+    vec_this_jet = ScaleJets(vec_jet, +1);
     met = Rebalance_Met();
   }
 
   if (param.syst_ == AnalyzerParameter::JetResDown)
   {
-    vec_this_jet = SmearJets(vec_jet, +1);
+    vec_this_jet = SmearJets(vec_jet, -1);
     met = Rebalance_Met();
   }
   else if (param.syst_ == AnalyzerParameter::JetResUp)
   {
-    vec_this_jet = SmearJets(vec_jet, -1);
+    vec_this_jet = SmearJets(vec_jet, +1);
     met = Rebalance_Met();
   }
 
