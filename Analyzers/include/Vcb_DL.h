@@ -71,8 +71,6 @@ protected:
 
   AnalyzerParameter param;
 
-  int process;
-
   float leading_lepton_eta;
   float leading_lepton_pt;
 
@@ -99,8 +97,13 @@ protected:
   float bvsc_third;
   float bvsc_fourth;
 
+  int decay_mode;
+
   vector<int> vec_gen_hf_flavour;
   vector<int> vec_gen_hf_origin;
+
+  vector<int> vec_sel_gen_hf_flavour;
+  vector<int> vec_sel_gen_hf_origin;
 
   float weight;
 

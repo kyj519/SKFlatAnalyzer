@@ -10,7 +10,7 @@ parser.add_argument('-e', dest='era', default="2018")
 parser.add_argument('-ch', dest='channel', default="Mu")
 parser.add_argument('-data', action='store_true', default="")
 parser.add_argument('-mc', action='store_true', default="")
-parser.add_argument('-flag', dest='flag', default="Result")
+parser.add_argument('-flag', dest='flag', default="Syst")
 args = parser.parse_args()
 
 if args.era=="2016a": args.era="2016preVFP"
@@ -22,7 +22,7 @@ if args.channel == "Mu":
         exit()
 
 # key:[njob for SkimTree, njob Vcb Analyzer]
-data_list = {"SingleMuon":[300,100], "EGamma":[300,50]}
+data_list = {"SingleMuon":[300,50], "EGamma":[300,50]}
 if args.era != "2018":
     del data_list["EGamma"]
     data_list["SingleElectron"] = [300, 50]
@@ -52,7 +52,7 @@ mc_list = {
     "ttZToLLNuNu": [20, 30],
     "ttZToQQ": [20, 30],
     "ttHToNonbb": [20, 20],
-    "ttHTobb": [20, 30],
+    "ttHTobb": [30, 30],
     "WW_pythia": [20, 5],
     "WZ_pythia": [20, 5],
     "ZZ_pythia": [20, 5],
@@ -100,40 +100,24 @@ if args.channel == "El" or args.channel == "Mu":
         if args.flag == "Syst_Top":
             #del mc_list["TTLJ_powheg"] 
             mc_list = dict()
-            mc_list["TTLJ_powheg_CP5Down"] = [300, 300]
-            mc_list["TTLJ_powheg_CP5Up"] = [300, 300]
-            mc_list["TTLJ_powheg_hdampDown"] = [300, 300]
-            mc_list["TTLJ_powheg_hdampUp"] = [300, 300]
-            mc_list["TTLJ_powheg_mtop171p5"] = [300, 300]
-            mc_list["TTLJ_powheg_mtop173p5"] = [300, 300]
-            mc_list["TTLL_powheg_CP5Down"] = [300, 100]
-            mc_list["TTLL_powheg_CP5Up"] = [300, 100]
-            mc_list["TTLL_powheg_hdampDown"] = [300, 100]
-            mc_list["TTLL_powheg_hdampUp"] = [300, 100]
-            mc_list["TTLL_powheg_mtop171p5"] = [300, 100]
-            mc_list["TTLL_powheg_mtop173p5"] = [300, 100]
+            mc_list["TTLJ_powheg_CP5Down"] = [300, 100]
+            mc_list["TTLJ_powheg_CP5Up"] = [300, 100]
+            mc_list["TTLJ_powheg_hdampDown"] = [300, 100]
+            mc_list["TTLJ_powheg_hdampUp"] = [300, 100]
+            mc_list["TTLJ_powheg_mtop171p5"] = [300, 100]
+            mc_list["TTLJ_powheg_mtop173p5"] = [300, 100]
+            mc_list["TTLL_powheg_CP5Down"] = [300, 30]
+            mc_list["TTLL_powheg_CP5Up"] = [300, 30]
+            mc_list["TTLL_powheg_hdampDown"] = [300, 30]
+            mc_list["TTLL_powheg_hdampUp"] = [300, 30]
+            mc_list["TTLL_powheg_mtop171p5"] = [300, 30]
+            mc_list["TTLL_powheg_mtop173p5"] = [300, 30]
 
         for mc in mc_list:
             if args.flag == "Result":
                 operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult &"
             elif args.flag == "Syst":
                 operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunSyst &"
-            elif args.flag == "JecDown":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunJecDown &"
-            elif args.flag == "JecUp":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunJecUp &"
-            elif args.flag == "JerDown":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunJerDown &"
-            elif args.flag == "JerUp":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunJerUp &"
-            elif args.flag == "EecDown":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunEecDown &"
-            elif args.flag == "EecUp":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunEecUp &"
-            elif args.flag == "EerDown":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunEerDown &"
-            elif args.flag == "EerUp":
-                operation =  f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult,RunEerUp &"
             elif args.flag == "Syst_Top":
                 operation = f"nohup SKFlat.py -a Vcb -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel},RunResult &"
             

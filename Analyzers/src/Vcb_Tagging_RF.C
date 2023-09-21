@@ -113,11 +113,14 @@ void Vcb_Tagging_RF::initializeAnalyzer()
   }
   mcCorr->SetJetTaggingParameters(vec_jet_tagging_para);
 
-  vec_syst_type = {AnalyzerParameter::Central,
-                   AnalyzerParameter::JetEnDown,
-                   AnalyzerParameter::JetEnUp,
-                   AnalyzerParameter::JetResDown,
-                   AnalyzerParameter::JetResUp};
+  if (MCSample.Contains("mtop17") || MCSample.Contains("CP5") || MCSample.Contains("hdamp"))
+    vec_syst_type = {AnalyzerParameter::Central};
+  else
+    vec_syst_type = {AnalyzerParameter::Central,
+                     AnalyzerParameter::JetEnDown,
+                     AnalyzerParameter::JetEnUp,
+                     AnalyzerParameter::JetResDown,
+                     AnalyzerParameter::JetResUp};
 
   // to make output dir
   for (unsigned int i = 0; i < vec_syst_type.size(); i++)
@@ -167,6 +170,12 @@ void Vcb_Tagging_RF::executeEvent()
 
     param.Name = param.GetSystType();
 
+    vec_gen_hf_flavour.clear();
+    vec_gen_hf_origin.clear();
+
+    vec_sel_gen_hf_flavour.clear();
+    vec_sel_gen_hf_origin.clear();
+
     executeEventFromParameter(param);
   }
 
@@ -183,6 +192,29 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
 
   if (!IsData)
   {
+    vec_gen = GetGens();
+    decay_mode = Get_W_Decay_Mode(vec_gen);
+
+    // TTBB or TTCC check using vec_jet
+    for (unsigned int i = 0; i < vec_jet.size(); i++)
+    {
+      Jet jet = vec_jet[i];
+
+      // acceptance cut
+      if (jet.Pt() < JET_PT)
+        continue;
+
+      float jet_eta_cut = JET_ETA;
+      if (DataYear == 2016)
+        jet_eta_cut = JET_ETA_2016;
+
+      if (jet_eta_cut < abs(jet.Eta()))
+        continue;
+
+      vec_gen_hf_flavour.push_back(jet.GenHFHadronMatcherFlavour());
+      vec_gen_hf_origin.push_back(jet.GenHFHadronMatcherOrigin());
+    }
+
     // lumi
     weight_lumi = ev.GetTriggerLumi("Full");
     weight *= weight_lumi;
@@ -205,7 +237,6 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
     weight *= weight_prefire;
 
     // Top Pt reweight
-    vec_gen = GetGens();
     weight_top_pt = mcCorr->GetTopPtReweight(vec_gen);
     weight *= weight_top_pt;
 
@@ -294,6 +325,14 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
 
   // sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
+
+  for (unsigned int i = 0; i < vec_sel_jet.size(); i++)
+  {
+    Jet jet = vec_sel_jet[i];
+
+    vec_sel_gen_hf_flavour.push_back(jet.GenHFHadronMatcherFlavour());
+    vec_sel_gen_hf_origin.push_back(jet.GenHFHadronMatcherOrigin());
+  }
 
   weight_hem_veto = Weight_HEM_Veto(vec_sel_jet);
 
@@ -416,12 +455,22 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
     float cvsl_wp = -1;
     float cvsb_wp = -1;
 
-    if (DataYear == 2017)
+    if (DataEra == "2016preVFP")
+    {
+      cvsl_wp = cvsl_2016a_m;
+      cvsb_wp = cvsb_2016a_m;
+    }
+    else if (DataEra == "2016postVFP")
+    {
+      cvsl_wp = cvsl_2016b_m;
+      cvsb_wp = cvsb_2016b_m;
+    }
+    else if (DataEra == "2017")
     {
       cvsl_wp = cvsl_2017_m;
       cvsb_wp = cvsb_2017_m;
     }
-    else if (DataYear == 2018)
+    else if (DataEra == "2018")
     {
       cvsl_wp = cvsl_2018_m;
       cvsb_wp = cvsb_2018_m;
@@ -525,7 +574,7 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
       weight_c_tag_up_jer = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jer_Up");
     else
       weight_c_tag = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "central");
-   
+
     weight *= weight_c_tag;
   }
 
@@ -765,6 +814,14 @@ void Vcb_Tagging_RF::Set_Result_Tree()
     result_tree->Branch("subleading_jet_cvsl", &subleading_jet_cvsl);
     result_tree->Branch("subleading_jet_eta", &subleading_jet_eta);
     result_tree->Branch("subleading_jet_pt", &subleading_jet_pt);
+
+    result_tree->Branch("decay_mode", &decay_mode);
+
+    result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
+    result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+
+    result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
+    result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
 
     map_result_tree.insert({syst_type, result_tree});
   }

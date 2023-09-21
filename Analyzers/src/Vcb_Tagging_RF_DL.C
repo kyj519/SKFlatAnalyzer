@@ -112,11 +112,14 @@ void Vcb_Tagging_RF_DL::initializeAnalyzer()
   }
   mcCorr->SetJetTaggingParameters(vec_jet_tagging_para);
 
-  vec_syst_type = {AnalyzerParameter::Central,
-                   AnalyzerParameter::JetEnDown,
-                   AnalyzerParameter::JetEnUp,
-                   AnalyzerParameter::JetResDown,
-                   AnalyzerParameter::JetResUp};
+  if (MCSample.Contains("mtop17") || MCSample.Contains("CP5") || MCSample.Contains("hdamp"))
+    vec_syst_type = {AnalyzerParameter::Central};
+  else
+    vec_syst_type = {AnalyzerParameter::Central,
+                     AnalyzerParameter::JetEnDown,
+                     AnalyzerParameter::JetEnUp,
+                     AnalyzerParameter::JetResDown,
+                     AnalyzerParameter::JetResUp};
 
   // to make output dir
   for (unsigned int i = 0; i < vec_syst_type.size(); i++)
@@ -167,6 +170,12 @@ void Vcb_Tagging_RF_DL::executeEvent()
 
     param.Name = param.GetSystType();
 
+    vec_gen_hf_flavour.clear();
+    vec_gen_hf_origin.clear();
+
+    vec_sel_gen_hf_flavour.clear();
+    vec_sel_gen_hf_origin.clear();
+
     executeEventFromParameter(param);
   }
 
@@ -184,8 +193,7 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
   if (!IsData)
   {
     vec_gen = GetGens();
-
-    process = Check_Process(vec_gen);
+    decay_mode = Get_W_Decay_Mode(vec_gen);
 
     for (unsigned int i = 0; i < vec_jet.size(); i++)
     {
@@ -246,9 +254,13 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
     Get_Reweight_PS(weight_ps);
   }
 
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::No_Cut, weight, n_cut_flow, 0, n_cut_flow);
+
   // met filter
   if (!PassMETFilter())
     return;
+
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Met_Filter, weight, n_cut_flow, 0, n_cut_flow);
 
   // set objects
   vec_this_muon = vec_muon;
@@ -317,7 +329,23 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
   // sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
 
+  if (!IsData)
+  {
+    // SF for PUJet Veto
+    weight_pujet_veto = mcCorr->PileupJetVeto_Reweight(vec_sel_jet, param.PUJet_Veto_ID, 0);
+    weight *= weight_pujet_veto;
+  }
+
+  for (unsigned int i = 0; i < vec_sel_jet.size(); i++)
+  {
+    Jet jet = vec_sel_jet[i];
+
+    vec_sel_gen_hf_flavour.push_back(jet.GenHFHadronMatcherFlavour());
+    vec_sel_gen_hf_origin.push_back(jet.GenHFHadronMatcherOrigin());
+  }
+
   weight_hem_veto = Weight_HEM_Veto(vec_sel_jet);
+  weight *= weight_hem_veto;
 
   // single lepton trigger
   if (!ev.PassTrigger(vec_mu_trig) && (!ev.PassTrigger(vec_el_trig) || !HLT_SE_Filter_2017(vec_sel_electron)))
@@ -347,10 +375,13 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
     weight *= weight_el_reco;
   } // if (!IsData)
 
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Trigger, weight, n_cut_flow, 0, n_cut_flow);
+
   // cut on double lepton and veto additional loose electron
   if (run_mm_ch)
   {
     if (vec_sel_muon.size() != 2 || vec_electron_veto.size() != 0)
+    //if (vec_sel_muon.size() != 2)
       return;
 
     lepton[0] = vec_sel_muon[0];
@@ -373,6 +404,8 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
     lepton[1] = vec_sel_electron[1];
   }
 
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Two_Lepton, weight, n_cut_flow, 0, n_cut_flow);
+
   // lepton pt sorting
   if (lepton[0].Pt() < lepton[1].Pt())
   {
@@ -385,6 +418,8 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
   if (lepton[0].Charge() + lepton[1].Charge() != 0)
     return;
 
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Lepton_Charge_Sum, weight, n_cut_flow, 0, n_cut_flow);
+
   // cut on dilepton mass to veto low mass resonance
   TLorentzVector dilepton = lepton[0];
   dilepton += lepton[1];
@@ -392,20 +427,19 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
   if (dilepton_mass < 15)
     return;
 
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Lepton_Low_Mass, weight, n_cut_flow, 0, n_cut_flow);
+
   // cut on dilepton mass to veto Z
   if (abs(dilepton_mass - Z_MASS) < 15)
     return;
+
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Z_Mass, weight, n_cut_flow, 0, n_cut_flow);
 
   // cut on jet
   if (n_sel_jet < 4)
     return;
 
-  if (!IsData)
-  {
-    // SF for PUJet Veto
-    weight_pujet_veto = mcCorr->PileupJetVeto_Reweight(vec_sel_jet, param.PUJet_Veto_ID, 0);
-    // weight *= weight_pujet_veto;
-  }
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::N_Sel_Jet, weight, n_cut_flow, 0, n_cut_flow);
 
   // n of btag
   n_b_jet = 0;
@@ -484,8 +518,6 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
       weight_b_tag_down_jes = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_jes");
     else if (param.syst_ == AnalyzerParameter::JetEnUp)
       weight_b_tag_up_jes = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_jes");
-
-    weight *= weight_b_tag;
   }
 
   if (!IsData)
@@ -527,8 +559,6 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
 
       weight_c_tag_down_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Down");
       weight_c_tag_up_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Up");
-
-      weight *= weight_c_tag;
     } // central
     else if (param.syst_ == AnalyzerParameter::JetEnDown)
       weight_c_tag_down_jes_total = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "jesTotal_Down");
@@ -550,6 +580,8 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
 
   if (!run_me_ch && met_pt < MET_PT_DL)
     return;
+
+  FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::Met, weight, n_cut_flow, 0, n_cut_flow);
 
   leading_jet_bvsc = vec_sel_jet[0].GetTaggerResult(JetTagging::DeepJet);
   leading_jet_cvsb = vec_sel_jet[0].GetTaggerResult(JetTagging::DeepJet_CvsB);
@@ -838,10 +870,13 @@ void Vcb_Tagging_RF_DL::Set_Result_Tree()
     result_tree->Branch("n_bjets", &n_b_jet);
     result_tree->Branch("n_cjets", &n_c_jet);
 
-    result_tree->Branch("process", &process);
+    result_tree->Branch("decay_mode", &decay_mode);
 
     result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
     result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+
+    result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
+    result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
 
     result_tree->Branch("ht", &ht);
 

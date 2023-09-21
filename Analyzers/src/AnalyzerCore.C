@@ -942,6 +942,96 @@ bool AnalyzerCore::FindHEMElectron(Electron electron)
   return false;
 }
 
+//////////
+
+int AnalyzerCore::Get_W_Decay_Mode(const vector<Gen> &vec_gen)
+{
+  int index_last_w = -999;
+  int index_last_aw = -999;
+  int index_d0_w = -999;
+  int index_d1_w = -999;
+  int index_d0_aw = -999;
+  int index_d1_aw = -999;
+
+  // scan gen to find W
+  for (unsigned int i = 0; i < vec_gen.size(); i++)
+  {
+    Gen gen = vec_gen.at(i);
+
+    int pid = gen.PID();
+    int m_index = gen.MotherIndex();
+
+    // find last index of W+ and W-
+    if (pid == 24)
+      index_last_w = i;
+    if (pid == -24)
+      index_last_aw = i;
+
+    // find decay products of W+
+    if (m_index == index_last_w && pid != 24)
+    {
+      if (index_d0_w == -999)
+        index_d0_w = i;
+      else
+        index_d1_w = i;
+    }
+
+    // find decay products of W-
+    if (m_index == index_last_aw && pid != -24)
+    {
+      if (index_d0_aw == -999)
+        index_d0_aw = i;
+      else
+        index_d1_aw = i;
+    }
+  }
+
+  // if input sample is not TT, so both of W couldn't be found
+  if (index_last_w == -999 || index_last_aw == -999)
+  {
+    // if(run_debug) cout << "Can't find both of W" << endl;
+    return 999;
+  }
+
+  int index_had_w[2];
+  // W+ decay hadronically
+  if (TMath::Abs(vec_gen.at(index_d0_w).PID()) < 10)
+  {
+    index_had_w[0] = index_d0_w;
+    index_had_w[1] = index_d1_w;
+  }
+  // W- decay hadronically
+  else if (TMath::Abs(vec_gen.at(index_d0_aw).PID() < 10))
+  {
+    index_had_w[0] = index_d0_aw;
+    index_had_w[1] = index_d1_aw;
+  }
+  // no W decays hadronically
+  else
+  {
+    // if(run_debug) cout << "No W decays hadronically" << endl;
+
+    return 999;
+  }
+
+  int decay_mode = 0;
+  for (unsigned int i = 0; i < 2; i++)
+  {
+    Gen gen = vec_gen.at(index_had_w[i]);
+
+    int pid = gen.PID();
+
+    if (pid % 2 == 0)
+      decay_mode += TMath::Abs(pid) * 10;
+    else
+      decay_mode += TMath::Abs(pid);
+  }
+
+  return decay_mode;
+} // int AnalyzerCore::Get_W_Decay_Mode(const vector<Gen>& vec_gen)
+
+//////////
+
 std::vector<Muon> AnalyzerCore::ScaleMuons(const std::vector<Muon> &muons, int sys)
 {
 

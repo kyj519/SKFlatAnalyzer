@@ -93,6 +93,7 @@ protected:
   /* vector<Muon> vec_sel_muon; */
   /* vector<Muon> vec_muon_veto; */
   /* vector<Electron> vec_electron_veto; */
+  
   vector<Jet> vec_sel_jet;
   vector<Jet> vec_sel_jet_match;
 
@@ -364,6 +365,12 @@ protected:
 
   int decay_mode;
 
+  vector<int> vec_gen_hf_flavour;
+  vector<int> vec_gen_hf_origin;
+
+  vector<int> vec_sel_gen_hf_flavour;
+  vector<int> vec_sel_gen_hf_origin;
+
   float bvsc_had_t_b;
   float cvsb_had_t_b;
   float cvsl_had_t_b;
@@ -406,7 +413,6 @@ protected:
   void Gen_Match_Residual(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, const vector<int> &vec_hf_flavour, const vector<int> &vec_hf_origin, const vector<float> &vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
   void Gen_Match_TT(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, const vector<int> &vec_hf_flavour, const vector<int> &vec_hf_origin, const vector<float> &vec_jer, int index_gen[4], int index_matched_jet[4], bool surely_matched[4], float dr_return[4]);
   int Gen_Match_W(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, const vector<int> &vec_hf_flavour, const vector<int> &vec_hf_origin, const vector<float> &vec_jer, int index_gen[2], int index_matched_jet[2], bool surely_matched[2], float dr_return[2]);
-  int Get_W_Decay_Mode(const vector<Gen> &vec_gen);
   void Index_Converter(const vector<Jet> &vec_sel_jet, const vector<Jet> &vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4]);
   // void Index_Restorer(int& index_had_t_b, int& index_w_u, int& index_w_d, int& index_lep_t_b);
   void KF_Ambiguity_Remover(const vector<Jet> &vec_sel_jet, const int index_matched_jet[4]);

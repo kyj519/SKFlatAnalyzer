@@ -25,7 +25,8 @@ mc_list = {'TTLJ_powheg':['TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8'],
            'QCD_bEn_HT1000to1500':['QCD_bEnriched_HT1000to1500_TuneCP5_13TeV-madgraph-pythia8'],
            'QCD_bEn_HT1500to2000':['QCD_bEnriched_HT1500to2000_TuneCP5_13TeV-madgraph-pythia8'],
            'QCD_bEn_HT2000toInf':['QCD_bEnriched_HT2000toInf_TuneCP5_13TeV-madgraph-pythia8'],
-           'TTLJ_WtoCB_powheg':['ttj_Vcb_NLO_FXFX_Summer20UL18_LHEGEN', 'ttj_Vcb_NLO_FXFX_Summer20UL18_GEN_extra'],
+           #'TTLJ_WtoCB_powheg':['ttj_Vcb_NLO_FXFX_Summer20UL18_LHEGEN', 'ttj_Vcb_NLO_FXFX_Summer20UL18_GEN_extra'],
+           'TTLJ_WtoCB_powheg':['TTToSemiLeptonic_Vcb_TuneCP5_13TeV-powheg-pythia8'],
            'TTLJ_powheg_hdampDown':['TTToSemiLeptonic_hdampDOWN_TuneCP5_13TeV-powheg-pythia8'],
            'TTLJ_powheg_hdampUp':['TTToSemiLeptonic_hdampUP_TuneCP5_13TeV-powheg-pythia8'],
            'TTLJ_powheg_mtop171p5':['TTToSemiLeptonic_mtop171p5_TuneCP5_13TeV-powheg-pythia8'],
@@ -48,13 +49,13 @@ if args.Chk_Private == False:
         print(f"{args.Sample} is private only sample. Check argument first. Add -p 1")
         exit(1)
 
-if args.Sample == 'TTLJ_WtoCB_powheg':
-    if args.Era == '2017':
-        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL17_9M_Events'];
-    elif args.Era == '2016postVFP':
-        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL16_9M_Events'];
-    elif args.Era == '2016preVFP':
-        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL16APV_9M_Events'];
+#if args.Sample == 'TTLJ_WtoCB_powheg':
+#    if args.Era == '2017':
+#        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL17_9M_Events'];
+#    elif args.Era == '2016postVFP':
+#        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL16_9M_Events'];
+#    elif args.Era == '2016preVFP':
+#        mc_list[args.Sample] = ['ttj_Vcb_NLO_FXFX_Summer20UL16APV_9M_Events'];
 
 target_mc_list = list()
 for mc in mc_list:

@@ -100,6 +100,14 @@ protected:
   float subleading_jet_eta;
   float subleading_jet_pt;
 
+  int decay_mode;
+
+  vector<int> vec_gen_hf_flavour;
+  vector<int> vec_gen_hf_origin;
+
+  vector<int> vec_sel_gen_hf_flavour;
+  vector<int> vec_sel_gen_hf_origin;
+
   float weight;
 
   float weight_hem_veto;

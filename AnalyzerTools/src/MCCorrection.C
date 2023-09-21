@@ -520,8 +520,8 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   TString histkey = "Trigger_Eff_DATA_" + trig + "_" + ID;
   if (DataOrMC == 1)
     histkey = "Trigger_Eff_MC_" + trig + "_" + ID;
-   //cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
-  
+  // cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
+
   TH2F *this_hist = map_hist_Muon[histkey];
   if (!this_hist)
   {
@@ -781,8 +781,8 @@ double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC,
     if (2.5 < sceta)
       sceta = 2.49;
 
-    if (pt < 35)
-      pt = 35.1;
+    if (pt < 10)
+      pt = 10.1;
     if (500 < pt)
       pt = 499.9;
   }
@@ -803,7 +803,7 @@ double MCCorrection::ElectronTrigger_Eff(TString ID, TString trig, int DataOrMC,
   if (DataOrMC == 1)
     histkey = "Trigger_Eff_MC_" + trig;
 
-  //cout << "Electron " << histkey << endl;
+  // cout << "Electron " << histkey << endl;
 
   TH2F *this_hist = map_hist_Electron[histkey];
   if (!this_hist)
@@ -837,7 +837,7 @@ double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vec
   if (trig == "Default")
     return 1.;
 
-  double value;
+  double value = 1;
 
   // single electron trigger eff sf for Vcb  analysis
   if (trig == "Ele27" || trig == "Ele35" || trig == "Ele32")
@@ -850,8 +850,8 @@ double MCCorrection::ElectronTrigger_SF(TString ID, TString trig, const std::vec
       float sceta = electrons[i].scEta();
       float pt = electrons[i].UncorrPt();
 
-      eff_data *= ElectronTrigger_Eff(ID, trig, 0, electrons[i].scEta(), electrons[i].UncorrPt(), sys);
-      eff_mc *= ElectronTrigger_Eff(ID, trig, 0, electrons[i].scEta(), electrons[i].UncorrPt(), sys);
+      eff_data *= (1 - ElectronTrigger_Eff(ID, trig, 0, sceta, pt, sys));
+      eff_mc *= (1 - ElectronTrigger_Eff(ID, trig, 1, sceta, pt, sys));
     }
 
     eff_data = 1 - eff_data;

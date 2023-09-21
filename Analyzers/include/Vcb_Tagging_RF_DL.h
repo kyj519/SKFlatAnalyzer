@@ -34,6 +34,20 @@ protected:
 
   bool run_debug;
 
+  typedef enum cut_flow
+  {
+    No_Cut,
+    Met_Filter,
+    Trigger,
+    Two_Lepton,
+    Lepton_Charge_Sum,
+    Lepton_Low_Mass,
+    Z_Mass,
+    N_Sel_Jet,
+    Met
+  } Cut_Flow;
+  int n_cut_flow = Cut_Flow::Met + 1;
+
   // vector<TString> vec_mu_id;
   // vector<TString> vec_mu_id_sf_key;
   // vector<TString> vec_mu_iso_sf_key;
@@ -83,10 +97,13 @@ protected:
   int n_b_jet;
   int n_c_jet;
 
-  int process;
+  int decay_mode;
 
   vector<int> vec_gen_hf_flavour;
   vector<int> vec_gen_hf_origin;
+
+  vector<int> vec_sel_gen_hf_flavour;
+  vector<int> vec_sel_gen_hf_origin;
 
   float dilepton_mass;
 
@@ -115,7 +132,7 @@ protected:
   float weight_pileup_up;
 
   float weight_ps[4];
-  
+
   float weight_prefire;
   float weight_top_pt;
   float weight_pujet_veto;

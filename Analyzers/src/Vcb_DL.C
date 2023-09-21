@@ -138,7 +138,7 @@ void Vcb_DL::initializeAnalyzer()
     pdfReweight->SetNewPDFAlphaS(LHAPDFHandler_New.PDFAlphaSDown, LHAPDFHandler_New.PDFAlphaSUp);
   }
 
-  if (!IsData && run_syst)
+  if (!IsDATA && run_syst)
   {
     vec_syst_type = {AnalyzerParameter::Central,
                      AnalyzerParameter::JetEnDown,
@@ -149,10 +149,10 @@ void Vcb_DL::initializeAnalyzer()
                      AnalyzerParameter::UnclusteredEnergyUp};
     if (run_me || run_ee)
     {
-      vec_syst_type.push_back(AnalyzerParameter::ElectronEnDown);
-      vec_syst_type.push_back(AnalyzerParameter::ElectronEnUp);
-      vec_syst_type.push_back(AnalyzerParameter::ElectronResDown);
-      vec_syst_type.push_back(AnalyzerParameter::ElectronResUp);
+      // vec_syst_type.push_back(AnalyzerParameter::ElectronEnDown);
+      // vec_syst_type.push_back(AnalyzerParameter::ElectronEnUp);
+      // vec_syst_type.push_back(AnalyzerParameter::ElectronResDown);
+      // vec_syst_type.push_back(AnalyzerParameter::ElectronResUp);
     }
   }
   else
@@ -206,6 +206,14 @@ void Vcb_DL::executeEvent()
 
     param.syst_ = vec_syst_type.at(i);
 
+    param.Name = param.GetSystType();
+
+    vec_gen_hf_flavour.clear();
+    vec_gen_hf_origin.clear();
+
+    vec_sel_gen_hf_flavour.clear();
+    vec_sel_gen_hf_origin.clear();
+
     executeEventFromParameter(param);
   }
 
@@ -220,12 +228,10 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
 
   Event ev = GetEvent();
 
-  if (!IsData)
+  if (!IsDATA)
   {
     vec_gen = GetGens();
-
-    process = Check_Process(vec_gen);
-    // cout << "test process = " << process << endl;
+    decay_mode = Get_W_Decay_Mode(vec_gen);
 
     for (unsigned int i = 0; i < vec_jet.size(); i++)
     {
@@ -299,7 +305,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
       // PS Reweight
       Get_Reweight_PS(weight_ps);
     }
-  } //  if (!IsData)
+  } //  if (!IsDATA)
 
   // met filter
   if (!PassMETFilter())
@@ -317,7 +323,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
   else
     met = ev.GetMETVector("PUPPI");
 
-  pair<double, double> met_corr = xy_met_correction.METXYCorr_Met_MetPhi(met.Pt(), met.Phi(), run, to_string(DataYear), !IsData, nPV, true, true);
+  pair<double, double> met_corr = xy_met_correction.METXYCorr_Met_MetPhi(met.Pt(), met.Phi(), run, to_string(DataYear), !IsDATA, nPV, true, true);
   met.SetPtEtaPhiE(met_corr.first, 0, met_corr.second, met_corr.first);
 
   // syst for objects
@@ -393,10 +399,18 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
   // sort jet as pt ordering
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
 
+  for (unsigned int i = 0; i < vec_sel_jet.size(); i++)
+  {
+    Jet jet = vec_sel_jet[i];
+
+    vec_sel_gen_hf_flavour.push_back(jet.GenHFHadronMatcherFlavour());
+    vec_sel_gen_hf_origin.push_back(jet.GenHFHadronMatcherOrigin());
+  }
+
   weight_hem_veto = Weight_HEM_Veto(vec_sel_jet);
 
   // single lepton trigger
-  if (IsData && run_me && (DataStream == "EGamma" || DataStream == "SingleElectron"))
+  if (IsDATA && run_me && (DataStream == "EGamma" || DataStream == "SingleElectron"))
   {
     if (ev.PassTrigger(vec_mu_trig) || (!ev.PassTrigger(vec_el_trig) || !HLT_SE_Filter_2017(vec_sel_electron)))
       return;
@@ -407,7 +421,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
       return;
   }
 
-  if (!IsData)
+  if (!IsDATA)
   {
     weight_sl_trig = mcCorr->SingleLepton_Trigger_SF("POGTight", mu_trig, vec_sel_muon, 0, "passTightID", el_trig, vec_sel_electron, 0);
     if (param.syst_ == AnalyzerParameter::Central && run_syst)
@@ -515,7 +529,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
   if (n_sel_jet < 4)
     return;
 
-  if (!IsData)
+  if (!IsDATA)
   {
     // SF for PU jet veto
     weight_pujet_veto = mcCorr->PileupJetVeto_Reweight(vec_sel_jet, param.PUJet_Veto_ID, 0);
@@ -538,7 +552,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
   if (n_b_jet < 2)
     return;
 
-  if (!IsData)
+  if (!IsDATA)
   {
     // SF for b-tagging
     if (param.syst_ == AnalyzerParameter::Central && run_syst)
@@ -626,7 +640,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
       weight_c_tag = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "central");
 
     weight *= weight_c_tag;
-  } // if (!IsData)
+  } // if (!IsDATA)
 
   met_pt = met.Pt();
   met_phi = met.Phi();
@@ -737,8 +751,6 @@ void Vcb_DL::Clear()
 {
   n_sel_jet = 0;
   n_b_jet = 0;
-
-  process = -999;
 
   vec_gen_hf_flavour.clear();
   vec_gen_hf_origin.clear();
@@ -940,13 +952,16 @@ void Vcb_DL::Set_Result_Tree()
     result_tree->Branch("met_pt", &met_pt);
     result_tree->Branch("met_phi", &met_phi);
 
-    result_tree->Branch("process", &process);
-
     result_tree->Branch("bvsc_third", &bvsc_third);
     result_tree->Branch("bvsc_fourth", &bvsc_fourth);
 
+    result_tree->Branch("decay_mode", &decay_mode);
+
     result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
     result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+
+    result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
+    result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
 
     if (syst_type == AnalyzerParameter::Central && run_syst)
     {

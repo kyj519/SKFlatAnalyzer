@@ -11,7 +11,7 @@ args = parser.parse_args()
 if args.Era=="2016a": args.Era="2016preVFP"
 if args.Era=="2016b": args.Era="2016postVFP"
 
-mc_list = {'TTLJ_powheg':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
+mc_list = {#'TTLJ_powheg':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
            #'TTLL_powheg':'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8',
            #'tw_antitop':'ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8',
            #'tW_top':'ST_tW_top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8',
@@ -44,6 +44,7 @@ mc_list = {'TTLJ_powheg':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
            #'TTLJ_WtoCB_powheg0':'ttj_Vcb_NLO_FXFX_Summer20UL17_9M_Events',
            #'TTLJ_WtoCB_powheg0':'ttj_Vcb_NLO_FXFX_Summer20UL16APV_9M_Events',
            #'TTLJ_WtoCB_powheg0':'ttj_Vcb_NLO_FXFX_Summer20UL16_9M_Events',
+    'TTLJ_WtoCB_powheg':'TTToSemiLeptonic_Vcb_TuneCP5_13TeV-powheg-pythia8',
 
 }
 

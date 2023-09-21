@@ -217,6 +217,8 @@ public:
   bool IsSignalPID(int pid);
   bool FindHEMElectron(Electron electron);
 
+  int Get_W_Decay_Mode(const vector<Gen> &vec_gen);
+
   //==== Plotting
 
   std::map<TString, TH1D *> maphist_TH1D;

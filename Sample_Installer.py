@@ -14,7 +14,7 @@ args = parser.parse_args()
 if args.era=="2016a": args.era="2016preVFP"
 if args.era=="2016b": args.era="2016postVFP"
 
-sample_dict = {'TTLJ_WtoCB_powheg':'ttj_Vcb_NLO_FXFX_Summer20UL18',
+sample_dict = {'TTLJ_WtoCB_powheg':'TTToSemiLeptonic_Vcb_TuneCP5_13TeV-powheg-pythia8',
                'TTLJ_powheg_hdampDown':'TTToSemiLeptonic_hdampDOWN_TuneCP5_13TeV-powheg-pythia8',
                'TTLJ_powheg_hdampUp':'TTToSemiLeptonic_hdampUP_TuneCP5_13TeV-powheg-pythia8',
                'TTLJ_powheg_mtop171p5':'TTToSemiLeptonic_mtop171p5_TuneCP5_13TeV-powheg-pythia8',
@@ -46,13 +46,13 @@ cross_dict = {'TTLJ_WtoCB_powheg':1.281e-01,
               'TTbb':1.7466,
               'ttHTobb':0.2951,}
 
-if args.sample == 'TTLJ_WtoCB_powheg':
-    if args.era == '2017':
-        sample_dict['TTLJ_WtoCB_powheg'] = 'ttj_Vcb_NLO_FXFX_Summer20UL17'
-    elif args.era == '2016preVFP':
-        sample_dict['TTLJ_WtoCB_powheg'] = 'ttj_Vcb_NLO_FXFX_Summer20UL16APV'
-    elif args.era == '2016postVFP':
-        sample_dict['TTLJ_WtoCB_powheg'] = 'ttj_Vcb_NLO_FXFX_Summer20UL16'
+#if args.sample == 'TTLJ_WtoCB_powheg':
+#    if args.era == '2017':
+#        sample_dict['TTLJ_WtoCB_powheg'] = 'ttj_Vcb_NLO_FXFX_Summer20UL17'
+#    elif args.era == '2016preVFP':
+#        sample_dict['TTLJ_WtoCB_powheg'] = 'ttj_Vcb_NLO_FXFX_Summer20UL16APV'
+#    elif args.era == '2016postVFP':
+#        sample_dict['TTLJ_WtoCB_powheg'] = 'ttj_Vcb_NLO_FXFX_Summer20UL16'
 
 path=os.environ['SKFlat_WD']
 path_sk_out=os.environ['SKFlatOutputDir']

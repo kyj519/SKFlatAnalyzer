@@ -51,7 +51,6 @@ Vcb::~Vcb()
     for (unsigned int i = 0; i < vec_syst_type.size(); i++)
     {
       param.syst_ = vec_syst_type.at(i);
-
       outfile->cd(param.GetSystType());
       map_result_tree[param.syst_]->Write();
     }
@@ -256,7 +255,7 @@ void Vcb::initializeAnalyzer()
     pdfReweight->SetNewPDFAlphaS(LHAPDFHandler_New.PDFAlphaSDown, LHAPDFHandler_New.PDFAlphaSUp);
   }
 
-  if (!IsData && run_syst)
+  if (!IsDATA && run_syst)
   {
     vec_syst_type = {AnalyzerParameter::Central,
                      AnalyzerParameter::JetEnDown,
@@ -265,13 +264,13 @@ void Vcb::initializeAnalyzer()
                      AnalyzerParameter::JetResUp,
                      AnalyzerParameter::UnclusteredEnergyDown,
                      AnalyzerParameter::UnclusteredEnergyUp};
-    if (run_el_ch)
-    {
-      //vec_syst_type.push_back(AnalyzerParameter::ElectronEnDown);
-      //vec_syst_type.push_back(AnalyzerParameter::ElectronEnUp);
-      //vec_syst_type.push_back(AnalyzerParameter::ElectronResDown);
-      //vec_syst_type.push_back(AnalyzerParameter::ElectronResUp);
-    }
+    // if (run_el_ch)
+    // {
+    //   vec_syst_type.push_back(AnalyzerParameter::ElectronEnDown);
+    //   vec_syst_type.push_back(AnalyzerParameter::ElectronEnUp);
+    //   vec_syst_type.push_back(AnalyzerParameter::ElectronResDown);
+    //   vec_syst_type.push_back(AnalyzerParameter::ElectronResUp);
+    // }
   }
   else
     vec_syst_type = {AnalyzerParameter::Central};
@@ -344,7 +343,14 @@ void Vcb::executeEvent()
     param.PUJet_Veto_ID = "LoosePileupJetVeto";
 
     param.syst_ = vec_syst_type.at(i);
+
     param.Name = param.GetSystType();
+
+    vec_gen_hf_flavour.clear();
+    vec_gen_hf_origin.clear();
+
+    vec_sel_gen_hf_flavour.clear();
+    vec_sel_gen_hf_origin.clear();
 
     executeEventFromParameter(param);
   }
@@ -356,15 +362,36 @@ void Vcb::executeEvent()
 
 void Vcb::executeEventFromParameter(AnalyzerParameter param)
 {
+  // cout << param.Name << endl;
+
   Clear();
 
   Event ev = GetEvent();
 
-  if (!IsData)
+  if (!IsDATA)
   {
     // separate W decay mode
     vector<Gen> vec_gen = GetGens();
     decay_mode = Get_W_Decay_Mode(vec_gen);
+
+    for (unsigned int i = 0; i < vec_jet.size(); i++)
+    {
+      Jet jet = vec_jet[i];
+
+      // acceptance cut
+      if (jet.Pt() < JET_PT)
+        continue;
+
+      float jet_eta_cut = JET_ETA;
+      if (DataYear == 2016)
+        jet_eta_cut = JET_ETA_2016;
+
+      if (jet_eta_cut < abs(jet.Eta()))
+        continue;
+
+      vec_gen_hf_flavour.push_back(jet.GenHFHadronMatcherFlavour());
+      vec_gen_hf_origin.push_back(jet.GenHFHadronMatcherOrigin());
+    }
 
     // lumi
     weight_lumi = ev.GetTriggerLumi("Full");
@@ -420,6 +447,9 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
       weight_scale_variation_4 = GetScaleVariation(4);
       weight_scale_variation_6 = GetScaleVariation(6);
       weight_scale_variation_8 = GetScaleVariation(8);
+
+      // PS Reweight
+      Get_Reweight_PS(weight_ps);
     }
 
     // if(!TMath::Finite(lumi_weight)) cout << lumi_weight << endl;
@@ -452,10 +482,10 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     met = ev.GetMETVector("PUPPI");
 
   // xy correction
-  pair<double, double> met_corr = xy_met_correction.METXYCorr_Met_MetPhi(met.Pt(), met.Phi(), run, to_string(DataYear), !IsData, nPV, true, true);
+  pair<double, double> met_corr = xy_met_correction.METXYCorr_Met_MetPhi(met.Pt(), met.Phi(), run, to_string(DataYear), !IsDATA, nPV, true, true);
 
   // Particle met = ev.GetMETVector("PF");
-  // pair<double, double> met_corr = xy_met_correction.METXYCorr_Met_MetPhi(met.Pt(), met.Phi(), run, to_string(DataYear), !IsData, nPV, true, false);
+  // pair<double, double> met_corr = xy_met_correction.METXYCorr_Met_MetPhi(met.Pt(), met.Phi(), run, to_string(DataYear), !IsDATA, nPV, true, false);
   // cout << met.Pt() << " " << met_corr.first << " " << met.Phi() << " " << met_corr.second << endl;
 
   met.SetPtEtaPhiE(met_corr.first, 0, met_corr.second, met_corr.first);
@@ -569,6 +599,14 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), PtComparing);
   sort(vec_sel_jet_match.begin(), vec_sel_jet_match.end(), PtComparing);
 
+  for (unsigned int i = 0; i < vec_sel_jet.size(); i++)
+  {
+    Jet jet = vec_sel_jet[i];
+
+    vec_sel_gen_hf_flavour.push_back(jet.GenHFHadronMatcherFlavour());
+    vec_sel_gen_hf_origin.push_back(jet.GenHFHadronMatcherOrigin());
+  }
+
   // single lepton trigger
   if (run_mu_ch)
   {
@@ -581,7 +619,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
       return;
   }
 
-  if (!IsData)
+  if (!IsDATA)
   {
     if (run_mu_ch)
     {
@@ -648,7 +686,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   if (lepton_pt <= sl_trig_safe_pt_cut)
     return;
 
-  if (!IsData)
+  if (!IsDATA)
   {
     if (run_mu_ch)
     {
@@ -700,7 +738,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   if (n_sel_jet < 4)
     return;
 
-  if (!IsData)
+  if (!IsDATA)
   {
     // SF for PUJet Veto
     weight_pujet_veto = mcCorr->PileupJetVeto_Reweight(vec_sel_jet, param.PUJet_Veto_ID, 0);
@@ -748,12 +786,22 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     float cvsl_wp = -1;
     float cvsb_wp = -1;
 
-    if (DataYear == 2017)
+    if (DataEra == "2016preVFP")
+    {
+      cvsl_wp = cvsl_2016a_m;
+      cvsb_wp = cvsb_2016a_m;
+    }
+    else if (DataEra == "2016postVFP")
+    {
+      cvsl_wp = cvsl_2016b_m;
+      cvsb_wp = cvsb_2016b_m;
+    }
+    else if (DataEra == "2017")
     {
       cvsl_wp = cvsl_2017_m;
       cvsb_wp = cvsb_2017_m;
     }
-    else if (DataYear == 2018)
+    else if (DataEra == "2018")
     {
       cvsl_wp = cvsl_2018_m;
       cvsb_wp = cvsb_2018_m;
@@ -769,7 +817,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   }
   // cout << "test n_of_ctag" << n_c_jet << endl;
 
-  if (!IsData)
+  if (!IsDATA)
   {
     // SF for b-tagging
     if (run_debug)
@@ -812,32 +860,43 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     weight *= weight_b_tag;
   }
 
-  if (!IsData)
+  if (!IsDATA)
   {
     // SF for c-tagging
     if (param.syst_ == AnalyzerParameter::Central && run_syst)
     {
       weight_c_tag = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "central");
+
       weight_c_tag_down_extrap = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Extrap_Down");
       weight_c_tag_up_extrap = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Extrap_Up");
+
       weight_c_tag_down_interp = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Interp_Down");
       weight_c_tag_up_interp = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Interp_Up");
+
       weight_c_tag_down_lhe_scale_muf = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muF_Down");
       weight_c_tag_up_lhe_scale_muf = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muF_Up");
+
       weight_c_tag_down_lhe_scale_mur = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muR_Down");
       weight_c_tag_up_lhe_scale_mur = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "LHEScaleWeight_muR_Up");
+
       weight_c_tag_down_ps_fsr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightFSRFixed_Down");
       weight_c_tag_up_ps_fsr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightFSRFixed_Up");
+
       weight_c_tag_down_ps_isr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightISRFixed_Down");
       weight_c_tag_up_ps_isr_fixed = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PSWeightISRFixed_Up");
+
       weight_c_tag_down_pu = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PUWeight_Down");
       weight_c_tag_up_pu = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "PUWeight_Up");
+
       weight_c_tag_down_stat = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Stat_Down");
       weight_c_tag_up_stat = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "Stat_Up");
+
       weight_c_tag_down_xsec_brunc_dyjets_b = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_b_Down");
       weight_c_tag_up_xsec_brunc_dyjets_b = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_b_Up");
+
       weight_c_tag_down_xsec_brunc_dyjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_c_Down");
       weight_c_tag_up_xsec_brunc_dyjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_DYJets_c_Up");
+
       weight_c_tag_down_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Down");
       weight_c_tag_up_xsec_brunc_wjets_c = mcCorr->GetCTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(1), "XSec_BRUnc_WJets_c_Up");
     }
@@ -885,7 +944,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   bool surely_matched[4];
   float matched_jet_dr[4];
   int switch_included = -1;
-  if (!IsData)
+  if (!IsDATA)
   {
     // scan GenHFHadronMatcher results and construct JER for gen match
     vector<float> vec_jer_match;
@@ -1022,14 +1081,14 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
       FillHist(param.Name + "/Included", 1, weight, 2, 0, 2);
     else
       FillHist(param.Name + "/Included", 0, weight, 2, 0, 2);
-  } // if(!IsData)
+  } // if(!IsDATA)
 
   // run_Template_truth
-  if (!IsData && run_template_truth)
+  if (!IsDATA && run_template_truth)
   {
     Make_Template_Truth_Tree();
     return;
-  } // if(!IsData && run_template_truth)
+  } // if(!IsDATA && run_template_truth)
 
   // kinematic fitter
   vector<float> vec_resolution_pt;
@@ -1049,7 +1108,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     KF_Ambiguity_Remover(vec_sel_jet, index_matched_jet);
 
   // Permutation Tree for signal study
-  if (!IsData && run_permutation_tree)
+  if (!IsDATA && run_permutation_tree)
   {
     Make_Permutation_Tree();
 
@@ -1057,20 +1116,20 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   }
 
   // HF Contamination
-  if (!IsData && run_hf_contamination_tree)
+  if (!IsDATA && run_hf_contamination_tree)
   {
     Make_HF_Contamination_Tree();
 
     return;
-  } // if(!IsData && run_hf_contamination_tree)
+  } // if(!IsDATA && run_hf_contamination_tree)
 
   // run_template
-  if (!IsData && run_template)
+  if (!IsDATA && run_template)
   {
     Make_Template_Tree();
 
     return;
-  } // if(!IsData && run_template)
+  } // if(!IsDATA && run_template)
 
   if (run_result)
   {
@@ -1844,94 +1903,6 @@ int Vcb::Gen_Match_W(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, con
 
 //////////
 
-int Vcb::Get_W_Decay_Mode(const vector<Gen> &vec_gen)
-{
-  int index_last_w = -999;
-  int index_last_aw = -999;
-  int index_d0_w = -999;
-  int index_d1_w = -999;
-  int index_d0_aw = -999;
-  int index_d1_aw = -999;
-
-  // scan gen to find W
-  for (unsigned int i = 0; i < vec_gen.size(); i++)
-  {
-    Gen gen = vec_gen.at(i);
-
-    int pid = gen.PID();
-    int m_index = gen.MotherIndex();
-
-    // find last index of W+ and W-
-    if (pid == 24)
-      index_last_w = i;
-    if (pid == -24)
-      index_last_aw = i;
-
-    // find decay products of W+
-    if (m_index == index_last_w && pid != 24)
-    {
-      if (index_d0_w == -999)
-        index_d0_w = i;
-      else
-        index_d1_w = i;
-    }
-
-    // find decay products of W-
-    if (m_index == index_last_aw && pid != -24)
-    {
-      if (index_d0_aw == -999)
-        index_d0_aw = i;
-      else
-        index_d1_aw = i;
-    }
-  }
-
-  // if input sample is not TT, so both of W couldn't be found
-  if (index_last_w == -999 || index_last_aw == -999)
-  {
-    // if(run_debug) cout << "Can't find both of W" << endl;
-    return 999;
-  }
-
-  int index_had_w[2];
-  // W+ decay hadronically
-  if (Abs(vec_gen.at(index_d0_w).PID()) < 10)
-  {
-    index_had_w[0] = index_d0_w;
-    index_had_w[1] = index_d1_w;
-  }
-  // W- decay hadronically
-  else if (Abs(vec_gen.at(index_d0_aw).PID() < 10))
-  {
-    index_had_w[0] = index_d0_aw;
-    index_had_w[1] = index_d1_aw;
-  }
-  // no W decays hadronically
-  else
-  {
-    // if(run_debug) cout << "No W decays hadronically" << endl;
-
-    return 999;
-  }
-
-  int decay_mode = 0;
-  for (unsigned int i = 0; i < 2; i++)
-  {
-    Gen gen = vec_gen.at(index_had_w[i]);
-
-    int pid = gen.PID();
-
-    if (pid % 2 == 0)
-      decay_mode += Abs(pid) * 10;
-    else
-      decay_mode += Abs(pid);
-  }
-
-  return decay_mode;
-} // int Vcb::Get_W_Decay_Mode(const vector<Gen>& vec_gen)
-
-//////////
-
 void Vcb::Index_Converter(const vector<Jet> &vec_sel_jet, const vector<Jet> &vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4])
 {
   for (int i = 0; i < 4; i++)
@@ -2553,7 +2524,7 @@ void Vcb::Make_Result_Tree(const AnalyzerParameter &param)
   pu_conta_lep_t_b = false;
   swapped_truth = -1;
 
-  if (!IsData)
+  if (!IsDATA)
   {
     // chk_reco_correct & swapped_truth
     if (index_matched_jet[1] == index_w_u && index_matched_jet[2] == index_w_d)
@@ -3204,6 +3175,8 @@ void Vcb::Set_Result_Tree()
   {
     AnalyzerParameter::Syst syst_type = vec_syst_type.at(i);
 
+    cout << "Set_Result_Tree: vec_syst_type.size() = " << vec_syst_type.size() << endl;
+
     TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
 
     if (syst_type == AnalyzerParameter::Central && run_syst)
@@ -3430,6 +3403,12 @@ void Vcb::Set_Result_Tree()
     result_tree->Branch("pu_conta_lep_t_b", &pu_conta_lep_t_b);
 
     result_tree->Branch("swapped_truth", &swapped_truth);
+
+    result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
+    result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+
+    result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
+    result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
 
     map_result_tree.insert({syst_type, result_tree});
   }
