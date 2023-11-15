@@ -141,6 +141,9 @@ protected:
 
   float pt_ratio;
 
+  float charge_leading_jet;
+  float charge_subleading_jet;
+
   float pt_leading_jet;
   float pt_subleading_jet;
 
@@ -224,6 +227,11 @@ protected:
   float chi2_constraint_lep_w;
 
   float chi2;
+
+  float had_w_charge_abs;
+  float had_t_charge_abs;
+  float lep_t_charge_abs;
+  float tt_charge;
 
   float gen_neutrino_px;
   float gen_neutrino_py;
@@ -399,7 +407,6 @@ protected:
 
   map<AnalyzerParameter::Syst, TTree *> map_result_tree;
 
-  TMVA::Reader *reader_swapper[2];
   TMVA::Reader *reader_hf_contamination_lessthantwo;
   TMVA::Reader *reader_hf_contamination_morethantwo;
 

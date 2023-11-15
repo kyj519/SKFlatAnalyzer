@@ -880,6 +880,9 @@ void Vcb_DL::Make_Result_Tree(const AnalyzerParameter &param)
   subleading_jet_cvsb = vec_sel_jet[1].GetTaggerResult(JetTagging::DeepJet_CvsB);
   subleading_jet_cvsl = vec_sel_jet[1].GetTaggerResult(JetTagging::DeepJet_CvsL);
 
+  leading_jet_charge = vec_sel_jet[0].Charge();
+  subleading_jet_charge = vec_sel_jet[1].Charge();
+
   sort(vec_sel_jet.begin(), vec_sel_jet.end(), BvsCComparing);
 
   bvsc_third = vec_sel_jet[2].GetTaggerResult(JetTagging::DeepJet);
@@ -948,6 +951,9 @@ void Vcb_DL::Set_Result_Tree()
     result_tree->Branch("subleading_jet_bvsc", &subleading_jet_bvsc);
     result_tree->Branch("subleading_jet_cvsb", &subleading_jet_cvsb);
     result_tree->Branch("subleading_jet_cvsl", &subleading_jet_cvsl);
+
+    result_tree->Branch("leading_jet_charge", &leading_jet_charge);
+    result_tree->Branch("subleading_jet_charge", &subleading_jet_charge);
 
     result_tree->Branch("met_pt", &met_pt);
     result_tree->Branch("met_phi", &met_phi);

@@ -59,11 +59,6 @@ Vcb::~Vcb()
   outfile->Close();
 
   delete fitter_driver;
-  if (!run_permutation_tree)
-  {
-    delete reader_swapper[0];
-    delete reader_swapper[1];
-  }
 } // Vcb::~Vcb()
 
 //////////
@@ -300,9 +295,6 @@ void Vcb::initializeAnalyzer()
 
     Set_Result_Tree();
   }
-
-  if (!run_permutation_tree)
-    Set_Reader_Swapper();
 
   // Set_Reader_HF_Contamination();
 
@@ -1103,9 +1095,6 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
 
   fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, lepton, met, chk_matched_jets_only, index_matched_jet);
   fitter_driver->Scan();
-
-  if (!run_permutation_tree && !run_chi)
-    KF_Ambiguity_Remover(vec_sel_jet, index_matched_jet);
 
   // Permutation Tree for signal study
   if (!IsDATA && run_permutation_tree)
@@ -1939,7 +1928,7 @@ void Vcb::Index_Converter(const vector<Jet> &vec_sel_jet, const vector<Jet> &vec
 } // void Vcb::Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4])
 
 //////////
-
+/*
 void Vcb::KF_Ambiguity_Remover(const vector<Jet> &vec_sel_jet, const int index_matched_jet[4])
 {
   float mva_swapper = -999;
@@ -2117,7 +2106,7 @@ void Vcb::KF_Ambiguity_Remover(const vector<Jet> &vec_sel_jet, const int index_m
 
   return;
 } // void Vcb::KF_Ambiguity_Remover(const vector<Jet>& vec_sel_jet)
-
+*/
 //////////
 
 void Vcb::Make_HF_Contamination_Tree()
@@ -2407,6 +2396,12 @@ void Vcb::Make_Permutation_Tree()
 
     lep_t_partial_mass = results.initial_lep_t_partial_mass;
 
+    // charges
+    had_w_charge_abs = results.had_w_charge_abs;
+    had_t_charge_abs = results.had_t_charge_abs;
+    lep_t_charge_abs = results.lep_t_charge_abs;
+    tt_charge = results.tt_charge;
+
     // chi2
     chi2_jet_had_t_b = results.chi2_jet_had_t_b;
     chi2_jet_w_u = results.chi2_jet_w_u;
@@ -2461,7 +2456,9 @@ void Vcb::Make_Result_Tree(const AnalyzerParameter &param)
   ht = Calculate_HT(vec_sel_jet);
 
   Results_Container results_container = fitter_driver->Get_Results();
-  best_mva_score_pre = results_container.best_mva_score;
+  best_mva_score_pre = results_container.best_mva_score_pre;
+  best_mva_score = results_container.best_mva_score;
+  swapped_mva = results_container.swapped_mva;
   best_chi2 = results_container.best_chi2;
 
   met_px = met.Px();
@@ -2897,6 +2894,10 @@ void Vcb::Set_Permutation_Tree()
   permutation_tree_correct->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
   permutation_tree_correct->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
   permutation_tree_correct->Branch("chi2", &chi2);
+  permutation_tree_correct->Branch("had_w_charge_abs", &had_w_charge_abs);
+  permutation_tree_correct->Branch("had_t_charge_abs", &had_t_charge_abs);
+  permutation_tree_correct->Branch("lep_t_charge_abs", &lep_t_charge_abs);
+  permutation_tree_correct->Branch("tt_charge", &tt_charge);
 
   permutation_tree_wrong = new TTree("Permutation_Wrong", "Permutation_Wrong");
   permutation_tree_wrong->Branch("weight", &weight);
@@ -2978,6 +2979,10 @@ void Vcb::Set_Permutation_Tree()
   permutation_tree_wrong->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
   permutation_tree_wrong->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
   permutation_tree_wrong->Branch("chi2", &chi2);
+  permutation_tree_wrong->Branch("had_w_charge_abs", &had_w_charge_abs);
+  permutation_tree_wrong->Branch("had_t_charge_abs", &had_t_charge_abs);
+  permutation_tree_wrong->Branch("lep_t_charge_abs", &lep_t_charge_abs);
+  permutation_tree_wrong->Branch("tt_charge", &tt_charge);
 
   return;
 } // void Vcb::Set_Permutation_Tree()
@@ -3037,6 +3042,7 @@ void Vcb::Set_Reader_HF_Contamination()
 
 //////////
 
+/*
 void Vcb::Set_Reader_Swapper()
 {
   for (int i = 0; i < 2; i++)
@@ -3121,7 +3127,7 @@ void Vcb::Set_Reader_Swapper()
 
   return;
 } // void Vcb::Set_Reader_Swapper()
-
+*/
 //////////
 
 void Vcb::Set_Region()
@@ -3174,8 +3180,6 @@ void Vcb::Set_Result_Tree()
   for (unsigned int i = 0; i < vec_syst_type.size(); i++)
   {
     AnalyzerParameter::Syst syst_type = vec_syst_type.at(i);
-
-    cout << "Set_Result_Tree: vec_syst_type.size() = " << vec_syst_type.size() << endl;
 
     TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
 

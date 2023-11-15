@@ -6,7 +6,7 @@
 #include "AnalyzerCore.h"
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
 
-#include "TKinFitterDriver.h"
+// #include "TKinFitterDriver.h"
 #include "Vcb_Def.h"
 #include "Results_Container.h"
 
@@ -90,6 +90,14 @@ protected:
   float subleading_jet_bvsc;
   float subleading_jet_cvsb;
   float subleading_jet_cvsl;
+
+  float leading_jet_charge;
+  float subleading_jet_charge;
+
+  float had_w_charge_abs;
+  float had_t_charge_abs;
+  float lep_t_charge_abs;
+  float tt_charge;
 
   float met_pt;
   float met_phi;
