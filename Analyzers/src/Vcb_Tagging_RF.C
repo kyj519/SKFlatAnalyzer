@@ -586,8 +586,8 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   met_pt = met.Pt();
   // met_phi = met.Phi();
 
-  if (met_pt < MET_PT)
-    return;
+  // if (met_pt < MET_PT)
+  //   return;
 
   leading_jet_bvsc = vec_sel_jet[0].GetTaggerResult(JetTagging::DeepJet);
   leading_jet_cvsb = vec_sel_jet[0].GetTaggerResult(JetTagging::DeepJet_CvsB);
@@ -814,6 +814,8 @@ void Vcb_Tagging_RF::Set_Result_Tree()
     result_tree->Branch("subleading_jet_cvsl", &subleading_jet_cvsl);
     result_tree->Branch("subleading_jet_eta", &subleading_jet_eta);
     result_tree->Branch("subleading_jet_pt", &subleading_jet_pt);
+
+    result_tree->Branch("met_pt", &met_pt);
 
     result_tree->Branch("decay_mode", &decay_mode);
 

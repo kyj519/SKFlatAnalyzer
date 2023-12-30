@@ -1079,6 +1079,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   if (!IsDATA && run_template_truth)
   {
     Make_Template_Truth_Tree();
+
     return;
   } // if(!IsDATA && run_template_truth)
 
