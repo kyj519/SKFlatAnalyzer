@@ -11,6 +11,7 @@ AnalyzerCore::AnalyzerCore()
   pdfReweight = new PDFReweight();
   muonGE = new GeneralizedEndpoint();
   muonGEScaleSyst = new GEScaleSyst();
+  loadJetVetoMap();
 }
 
 AnalyzerCore::~AnalyzerCore()
@@ -527,6 +528,60 @@ std::vector<Jet> AnalyzerCore::GetJets(TString id, double ptmin, double fetamax)
     out.push_back(jets.at(i));
   }
   return out;
+}
+
+void AnalyzerCore::loadJetVetoMap()
+{
+  TString datapath = getenv("DATA_DIR");
+  TString map_path = datapath + "/" + GetEra() + "/JetVetoMap/hotjets.root";
+  TFile *f = new TFile(map_path, "READ");
+  if(GetEra() == "2018"){
+    JetVetoMap =  (TH2D*)f->Get("h2hot_ul18_plus_hbp2m1");
+  }
+  else if(GetEra() == "2017"){
+    JetVetoMap =  (TH2D*)f->Get("h2hot_ul17_plus_hep17_plus_hbpw89");
+  }
+  else if(GetEra() == "2016preVFP" or GetEra() == "2016postVFP"){
+    JetVetoMap =  (TH2D*)f->Get("h2hot_ul16_plus_hbm2_hbp12_qie11");
+  }
+  else{
+    cout << "[AnalyzerCore::loadJetVetoMap] load error" << endl;
+  
+  }
+  return;
+
+}
+
+bool AnalyzerCore::IsEventJetMapVetoed(std::vector<Jet> jets)
+{
+  bool vetoEvent = false;
+  std::vector<Jet> sel_jets = SelectJets(jets, "tight", 15., 5.);
+  sel_jets = SelectJets(jets, "LoosePileupJetVeto", 15., 5.);
+  std::vector<Muon> PFMuon = GetAllMuons();
+  std::vector<Electron> EmptyElectronVector = {};
+  sel_jets = JetsVetoLeptonInside(sel_jets, EmptyElectronVector, PFMuon, 0.2);
+  for(auto jet: sel_jets){
+    //if jet Em fraction<0.9, remove from the vector
+    if(jet.GetEmFraction() < 0.9){
+      continue;
+    }
+    bool inDirtyZone = false;
+    double ieta = jet.Eta();
+    double iphi = jet.Phi();
+    if(ieta>=5.) ieta = 4.999;
+    else if(ieta< -5.) ieta = -5.;
+    if(iphi>=3.142) iphi = 3.14199;
+    else if(iphi< -3.142) iphi = -3.142;
+
+    inDirtyZone = JetVetoMap->GetBinContent(JetVetoMap->FindBin(ieta, iphi)) > 0. ? true : false;
+    //debug
+    if(inDirtyZone) cout << "Jet is in dirty zone, Jet Eta" << ieta << " Jet Phi" << iphi << endl;
+    vetoEvent = vetoEvent || inDirtyZone;
+    if(vetoEvent) return true;
+  }
+  
+  return false;
+
 }
 
 std::vector<FatJet> AnalyzerCore::GetAllFatJets()
