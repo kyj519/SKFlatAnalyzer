@@ -823,6 +823,9 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
         weight_b_tag_down_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hf");
         weight_b_tag_up_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hf");
 
+        weight_b_tag_down_lf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lf");
+        weight_b_tag_up_lf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lf");
+
         weight_b_tag_down_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lfstats1");
         weight_b_tag_up_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lfstats1");
 
@@ -1177,6 +1180,8 @@ void Vcb::Clear()
   weight_b_tag = 1;
   weight_b_tag_down_hf = 1;
   weight_b_tag_up_hf = 1;
+  weight_b_tag_down_lf = 1;
+  weight_b_tag_up_lf = 1;
   weight_b_tag_down_jes = 1;
   weight_b_tag_up_jes = 1;
   weight_b_tag_down_lfstats1 = 1;
@@ -2359,6 +2364,12 @@ void Vcb::Make_Permutation_Tree()
     pt_w_d = results.pt_w_d;
     pt_lep_t_b = results.pt_lep_t_b;
 
+    // pt_raw
+    pt_raw_had_t_b = jet_had_t_b.Pt();
+    pt_raw_w_u = jet_w_u.Pt();
+    pt_raw_w_d = jet_w_d.Pt();
+    pt_raw_lep_t_b = jet_lep_t_b.Pt();
+
     // eta
     eta_had_t_b = results.eta_had_t_b;
     eta_w_u = results.eta_w_u;
@@ -2497,6 +2508,12 @@ void Vcb::Make_Result_Tree(const AnalyzerParameter &param)
   pt_w_u = results_container.best_pt_w_u;
   pt_w_d = results_container.best_pt_w_d;
   pt_lep_t_b = results_container.best_pt_lep_t_b;
+
+  // pt raw
+  pt_raw_had_t_b = jet_had_t_b.Pt();
+  pt_raw_w_u = jet_w_u.Pt();
+  pt_raw_w_d = jet_w_d.Pt();
+  pt_raw_lep_t_b = jet_lep_t_b.Pt();
 
   eta_had_t_b = jet_had_t_b.Eta();
   eta_w_u = jet_w_u.Eta();
@@ -3189,6 +3206,8 @@ void Vcb::Set_Result_Tree()
       result_tree->Branch("weight_b_tag", &weight_b_tag);
       result_tree->Branch("weight_b_tag_down_hf", &weight_b_tag_down_hf);
       result_tree->Branch("weight_b_tag_up_hf", &weight_b_tag_up_hf);
+      result_tree->Branch("weight_b_tag_down_lf", &weight_b_tag_down_lf);
+      result_tree->Branch("weight_b_tag_up_lf", &weight_b_tag_up_lf);
       result_tree->Branch("weight_b_tag_down_lfstats1", &weight_b_tag_down_lfstats1);
       result_tree->Branch("weight_b_tag_up_lfstats1", &weight_b_tag_up_lfstats1);
       result_tree->Branch("weight_b_tag_down_lfstats2", &weight_b_tag_down_lfstats2);
@@ -3379,6 +3398,11 @@ void Vcb::Set_Result_Tree()
     result_tree->Branch("pt_w_u", &pt_w_u);
     result_tree->Branch("pt_w_d", &pt_w_d);
     result_tree->Branch("pt_lep_t_b", &pt_lep_t_b);
+
+    result_tree->Branch("pt_raw_had_t_b", &pt_raw_had_t_b);
+    result_tree->Branch("pt_raw_w_u", &pt_raw_w_u);
+    result_tree->Branch("pt_raw_w_d", &pt_raw_w_d);
+    result_tree->Branch("pt_raw_lep_t_b", &pt_raw_lep_t_b);
 
     result_tree->Branch("eta_had_t_b", &eta_had_t_b);
     result_tree->Branch("eta_w_u", &eta_w_u);

@@ -163,6 +163,11 @@ protected:
   float pt_w_d;
   float pt_lep_t_b;
 
+  float pt_raw_had_t_b;
+  float pt_raw_w_u;
+  float pt_raw_w_d;
+  float pt_raw_lep_t_b;
+
   float eta_had_t_b;
   float eta_w_u;
   float eta_w_d;
@@ -256,6 +261,8 @@ protected:
   float weight_b_tag;
   float weight_b_tag_down_hf;
   float weight_b_tag_up_hf;
+  float weight_b_tag_down_lf;
+  float weight_b_tag_up_lf;
   float weight_b_tag_down_jes;
   float weight_b_tag_up_jes;
   float weight_b_tag_down_lfstats1;

@@ -496,6 +496,9 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
       weight_b_tag_down_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_hf");
       weight_b_tag_up_hf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_hf");
 
+      weight_b_tag_down_lf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lf");
+      weight_b_tag_up_lf = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lf");
+
       weight_b_tag_down_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "down_lfstats1");
       weight_b_tag_up_lfstats1 = mcCorr->GetBTaggingReweight_1d(vec_sel_jet, vec_jet_tagging_para.at(0), "up_lfstats1");
 
@@ -707,6 +710,8 @@ void Vcb_Tagging_RF::Set_Result_Tree()
       result_tree->Branch("weight_b_tag", &weight_b_tag);
       result_tree->Branch("weight_b_tag_down_hf", &weight_b_tag_down_hf);
       result_tree->Branch("weight_b_tag_up_hf", &weight_b_tag_up_hf);
+      result_tree->Branch("weight_b_tag_down_lf", &weight_b_tag_down_lf);
+      result_tree->Branch("weight_b_tag_up_lf", &weight_b_tag_up_lf);
       result_tree->Branch("weight_b_tag_down_lfstats1", &weight_b_tag_down_lfstats1);
       result_tree->Branch("weight_b_tag_up_lfstats1", &weight_b_tag_up_lfstats1);
       result_tree->Branch("weight_b_tag_down_lfstats2", &weight_b_tag_down_lfstats2);

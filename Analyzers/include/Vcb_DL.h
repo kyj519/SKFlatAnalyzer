@@ -118,6 +118,8 @@ protected:
   float weight_b_tag;
   float weight_b_tag_down_hf;
   float weight_b_tag_up_hf;
+  float weight_b_tag_down_lf;
+  float weight_b_tag_up_lf;
   float weight_b_tag_down_jes;
   float weight_b_tag_up_jes;
   float weight_b_tag_down_lfstats1;
