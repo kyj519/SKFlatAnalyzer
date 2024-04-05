@@ -84,6 +84,8 @@ public:
 
   std::vector<Jet> GetAllJets();
   std::vector<Jet> GetJets(TString id, double ptmin, double fetamax);
+  bool IsEventJetMapVetoed(std::vector<Jet> jets);
+  void loadJetVetoMap();
 
   std::vector<FatJet> GetAllFatJets();
   std::vector<FatJet> GetFatJets(TString id, double ptmin, double fetamax);
@@ -282,6 +284,9 @@ public:
   void SwitchToTempDir();
   TFile *outfile = NULL;
   void SetOutfilePath(TString outname);
+
+  private:
+  TH2D *JetVetoMap = NULL;
 };
 
 #endif
