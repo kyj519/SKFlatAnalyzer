@@ -226,6 +226,8 @@ protected:
   void Clear();
   void Make_Result_Tree(const AnalyzerParameter &param);
   Particle Rebalance_Met();
+  vector<Electron> Select_Electrons_Iso(vector<Electron> &vec_electron);
+  vector<Muon> Select_Muons_Iso(vector<Muon> &vec_muon);
   void Set_Result_Tree();
 };
 

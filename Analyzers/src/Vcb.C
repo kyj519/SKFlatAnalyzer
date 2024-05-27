@@ -51,6 +51,7 @@ Vcb::~Vcb()
     for (unsigned int i = 0; i < vec_syst_type.size(); i++)
     {
       param.syst_ = vec_syst_type.at(i);
+
       outfile->cd(param.GetSystType());
       map_result_tree[param.syst_]->Write();
     }
@@ -114,9 +115,8 @@ void Vcb::initializeAnalyzer()
   cout << "[Vcb::initializeAnalyzer] RM_REG_NN = " << rm_bjet_energy_reg_nn << endl;
 
   // set single muon object
-  vec_mu_id = {"POGTightWithTightIso"};
-  vec_mu_id_sf_key = {"NUM_TightID_DEN_TrackerMuons"};
-  vec_mu_iso_sf_key = {"NUM_TightRelIso_DEN_TightIDandIPCut"};
+  // vec_mu_id_sf_key = {"NUM_TightID_DEN_TrackerMuons"};
+  // vec_mu_iso_sf_key = {"NUM_TightRelIso_DEN_TightIDandIPCut"};
 
   // set sigle lepton trigger
   if (DataYear == 2016)
@@ -305,6 +305,10 @@ void Vcb::initializeAnalyzer()
 
 void Vcb::executeEvent()
 {
+  // Apply Jet Veto Map
+  if (IsEventJetMapVetoed())
+    return;
+
   // init and clear
   vec_muon.clear();
   vec_electron.clear();
@@ -319,7 +323,8 @@ void Vcb::executeEvent()
     // setup setting
     param.Clear();
 
-    param.Muon_Tight_ID = "POGTightWithTightIso";
+    // param.Muon_Tight_ID = "POGTightWithTightIso";
+    param.Muon_Tight_ID = "POGTight";
     param.Muon_Loose_ID = "POGLoose";
 
     param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
@@ -327,9 +332,10 @@ void Vcb::executeEvent()
 
     // param.Electron_Tight_ID = "passTightID";
     // param.Electron_Loose_ID = "passLooseID";
-
-    param.Electron_Tight_ID = "passMVAID_iso_WP80";
-    param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    // param.Electron_Tight_ID = "passMVAID_iso_WP80";
+    // param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    param.Electron_Tight_ID = "passMVAID_noIso_WP80";
+    param.Electron_Loose_ID = "passMVAID_noIso_WP90";
 
     param.Jet_ID = "tight";
     param.PUJet_Veto_ID = "LoosePileupJetVeto";
@@ -364,6 +370,8 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   {
     // separate W decay mode
     vector<Gen> vec_gen = GetGens();
+    // PrintGen(vec_gen);
+
     decay_mode = Get_W_Decay_Mode(vec_gen);
 
     for (unsigned int i = 0; i < vec_jet.size(); i++)
@@ -673,7 +681,10 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   }
 
   lepton_pt = lepton.Pt();
+  if (run_el_ch)
+    lepton_pt_uncorr = electron.UncorrPt();
   lepton_eta = lepton.Eta();
+  lepton_rel_iso = lepton.RelIso();
 
   if (lepton_pt <= sl_trig_safe_pt_cut)
     return;
@@ -909,18 +920,22 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     weight *= weight_c_tag;
   }
 
+  // at least two b-tag jets
   if (n_b_jet < 2)
     return;
 
   FillHist(param.Name + "/Cut_Flow", Cut_Flow::At_Least_Two_B_Tagged, weight, n_cut_flow, 0, n_cut_flow);
   FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::At_Least_Two_B_Tagged, weight, n_cut_flow, 0, n_cut_flow);
 
-  // cut on MET
   met_pt = met.Pt();
   met_phi = met.Phi();
 
   // if (met_pt < MET_PT)
   //   return;
+
+  int abcd_region_index = Set_ABCD_Region();
+  if (run_permutation_tree && abcd_region_index != 3)
+    return;
 
   pt_ratio = lepton_pt / met_pt;
 
@@ -1928,7 +1943,7 @@ void Vcb::Index_Converter(const vector<Jet> &vec_sel_jet, const vector<Jet> &vec
         break;
       }
     } // for(unsigned int j=0; j<vec_sel_jet.size(); j++)
-  }   // for(int i=0; i<4; i++)
+  } // for(int i=0; i<4; i++)
 
   return;
 } // void Vcb::Index_Converter(const vector<Jet>& vec_sel_jet, const vector<Jet>& vec_sel_jet_match, const int index_matched_jet_match[4], int index_matched_jet[4])
@@ -2120,8 +2135,9 @@ void Vcb::Make_HF_Contamination_Tree()
   // if(n_b_jet<3) return;
 
   Results_Container results_container = fitter_driver->Get_Results();
-  if (!fitter_driver->Check_Status())
-    return;
+
+  // if (!fitter_driver->Check_Status())
+  //   return;
 
   chk_hf_contamination = false;
 
@@ -2376,6 +2392,13 @@ void Vcb::Make_Permutation_Tree()
     eta_w_d = results.eta_w_d;
     eta_lep_t_b = results.eta_lep_t_b;
 
+    // pt of reco objects
+    pt_had_w = results.pt_had_w;
+    pt_had_t = results.pt_had_t;
+    pt_lep_w = results.pt_lep_w;
+    pt_lep_t = results.pt_lep_t;
+    pt_tt = results.pt_tt;
+
     // angles
     del_phi_w_u_w_d = results.del_phi_w_u_w_d;
     del_phi_had_w_had_t_b = results.del_phi_had_w_had_t_b;
@@ -2442,8 +2465,9 @@ void Vcb::Make_Permutation_Tree()
 void Vcb::Make_Result_Tree(const AnalyzerParameter &param)
 {
   bool chk_fitter_status = fitter_driver->Check_Status();
-  if (!chk_fitter_status)
-    return;
+
+  // if (!chk_fitter_status)
+  //   return;
 
   FillHist(param.Name + "/Cut_Flow", Cut_Flow::KF_Pass, weight, n_cut_flow, 0, n_cut_flow);
   FillHist(param.Name + Form("/Cut_Flow_%d", decay_mode), Cut_Flow::KF_Pass, weight, n_cut_flow, 0, n_cut_flow);
@@ -2878,6 +2902,11 @@ void Vcb::Set_Permutation_Tree()
   permutation_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
   permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
   permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
+  permutation_tree_correct->Branch("pt_had_w", &pt_had_w);
+  permutation_tree_correct->Branch("pt_had_t", &pt_had_t);
+  permutation_tree_correct->Branch("pt_lep_w", &pt_lep_w);
+  permutation_tree_correct->Branch("pt_lep_t", &pt_lep_t);
+  permutation_tree_correct->Branch("pt_tt", &pt_tt);
   permutation_tree_correct->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
   permutation_tree_correct->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
   permutation_tree_correct->Branch("del_phi_lep_neu", &del_phi_lep_neu);
@@ -2963,6 +2992,11 @@ void Vcb::Set_Permutation_Tree()
   permutation_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
   permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
   permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
+  permutation_tree_wrong->Branch("pt_had_w", &pt_had_w);
+  permutation_tree_wrong->Branch("pt_had_t", &pt_had_t);
+  permutation_tree_wrong->Branch("pt_lep_w", &pt_lep_w);
+  permutation_tree_wrong->Branch("pt_lep_t", &pt_lep_t);
+  permutation_tree_wrong->Branch("pt_tt", &pt_tt);
   permutation_tree_wrong->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
   permutation_tree_wrong->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
   permutation_tree_wrong->Branch("del_phi_lep_neu", &del_phi_lep_neu);
@@ -3148,6 +3182,57 @@ void Vcb::Set_Reader_Swapper()
 */
 //////////
 
+int Vcb::Set_ABCD_Region()
+{
+  bool chk_pass_iso;
+  if (run_mu_ch)
+  {
+    if (lepton.RelIso() < REL_ISO_MUON)
+      chk_pass_iso = true;
+    else
+      chk_pass_iso = false;
+  }
+  else if (run_el_ch)
+  {
+    float rel_iso_electron_a;
+    float rel_iso_electron_b;
+    if (TMath::Abs(electron.Eta()) <= 1.479)
+    {
+      rel_iso_electron_a = REL_ISO_ELECTRON_BARREL_A;
+      rel_iso_electron_b = REL_ISO_ELECTRON_BARREL_B;
+    }
+    else
+    {
+      rel_iso_electron_a = REL_ISO_ELECTRON_ENDCAP_A;
+      rel_iso_electron_b = REL_ISO_ELECTRON_ENDCAP_B;
+    }
+
+    if (lepton.RelIso() < rel_iso_electron_a + rel_iso_electron_b / electron.UncorrPt())
+      chk_pass_iso = true;
+    else
+      chk_pass_iso = false;
+  }
+
+  if (MET_PT < met_pt)
+  {
+    if (chk_pass_iso)
+      return 3; //"D"
+    else
+      return 1; //"B"
+  }
+  else
+  {
+    if (chk_pass_iso)
+      return 2; //"C"
+    else
+      return 0; //"A"
+  }
+
+  return -1;
+} // int Vcb::Set_ABCD_Region()
+
+//////////
+
 void Vcb::Set_Region()
 {
   bool chk_b_tagged_had_t_b = mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < bvsc_had_t_b ? true : false;
@@ -3159,34 +3244,10 @@ void Vcb::Set_Region()
   bool chk_b_tagged_w_d = mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < bvsc_w_d ? true : false;
 
   // Control 0 : b-inversion
-  if (chk_b_tagged_had_t_b && chk_b_tagged_lep_t_b &&
-      chk_best_mva_score &&
-      chk_n_c_tagged &&
-      chk_c_tagged_w_u &&
-      !chk_n_b_tagged &&
-      !chk_b_tagged_w_d)
+  if (!chk_n_b_tagged)
     region = "Control0";
-
-  // Control 1 : c-inversion
-  else if (chk_b_tagged_had_t_b && chk_b_tagged_lep_t_b &&
-           chk_best_mva_score &&
-           !chk_n_c_tagged &&
-           !chk_c_tagged_w_u &&
-           chk_n_b_tagged &&
-           chk_b_tagged_w_d)
-    region = "Control1";
-
-  // Control 2 : score inversion
-  else if (chk_b_tagged_had_t_b && chk_b_tagged_lep_t_b &&
-           !chk_best_mva_score &&
-           chk_n_c_tagged &&
-           chk_c_tagged_w_u &&
-           chk_n_b_tagged &&
-           chk_b_tagged_w_d)
-    region = "Control2";
-
   else
-    region = "Other";
+    region = "Signal";
 
   return;
 } // void Vcb::Set_Region()
@@ -3199,7 +3260,11 @@ void Vcb::Set_Result_Tree()
   {
     AnalyzerParameter::Syst syst_type = vec_syst_type.at(i);
 
+    param.syst_ = syst_type;
+    map_dir_syst.insert({param.GetSystType(), outfile->mkdir(param.GetSystType())});
+
     TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
+    result_tree->SetDirectory(map_dir_syst[param.GetSystType()]);
 
     if (syst_type == AnalyzerParameter::Central && run_syst)
     {
@@ -3351,7 +3416,9 @@ void Vcb::Set_Result_Tree()
     result_tree->Branch("n_vertex", &nPV);
 
     result_tree->Branch("lepton_pt", &lepton_pt);
+    result_tree->Branch("lepton_pt_uncorr", &lepton_pt_uncorr);
     result_tree->Branch("lepton_eta", &lepton_eta);
+    result_tree->Branch("lepton_rel_iso", &lepton_rel_iso);
 
     result_tree->Branch("n_jets", &n_sel_jet);
     result_tree->Branch("n_bjets", &n_b_jet);
@@ -3408,6 +3475,12 @@ void Vcb::Set_Result_Tree()
     result_tree->Branch("eta_w_u", &eta_w_u);
     result_tree->Branch("eta_w_d", &eta_w_d);
     result_tree->Branch("eta_lep_t_b", &eta_lep_t_b);
+
+    result_tree->Branch("pt_had_w", &pt_had_w);
+    result_tree->Branch("pt_had_t", &pt_had_t);
+    result_tree->Branch("pt_lep_w", &pt_lep_w);
+    result_tree->Branch("pt_lep_t", &pt_lep_t);
+    result_tree->Branch("pt_tt", &pt_tt);
 
     result_tree->Branch("m_had_t", &m_had_t);
     result_tree->Branch("m_had_w", &m_had_w);

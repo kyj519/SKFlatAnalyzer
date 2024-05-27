@@ -51,6 +51,14 @@ const float cvsl_2017_m = 0.085;
 const float cvsb_2017_m = 0.34;
 
 const float cvsl_2018_m = 0.099;
-const float cvsb_2018_m = 0.325; 
+const float cvsb_2018_m = 0.325;
+
+const float REL_ISO_MUON = 0.15;
+
+//medium
+const float REL_ISO_ELECTRON_BARREL_A = 0.0478;
+const float REL_ISO_ELECTRON_BARREL_B = 0.506;
+const float REL_ISO_ELECTRON_ENDCAP_A = 0.0658;
+const float REL_ISO_ELECTRON_ENDCAP_B = 0.963;
 
 #endif /* Vcb_Def_h */

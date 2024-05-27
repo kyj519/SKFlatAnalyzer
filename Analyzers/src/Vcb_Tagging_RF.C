@@ -138,6 +138,10 @@ void Vcb_Tagging_RF::initializeAnalyzer()
 
 void Vcb_Tagging_RF::executeEvent()
 {
+  // Apply Jet Veto Map
+  if (IsEventJetMapVetoed())
+    return;
+
   // init and clear
   vec_muon.clear();
   vec_electron.clear();
@@ -151,7 +155,8 @@ void Vcb_Tagging_RF::executeEvent()
   {
     param.Clear();
 
-    param.Muon_Tight_ID = "POGTightWithTightIso";
+    // param.Muon_Tight_ID = "POGTightWithTightIso";
+    param.Muon_Tight_ID = "POGTight";
     param.Muon_Loose_ID = "POGLoose";
 
     param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
@@ -159,9 +164,10 @@ void Vcb_Tagging_RF::executeEvent()
 
     // param.Electron_Tight_ID = "passTightID";
     // param.Electron_Loose_ID = "passLooseID";
-
-    param.Electron_Tight_ID = "passMVAID_iso_WP80";
-    param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    // param.Electron_Tight_ID = "passMVAID_iso_WP80";
+    // param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    param.Electron_Tight_ID = "passMVAID_noIso_WP80";
+    param.Electron_Loose_ID = "passMVAID_noIso_WP90";
 
     param.Jet_ID = "tight";
     param.PUJet_Veto_ID = "LoosePileupJetVeto";
@@ -389,7 +395,10 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   }
 
   lepton_pt = lepton.Pt();
+  if (run_el_ch)
+    lepton_pt_uncorr = electron.UncorrPt();
   lepton_eta = lepton.Eta();
+  lepton_rel_iso = lepton.RelIso();
 
   if (lepton_pt <= sl_trig_safe_pt_cut)
     return;
@@ -799,8 +808,10 @@ void Vcb_Tagging_RF::Set_Result_Tree()
 
     result_tree->Branch("n_vertex", &nPV);
 
-    // result_tree->Branch("lepton_pt", &lepton_pt);
-    // result_tree->Branch("lepton_eta", &lepton_eta);
+    result_tree->Branch("lepton_pt", &lepton_pt);
+    result_tree->Branch("lepton_eta", &lepton_eta);
+    result_tree->Branch("lepton_pt_uncorr", &lepton_pt_uncorr);
+    result_tree->Branch("lepton_rel_iso", &lepton_rel_iso);
 
     result_tree->Branch("n_jets", &n_sel_jet);
     result_tree->Branch("n_bjets", &n_b_jet);

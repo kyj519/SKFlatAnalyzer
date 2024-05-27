@@ -137,6 +137,10 @@ void Vcb_Tagging_RF_DL::initializeAnalyzer()
 
 void Vcb_Tagging_RF_DL::executeEvent()
 {
+  // Apply Jet Veto Map
+  if (IsEventJetMapVetoed())
+    return;
+
   // init and clear
   vec_muon.clear();
   vec_electron.clear();
@@ -150,7 +154,8 @@ void Vcb_Tagging_RF_DL::executeEvent()
   {
     param.Clear();
 
-    param.Muon_Tight_ID = "POGTightWithTightIso";
+    // param.Muon_Tight_ID = "POGTightWithTightIso";
+    param.Muon_Tight_ID = "POGTight";
     param.Muon_Loose_ID = "POGLoose";
     param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
     param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
@@ -159,9 +164,11 @@ void Vcb_Tagging_RF_DL::executeEvent()
     // param.Electron_Loose_ID = "passLooseID";
     // param.Electron_ID_SF_Key = "ID_SF_passTightID";
 
-    param.Electron_Tight_ID = "passMVAID_iso_WP80";
-    param.Electron_Loose_ID = "passMVAID_iso_WP90";
-    // param.Electron_ID_SF_Key = "ID_SF_passTightID";
+    // param.Electron_Tight_ID = "passMVAID_iso_WP80";
+    // param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    param.Electron_Tight_ID = "passMVAID_noIso_WP80";
+    param.Electron_Loose_ID = "passMVAID_noIso_WP90";
+    //  param.Electron_ID_SF_Key = "ID_SF_passTightID";
 
     param.Jet_ID = "tight";
     param.PUJet_Veto_ID = "LoosePileupJetVeto";
@@ -381,7 +388,7 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
   if (run_mm_ch)
   {
     if (vec_sel_muon.size() != 2 || vec_electron_veto.size() != 0)
-    //if (vec_sel_muon.size() != 2)
+      // if (vec_sel_muon.size() != 2)
       return;
 
     lepton[0] = vec_sel_muon[0];
@@ -763,6 +770,51 @@ Particle Vcb_Tagging_RF_DL::Rebalance_Met()
 
   return met_rebal;
 } // Particle Vcb_Tagging_RF_DL::Rebalance_Met()
+
+//////////
+
+vector<Electron> Vcb_Tagging_RF_DL::Select_Electrons_Iso(vector<Electron> &vec_electron)
+{
+  vector<Electron> vec_out;
+  for (unsigned int i = 0; i < vec_electron.size(); i++)
+  {
+    Electron electron = vec_electron[i];
+
+    float rel_iso_electron_a;
+    float rel_iso_electron_b;
+    if (TMath::Abs(electron.Eta()) < 1.479)
+    {
+      rel_iso_electron_a = REL_ISO_ELECTRON_BARREL_A;
+      rel_iso_electron_b = REL_ISO_ELECTRON_BARREL_B;
+    }
+    else
+    {
+      rel_iso_electron_a = REL_ISO_ELECTRON_ENDCAP_A;
+      rel_iso_electron_b = REL_ISO_ELECTRON_ENDCAP_B;
+    }
+
+    if (electron.RelIso() < rel_iso_electron_a + rel_iso_electron_b / electron.UncorrPt())
+      vec_out.push_back(electron);
+  }
+
+  return vec_out;
+} // vector<Electron> Vcb_Tagging_RF_DL::Select_Electron_Iso(vector<Electron>& vec_electron)
+
+//////////
+
+vector<Muon> Vcb_Tagging_RF_DL::Select_Muons_Iso(vector<Muon> &vec_muon)
+{
+  vector<Muon> vec_out;
+  for (unsigned int i = 0; i < vec_muon.size(); i++)
+  {
+    Muon muon = vec_muon[i];
+
+    if (muon.RelIso() < REL_ISO_MUON)
+      vec_out.push_back(muon);
+  }
+
+  return vec_out;
+} // vector<muon> Vcb_Tagging_RF_DL::Select_Muon_Iso(vector<Muon>& vec_muon)
 
 //////////
 

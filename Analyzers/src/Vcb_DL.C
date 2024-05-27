@@ -174,6 +174,10 @@ void Vcb_DL::initializeAnalyzer()
 
 void Vcb_DL::executeEvent()
 {
+  // Apply Jet Veto Map
+  if (IsEventJetMapVetoed())
+    return;
+
   // init and clear
   vec_muon.clear();
   vec_electron.clear();
@@ -188,7 +192,8 @@ void Vcb_DL::executeEvent()
     // param setting
     param.Clear();
 
-    param.Muon_Tight_ID = "POGTightWithTightIso";
+    // param.Muon_Tight_ID = "POGTightWithTightIso";
+    param.Muon_Tight_ID = "POGTight";
     param.Muon_Loose_ID = "POGLoose";
     param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
     param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
@@ -196,8 +201,10 @@ void Vcb_DL::executeEvent()
     // param.Electron_Tight_ID = "passTightID";
     // param.Electron_Loose_ID = "passLooseID";
 
-    param.Electron_Tight_ID = "passMVAID_iso_WP80";
-    param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    // param.Electron_Tight_ID = "passMVAID_iso_WP80";
+    // param.Electron_Loose_ID = "passMVAID_iso_WP90";
+    param.Electron_Tight_ID = "passMVAID_noIso_WP80";
+    param.Electron_Loose_ID = "passMVAID_noIso_WP90";
 
     // param.Electron_ID_SF_Key = "ID_SF_passTightID";
 
@@ -381,6 +388,9 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
   vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, mu_trig_safe_pt_cut, MUON_ETA);
   vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, el_trig_safe_pt_cut, ELECTRON_ETA);
 
+  vec_sel_muon = Select_Muons_Iso(vec_sel_muon);
+  vec_sel_electron = Select_Electrons_Iso(vec_sel_electron);
+
   // for lepton veto
   vector<Muon> vec_muon_veto = SelectMuons(vec_this_muon, param.Muon_Loose_ID, MUON_PT_VETO, MUON_ETA);
   vector<Electron> vec_electron_veto = SelectElectrons(vec_this_electron, param.Electron_Loose_ID, ELECTRON_PT_VETO, ELECTRON_ETA);
@@ -545,7 +555,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
   {
     float tagging_score = jet.GetTaggerResult(JetTagging::DeepJet);
     if (mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Medium) < tagging_score)
-    //if (mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Tight) < tagging_score)
+      // if (mcCorr->GetJetTaggingCutValue(JetTagging::DeepJet, JetTagging::Tight) < tagging_score)
       n_b_jet++;
   }
 
@@ -922,6 +932,51 @@ Particle Vcb_DL::Rebalance_Met()
 
   return met_rebal;
 } // Particle Vcb_DL::Rebalance_Met()
+
+//////////
+
+vector<Electron> Vcb_DL::Select_Electrons_Iso(vector<Electron> &vec_electron)
+{
+  vector<Electron> vec_out;
+  for (unsigned int i = 0; i < vec_electron.size(); i++)
+  {
+    Electron electron = vec_electron[i];
+
+    float rel_iso_electron_a;
+    float rel_iso_electron_b;
+    if (TMath::Abs(electron.Eta()) < 1.479)
+    {
+      rel_iso_electron_a = REL_ISO_ELECTRON_BARREL_A;
+      rel_iso_electron_b = REL_ISO_ELECTRON_BARREL_B;
+    }
+    else
+    {
+      rel_iso_electron_a = REL_ISO_ELECTRON_ENDCAP_A;
+      rel_iso_electron_b = REL_ISO_ELECTRON_ENDCAP_B;
+    }
+
+    if (electron.RelIso() < rel_iso_electron_a + rel_iso_electron_b / electron.UncorrPt())
+      vec_out.push_back(electron);
+  }
+
+  return vec_out;
+} // vector<Electron> Vcb_DL::Select_Electron_Iso(vector<Electron>& vec_electron)
+
+//////////
+
+vector<Muon> Vcb_DL::Select_Muons_Iso(vector<Muon> &vec_muon)
+{
+  vector<Muon> vec_out;
+  for (unsigned int i = 0; i < vec_muon.size(); i++)
+  {
+    Muon muon = vec_muon[i];
+
+    if (muon.RelIso() < REL_ISO_MUON)
+      vec_out.push_back(muon);
+  }
+
+  return vec_out;
+} // vector<muon> Vcb_DL::Select_Muon_Iso(vector<Muon>& vec_muon)
 
 //////////
 

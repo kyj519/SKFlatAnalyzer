@@ -84,8 +84,8 @@ public:
 
   std::vector<Jet> GetAllJets();
   std::vector<Jet> GetJets(TString id, double ptmin, double fetamax);
-  bool IsEventJetMapVetoed(std::vector<Jet> jets);
-  void loadJetVetoMap();
+  bool IsEventJetMapVetoed();
+  void LoadJetVetoMap();
 
   std::vector<FatJet> GetAllFatJets();
   std::vector<FatJet> GetFatJets(TString id, double ptmin, double fetamax);

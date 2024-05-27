@@ -2,6 +2,7 @@
 #define __Vcb_h__
 
 #include <TMVA/Reader.h>
+#include <TDirectory.h>
 
 #include "AnalyzerCore.h"
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
@@ -93,7 +94,7 @@ protected:
   /* vector<Muon> vec_sel_muon; */
   /* vector<Muon> vec_muon_veto; */
   /* vector<Electron> vec_electron_veto; */
-  
+
   vector<Jet> vec_sel_jet;
   vector<Jet> vec_sel_jet_match;
 
@@ -123,7 +124,9 @@ protected:
   bool pu_conta_lep_t_b;
 
   float lepton_pt;
+  float lepton_pt_uncorr;
   float lepton_eta;
+  float lepton_rel_iso;
 
   int n_sel_jet;
   int n_b_jet;
@@ -172,6 +175,12 @@ protected:
   float eta_w_u;
   float eta_w_d;
   float eta_lep_t_b;
+
+  float pt_had_w;
+  float pt_had_t;
+  float pt_lep_w;
+  float pt_lep_t;
+  float pt_tt;
 
   float del_phi_w_u_w_d;
   float del_phi_had_w_had_t_b;
@@ -412,6 +421,7 @@ protected:
   TTree *template_tree[5];
   TTree *template_truth_tree[5];
 
+  map<TString, TDirectory *> map_dir_syst;
   map<AnalyzerParameter::Syst, TTree *> map_result_tree;
 
   TMVA::Reader *reader_hf_contamination_lessthantwo;
@@ -441,6 +451,7 @@ protected:
   void Set_Permutation_Tree();
   void Set_Reader_HF_Contamination();
   void Set_Reader_Swapper();
+  int Set_ABCD_Region();
   void Set_Region();
   void Set_Result_Tree();
   void Set_Template_Truth_Tree();

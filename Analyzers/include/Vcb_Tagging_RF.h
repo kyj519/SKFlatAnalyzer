@@ -80,7 +80,9 @@ protected:
   int n_pv;
 
   float lepton_pt;
+  float lepton_pt_uncorr;
   float lepton_eta;
+  float lepton_rel_iso;
 
   int n_sel_jet;
   int n_b_jet;
