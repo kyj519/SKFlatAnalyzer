@@ -34,6 +34,10 @@ protected:
   bool run_mm;
   bool run_syst;
 
+  vector<TString> vec_channel;
+  TDirectory **dir_channel; // channel
+  TDirectory ***dir_syst;   // channel, syst
+
   vector<TString> vec_mu_id;
   vector<TString> vec_mu_id_sf_key;
   vector<TString> vec_mu_iso_sf_key;
@@ -217,7 +221,7 @@ protected:
 
   float weight_top_pt;
 
-  map<AnalyzerParameter::Syst, TTree *> map_result_tree;
+  map<TString, TTree *> map_result_tree;
 
   XYMETCorrection_withUL17andUL18andUL16 xy_met_correction;
 
