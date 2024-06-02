@@ -67,6 +67,8 @@ public:
 
   double GetTaggerResult(JetTagging::Tagger tg) const;
 
+  float GetEmFraction() const { return j_neutralEmEnergyFraction + j_chargedEmEnergyFraction; }
+
 private:
   double j_area;
   int j_partonFlavour;

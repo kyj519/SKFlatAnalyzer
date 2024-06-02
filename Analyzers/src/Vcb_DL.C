@@ -10,12 +10,15 @@ Vcb_DL::Vcb_DL()
 
 Vcb_DL::~Vcb_DL()
 {
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    param.syst_ = vec_syst_type.at(i);
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+    {
+      param.syst_ = vec_syst_type.at(j);
 
-    outfile->cd(param.GetSystType());
-    map_result_tree[param.syst_]->Write();
+      dir_syst[i][j]->cd();
+      map_result_tree[vec_channel[i] + param.GetSystType()]->Write();
+    }
   }
 
 } // Vcb_DL::~Vcb_DL()
@@ -24,8 +27,8 @@ Vcb_DL::~Vcb_DL()
 
 void Vcb_DL::initializeAnalyzer()
 {
-  // run_debug = HasFlag("RunDebug");
-  // cout << "[Vcb_DL::initializeAnalyzer] RunDebug = " << run_debug << endl;
+  run_debug = HasFlag("RunDebug");
+  cout << "[Vcb_DL::initializeAnalyzer] RunDebug = " << run_debug << endl;
 
   // run_mm = HasFlag("RunMM");
   // cout << "[Vcb_DL::initializeAnalyzer] RunMM = " << run_mm << endl;
@@ -168,15 +171,17 @@ void Vcb_DL::initializeAnalyzer()
     dir_channel[i] = outfile->mkdir(vec_channel[i]);
     dir_syst[i] = new TDirectory *[vec_syst_type.size()];
 
-    for (unsigned int j = 0; j < vec_syst_type.size(); ++)
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
     {
       param.syst_ = vec_syst_type.at(j);
 
-      dir_syst[i][j] = dir_channel[i]->mkdir(param.GetSystType(););
+      dir_syst[i][j] = dir_channel[i]->mkdir(param.GetSystType());
     }
   }
 
   Set_Result_Tree();
+
+  cout << "[Vcb_DL::initializeAnalyzer]: Done" << endl;
 
   return;
 } // void Vcb_DL::initializeAnalyzer()
@@ -198,42 +203,58 @@ void Vcb_DL::executeEvent()
   vec_electron = GetAllElectrons();
   vec_jet = GetAllJets();
 
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    // param setting
-    param.Clear();
+    run_mm = false;
+    run_me = false;
+    run_ee = false;
 
-    // param.Muon_Tight_ID = "POGTightWithTightIso";
-    param.Muon_Tight_ID = "POGTight";
-    param.Muon_Loose_ID = "POGLoose";
-    param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
-    param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
+    if (i == 0)
+      run_mm = true;
+    else if (i == 1)
+      run_me = true;
+    else if (i == 2)
+      run_ee = true;
 
-    // param.Electron_Tight_ID = "passTightID";
-    // param.Electron_Loose_ID = "passLooseID";
+    channel_name = vec_channel[i];
 
-    // param.Electron_Tight_ID = "passMVAID_iso_WP80";
-    // param.Electron_Loose_ID = "passMVAID_iso_WP90";
-    param.Electron_Tight_ID = "passMVAID_noIso_WP80";
-    param.Electron_Loose_ID = "passMVAID_noIso_WP90";
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+    {
+      // param setting
+      param.Clear();
 
-    // param.Electron_ID_SF_Key = "ID_SF_passTightID";
+      // param.Muon_Tight_ID = "POGTightWithTightIso";
+      param.Muon_Tight_ID = "POGTight";
+      param.Muon_Loose_ID = "POGLoose";
+      param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
+      param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
 
-    param.Jet_ID = "tight";
-    param.PUJet_Veto_ID = "LoosePileupJetVeto";
+      // param.Electron_Tight_ID = "passTightID";
+      // param.Electron_Loose_ID = "passLooseID";
 
-    param.syst_ = vec_syst_type.at(i);
+      // param.Electron_Tight_ID = "passMVAID_iso_WP80";
+      // param.Electron_Loose_ID = "passMVAID_iso_WP90";
+      param.Electron_Tight_ID = "passMVAID_noIso_WP80";
+      param.Electron_Loose_ID = "passMVAID_noIso_WP90";
 
-    param.Name = param.GetSystType();
+      // param.Electron_ID_SF_Key = "ID_SF_passTightID";
 
-    vec_gen_hf_flavour.clear();
-    vec_gen_hf_origin.clear();
+      param.Jet_ID = "tight";
+      param.PUJet_Veto_ID = "LoosePileupJetVeto";
 
-    vec_sel_gen_hf_flavour.clear();
-    vec_sel_gen_hf_origin.clear();
+      param.syst_ = vec_syst_type.at(j);
 
-    executeEventFromParameter(param);
-  }
+      param.Name = param.GetSystType();
+
+      vec_gen_hf_flavour.clear();
+      vec_gen_hf_origin.clear();
+
+      vec_sel_gen_hf_flavour.clear();
+      vec_sel_gen_hf_origin.clear();
+
+      executeEventFromParameter(param);
+    } // loop over syst
+  } // loop over channel
 
   return;
 } // void Vcb_DL::executeEvent()
@@ -887,7 +908,7 @@ void Vcb_DL::Clear()
 
 //////////
 
-void Vcb_DL::Make_Result_Tree(const AnalyzerParameter &param)
+void Vcb_DL::Make_Result_Tree(AnalyzerParameter &param)
 {
   leading_lepton_eta = lepton[0].Eta();
   leading_lepton_pt = lepton[0].Pt();
@@ -913,7 +934,7 @@ void Vcb_DL::Make_Result_Tree(const AnalyzerParameter &param)
   bvsc_third = vec_sel_jet[2].GetTaggerResult(JetTagging::DeepJet);
   bvsc_fourth = vec_sel_jet[3].GetTaggerResult(JetTagging::DeepJet);
 
-  map_result_tree[param.syst_]->Fill();
+  map_result_tree[channel_name + param.GetSystType()]->Fill();
 
   return;
 } // void Vcb_DL::Make_Result_Tree()
@@ -998,7 +1019,7 @@ void Vcb_DL::Set_Result_Tree()
   {
     for (unsigned int j = 0; j < vec_syst_type.size(); j++)
     {
-      param.syst_ = vec_syst_type.at(i);
+      param.syst_ = vec_syst_type.at(j);
       AnalyzerParameter::Syst syst_type = vec_syst_type.at(j);
 
       TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
@@ -1192,7 +1213,7 @@ void Vcb_DL::Set_Result_Tree()
 
       result_tree->Branch("weight_top_pt", &weight_top_pt);
 
-      map_result_tree.insert({param.GetSystType(), result_tree});
+      map_result_tree.insert({vec_channel[i] + param.GetSystType(), result_tree});
     } // loop over syst
   } // loop over channel
 

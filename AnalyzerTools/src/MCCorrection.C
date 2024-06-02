@@ -1064,13 +1064,23 @@ double MCCorrection::GetTopPtReweight(const std::vector<Gen> &gens)
   }
   double pt_reweight = 1.;
   //==== if top pair is not found, return 1.
-  //==== the measurement covers only the range pt(top)<=800GeV, otherwise, return 1.
-  if (toppt1 <= 800 && toppt2 <= 800)
+
+  // //==== the measurement covers only the range pt(top)<=800GeV, otherwise, return 1.
+  // if (toppt1 <= 800 && toppt2 <= 800)
+  // {
+  //   pt_reweight *= exp(0.0615 - 0.0005 * toppt1);
+  //   pt_reweight *= exp(0.0615 - 0.0005 * toppt2);
+  //   pt_reweight = sqrt(pt_reweight);
+  // }
+
+  //==== the measurement covers only the range pt(top)<=2000 GeV, otherwise, return 1.
+  if (toppt1 <= 2000 && toppt2 <= 2000)
   {
-    pt_reweight *= exp(0.0615 - 0.0005 * toppt1);
-    pt_reweight *= exp(0.0615 - 0.0005 * toppt2);
+    pt_reweight *= 0.103 * exp(-0.0118 * toppt1) - 0.000134 * toppt1 + 0.973;
+    pt_reweight *= 0.103 * exp(-0.0118 * toppt2) - 0.000134 * toppt2 + 0.973;
     pt_reweight = sqrt(pt_reweight);
   }
+
   return pt_reweight;
 }
 
@@ -2010,7 +2020,7 @@ double MCCorrection::PileupJetVeto_Reweight(const vector<Jet> &jets, const TStri
         prob_data *= 1 - data_mistag;
       }
     } // genjet unmatched
-  }   // loop over jets
+  } // loop over jets
 
   return prob_data / prob_mc;
 } // double MCCorrection::PileupJetVeto_Reweight(const vector<Jet>& jets, string wp, string Syst)

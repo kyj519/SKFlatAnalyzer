@@ -32,7 +32,10 @@ protected:
   bool run_ee;
   bool run_me;
   bool run_mm;
+  TString channel_name;
+  
   bool run_syst;
+
 
   vector<TString> vec_channel;
   TDirectory **dir_channel; // channel
@@ -228,7 +231,7 @@ protected:
   float Calculate_HT(const vector<Jet> &vec_jet);
   int Check_Process(const vector<Gen> &vec_gen);
   void Clear();
-  void Make_Result_Tree(const AnalyzerParameter &param);
+  void Make_Result_Tree(AnalyzerParameter &param);
   Particle Rebalance_Met();
   vector<Electron> Select_Electrons_Iso(vector<Electron> &vec_electron);
   vector<Muon> Select_Muons_Iso(vector<Muon> &vec_muon);
