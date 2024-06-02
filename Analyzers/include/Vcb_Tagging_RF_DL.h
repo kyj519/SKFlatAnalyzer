@@ -29,10 +29,15 @@ protected:
   vector<AnalyzerParameter::Syst> vec_syst_type;
 
   bool run_mm_ch;
-  bool run_ee_ch;
   bool run_me_ch;
+  bool run_ee_ch;
+  TString channel_name;
 
   bool run_debug;
+
+  vector<TString> vec_channel;
+  TDirectory **dir_channel; // channel
+  TDirectory ***dir_syst;   // channel, syst
 
   typedef enum cut_flow
   {
@@ -201,7 +206,7 @@ protected:
 
   float weight_sl_trig;
 
-  map<AnalyzerParameter::Syst, TTree *> map_result_tree;
+  map<TString, TTree *> map_result_tree;
 
   float Calculate_HT(const vector<Jet> &jet);
   int Check_Process(const vector<Gen> &vec_gen);
