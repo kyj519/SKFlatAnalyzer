@@ -4,8 +4,6 @@
 
 Vcb::Vcb()
 {
-  permutation_tree_correct = NULL;
-  permutation_tree_wrong = NULL;
 } // Vcb::Vcb()
 
 //////////
@@ -14,17 +12,21 @@ Vcb::~Vcb()
 {
   if (run_permutation_tree)
   {
-    outfile->cd();
-    permutation_tree_correct->Write();
-    permutation_tree_wrong->Write();
+    for (unsigned int i = 0; i < vec_channel.size(); i++)
+    {
+      dir_channel[i]->cd();
+
+      map_permutation_tree[vec_channel[i] + "Correct"]->Write();
+      map_permutation_tree[vec_channel[i] + "Wrong"]->Write();
+    }
   }
 
-  if (run_hf_contamination_tree)
-  {
-    outfile->cd();
-    hf_contamination_tree_correct->Write();
-    hf_contamination_tree_wrong->Write();
-  }
+  // if (run_hf_contamination_tree)
+  // {
+  //   outfile->cd();
+  //   hf_contamination_tree_correct->Write();
+  //   hf_contamination_tree_wrong->Write();
+  // }
 
   if (run_template)
   {
@@ -48,12 +50,21 @@ Vcb::~Vcb()
 
   if (run_result)
   {
-    for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+    cout << "test test" << endl;
+    for (unsigned int i = 0; i < vec_channel.size(); i++)
     {
-      param.syst_ = vec_syst_type.at(i);
+      cout << "test test " << i << endl;
+      for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+      {
+        cout << "test test " << j << endl;
+        param.syst_ = vec_syst_type.at(j);
 
-      outfile->cd(param.GetSystType());
-      map_result_tree[param.syst_]->Write();
+        dir_syst[i][j]->cd();
+        map_result_tree[vec_channel[i] + param.GetSystType()]->Write();
+
+        cout << "test test test " << j << endl;
+      }
+      cout << "test test test " << i << endl;
     }
   }
 
@@ -66,22 +77,22 @@ Vcb::~Vcb()
 
 void Vcb::initializeAnalyzer()
 {
-  run_mu_ch = HasFlag("RunMu");
-  cout << "[Vcb::initializeAnalyzer] RunMu = " << run_mu_ch << endl;
+  // run_mu_ch = HasFlag("RunMu");
+  // cout << "[Vcb::initializeAnalyzer] RunMu = " << run_mu_ch << endl;
 
-  run_el_ch = HasFlag("RunEl");
-  cout << "[Vcb::initializeAnalyzer] RunEl = " << run_el_ch << endl;
+  // run_el_ch = HasFlag("RunEl");
+  // cout << "[Vcb::initializeAnalyzer] RunEl = " << run_el_ch << endl;
 
-  if (run_mu_ch == run_el_ch)
-  {
-    cout << "One of RunMu or RunEl should be set." << endl;
-    exit(1);
-  }
+  // if (run_mu_ch == run_el_ch)
+  // {
+  //   cout << "One of RunMu or RunEl should be set." << endl;
+  //   exit(1);
+  // }
 
   if (run_mu_ch)
-    channel = "Muon";
+    channel_name = "Muon";
   else if (run_el_ch)
-    channel = "Electron";
+    channel_name = "Electron";
 
   run_debug = HasFlag("RunDebug");
   cout << "[Vcb::initializeAnalyzer] RunDebug = " << run_debug << endl;
@@ -89,8 +100,8 @@ void Vcb::initializeAnalyzer()
   run_permutation_tree = HasFlag("RunPermutationTree");
   cout << "[Vcb::initializeAnalyzer] RunPermutationTree = " << run_permutation_tree << endl;
 
-  run_hf_contamination_tree = HasFlag("RunHFContaminationTree");
-  cout << "[Vcb::initializeAnalyzer] RunHFContaminationTree = " << run_hf_contamination_tree << endl;
+  // run_hf_contamination_tree = HasFlag("RunHFContaminationTree");
+  // cout << "[Vcb::initializeAnalyzer] RunHFContaminationTree = " << run_hf_contamination_tree << endl;
 
   run_chi = HasFlag("RunChi");
   cout << "[Vcb::initializeAnalyzer] RunChi = " << run_chi << endl;
@@ -121,65 +132,48 @@ void Vcb::initializeAnalyzer()
   // set sigle lepton trigger
   if (DataYear == 2016)
   {
-    if (run_mu_ch)
-    {
-      vec_mu_trig.push_back("HLT_IsoMu24_v");
-      sl_trig = "IsoMu24";
-      sl_trig_safe_pt_cut = 26.;
-    }
-    else if (run_el_ch)
-    {
-      vec_el_trig.push_back("HLT_Ele27_WPTight_Gsf_v");
-      sl_trig = "Ele27";
-      sl_trig_safe_pt_cut = 30.;
-    }
+    vec_mu_trig.push_back("HLT_IsoMu24_v");
+    mu_trig = "IsoMu24";
+    mu_trig_safe_pt_cut = 26.;
+
+    vec_el_trig.push_back("HLT_Ele27_WPTight_Gsf_v");
+    el_trig = "Ele27";
+    el_trig_safe_pt_cut = 30.;
   } // if (DataYear == 2016)
   else if (DataYear == 2017)
   {
-    if (run_mu_ch)
-    {
-      vec_mu_trig.push_back("HLT_IsoMu27_v");
-      sl_trig = "IsoMu27";
-      sl_trig_safe_pt_cut = 30.;
-    }
-    else if (run_el_ch)
-    {
-      // vec_sl_trig.push_back("HLT_Ele35_WPTight_Gsf_v");
-      // sl_trig = "Ele35";
-      // sl_trig_safe_pt_cut = 37.;
+    vec_mu_trig.push_back("HLT_IsoMu27_v");
+    mu_trig = "IsoMu27";
+    mu_trig_safe_pt_cut = 30.;
 
-      vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_L1DoubleEG_");
-      sl_trig = "Ele32";
-      sl_trig_safe_pt_cut = 35.;
-    }
+    // vec_el_trig.push_back("HLT_Ele35_WPTight_Gsf_v");
+    // sl_trig = "Ele35";
+    // sl_trig_safe_pt_cut = 37.;
+
+    vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_L1DoubleEG_");
+    el_trig = "Ele32";
+    el_trig_safe_pt_cut = 35.;
   } // else if (DataYear == 2017)
   else if (DataYear == 2018)
   {
-    if (run_mu_ch)
-    {
-      vec_mu_trig.push_back("HLT_IsoMu24_v");
-      sl_trig = "IsoMu24";
-      sl_trig_safe_pt_cut = 26.;
-    }
-    else if (run_el_ch)
-    {
-      vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_v");
-      sl_trig = "Ele32";
-      sl_trig_safe_pt_cut = 35.;
-    }
+    vec_mu_trig.push_back("HLT_IsoMu24_v");
+    mu_trig = "IsoMu24";
+    mu_trig_safe_pt_cut = 26.;
+
+    vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_v");
+    el_trig = "Ele32";
+    el_trig_safe_pt_cut = 35.;
   } // else if (DataYear == 2018)
   else
     std::runtime_error("No trigger configuration for year");
 
-  for (unsigned int i = 0; i < vec_mu_trig.size(); i++)
-    vec_sl_trig.push_back(vec_mu_trig[i]);
+  for (auto &trigger_name : vec_mu_trig)
+    cout << "[Vcb::initializeAnalyzer] Single Muon Trigger Name = " << trigger_name << endl;
+  cout << "[Vcb::initializeAnalyzer] Single Muon Trigger Safe Pt Cut = " << mu_trig_safe_pt_cut << endl;
 
-  for (unsigned int i = 0; i < vec_el_trig.size(); i++)
-    vec_sl_trig.push_back(vec_el_trig[i]);
-
-  for (auto &trigger_name : vec_sl_trig)
-    cout << "[Vcb::initializeAnalyzer] Single Lepton Trigger Name = " << trigger_name << endl;
-  cout << "[Vcb::initializeAnalyzer] Single Lepton Trigger Safe Pt Cut = " << sl_trig_safe_pt_cut << endl;
+  for (auto &trigger_name : vec_el_trig)
+    cout << "[Vcb::initializeAnalyzer] Single Electron Trigger Name = " << trigger_name << endl;
+  cout << "[Vcb::initializeAnalyzer] Single Electron Trigger Safe Pt Cut = " << el_trig_safe_pt_cut << endl;
 
   // Jet Tagging Parameters
   if (run_debug)
@@ -226,7 +220,7 @@ void Vcb::initializeAnalyzer()
   jet_resolution = JME::JetResolution(jetPtResolutionPath);
   jet_resolution_sf = JME::JetResolutionScaleFactor(jetPtResolutionSFPath);
 
-  fitter_driver = new TKinFitterDriver(DataEra, channel, run_permutation_tree, run_chi, rm_wm_constraint, rm_bjet_energy_reg_nn);
+  fitter_driver = new TKinFitterDriver(DataEra, run_permutation_tree, run_chi, rm_wm_constraint, rm_bjet_energy_reg_nn);
 
   // PDF syst
   if (run_syst)
@@ -250,6 +244,8 @@ void Vcb::initializeAnalyzer()
     pdfReweight->SetNewPDFAlphaS(LHAPDFHandler_New.PDFAlphaSDown, LHAPDFHandler_New.PDFAlphaSUp);
   }
 
+  vec_channel = {"Mu", "El"};
+
   if (!IsDATA && run_syst)
   {
     vec_syst_type = {AnalyzerParameter::Central,
@@ -270,6 +266,25 @@ void Vcb::initializeAnalyzer()
   else
     vec_syst_type = {AnalyzerParameter::Central};
 
+  // to make output dir
+  dir_channel = new TDirectory *[vec_channel.size()];
+  dir_syst = new TDirectory **[vec_channel.size()];
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
+  {
+    dir_channel[i] = outfile->mkdir(vec_channel[i]);
+    dir_syst[i] = new TDirectory *[vec_syst_type.size()];
+
+    if (run_result)
+    {
+      for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+      {
+        param.syst_ = vec_syst_type.at(j);
+
+        dir_syst[i][j] = dir_channel[i]->mkdir(param.GetSystType());
+      } // loop over syst
+    } // if
+  } // loop over channel
+
   if (run_permutation_tree)
   {
     chk_matched_jets_only = false;
@@ -277,12 +292,12 @@ void Vcb::initializeAnalyzer()
     Set_Permutation_Tree();
   } // if(run_permutation_tree)
 
-  if (run_hf_contamination_tree)
-  {
-    chk_matched_jets_only = false;
+  // if (run_hf_contamination_tree)
+  // {
+  //   chk_matched_jets_only = false;
 
-    Set_HF_Contamination_Tree();
-  }
+  //   Set_HF_Contamination_Tree();
+  // }
 
   if (run_template_truth)
   {
@@ -318,40 +333,53 @@ void Vcb::executeEvent()
   vec_electron = GetAllElectrons();
   vec_jet = GetAllJets();
 
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    // setup setting
-    param.Clear();
+    run_mu_ch = false;
+    run_el_ch = false;
 
-    // param.Muon_Tight_ID = "POGTightWithTightIso";
-    param.Muon_Tight_ID = "POGTight";
-    param.Muon_Loose_ID = "POGLoose";
+    if (i == 0)
+      run_mu_ch = true;
+    else if (i == 1)
+      run_el_ch = true;
 
-    param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
-    param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
+    channel_name = vec_channel[i];
 
-    // param.Electron_Tight_ID = "passTightID";
-    // param.Electron_Loose_ID = "passLooseID";
-    // param.Electron_Tight_ID = "passMVAID_iso_WP80";
-    // param.Electron_Loose_ID = "passMVAID_iso_WP90";
-    param.Electron_Tight_ID = "passMVAID_noIso_WP80";
-    param.Electron_Loose_ID = "passMVAID_noIso_WP90";
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+    {
+      // setup setting
+      param.Clear();
 
-    param.Jet_ID = "tight";
-    param.PUJet_Veto_ID = "LoosePileupJetVeto";
+      // param.Muon_Tight_ID = "POGTightWithTightIso";
+      param.Muon_Tight_ID = "POGTight";
+      param.Muon_Loose_ID = "POGLoose";
 
-    param.syst_ = vec_syst_type.at(i);
+      param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
+      param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
 
-    param.Name = param.GetSystType();
+      // param.Electron_Tight_ID = "passTightID";
+      // param.Electron_Loose_ID = "passLooseID";
+      // param.Electron_Tight_ID = "passMVAID_iso_WP80";
+      // param.Electron_Loose_ID = "passMVAID_iso_WP90";
+      param.Electron_Tight_ID = "passMVAID_noIso_WP80";
+      param.Electron_Loose_ID = "passMVAID_noIso_WP90";
 
-    vec_gen_hf_flavour.clear();
-    vec_gen_hf_origin.clear();
+      param.Jet_ID = "tight";
+      param.PUJet_Veto_ID = "LoosePileupJetVeto";
 
-    vec_sel_gen_hf_flavour.clear();
-    vec_sel_gen_hf_origin.clear();
+      param.syst_ = vec_syst_type.at(j);
 
-    executeEventFromParameter(param);
-  }
+      param.Name = channel_name + "/" + param.GetSystType();
+
+      vec_gen_hf_flavour.clear();
+      vec_gen_hf_origin.clear();
+
+      vec_sel_gen_hf_flavour.clear();
+      vec_sel_gen_hf_origin.clear();
+
+      executeEventFromParameter(param);
+    } // loop over syst
+  } // loop over channel
 
   return;
 } // void Vcb::executeEvent()
@@ -542,8 +570,8 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   /////////////////
 
   // for lepton selection
-  vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, sl_trig_safe_pt_cut, MUON_ETA);
-  vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, sl_trig_safe_pt_cut, ELECTRON_ETA);
+  vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, mu_trig_safe_pt_cut, MUON_ETA);
+  vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, el_trig_safe_pt_cut, ELECTRON_ETA);
 
   // for lepton veto
   vector<Muon> vec_muon_veto = SelectMuons(vec_this_muon, param.Muon_Loose_ID, MUON_PT_VETO, MUON_ETA);
@@ -624,20 +652,20 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     if (run_mu_ch)
     {
       // SF for muon trigger effi
-      weight_sl_trig = mcCorr->MuonTrigger_SF("POGTight", sl_trig, vec_sel_muon, 0);
+      weight_sl_trig = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, 0);
       if (run_syst)
       {
-        weight_sl_trig_down = mcCorr->MuonTrigger_SF("POGTight", sl_trig, vec_sel_muon, -1);
-        weight_sl_trig_up = mcCorr->MuonTrigger_SF("POGTight", sl_trig, vec_sel_muon, +1);
+        weight_sl_trig_down = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, -1);
+        weight_sl_trig_up = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, +1);
       }
     }
     else if (run_el_ch)
     {
-      weight_sl_trig = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, sl_trig, vec_sel_electron, 0);
+      weight_sl_trig = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, el_trig, vec_sel_electron, 0);
       if (run_syst)
       {
-        weight_sl_trig_down = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, sl_trig, vec_sel_electron, -1);
-        weight_sl_trig_up = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, sl_trig, vec_sel_electron, +1);
+        weight_sl_trig_down = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, el_trig, vec_sel_electron, -1);
+        weight_sl_trig_up = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, el_trig, vec_sel_electron, +1);
       }
     }
     weight *= weight_sl_trig;
@@ -686,8 +714,16 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
   lepton_eta = lepton.Eta();
   lepton_rel_iso = lepton.RelIso();
 
-  if (lepton_pt <= sl_trig_safe_pt_cut)
-    return;
+  if (run_mu_ch)
+  {
+    if (lepton_pt <= mu_trig_safe_pt_cut)
+      return;
+  }
+  else if (run_el_ch)
+  {
+    if (lepton_pt <= el_trig_safe_pt_cut)
+      return;
+  }
 
   if (!IsDATA)
   {
@@ -1112,7 +1148,7 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     vec_resolution_pt.push_back(resolution_pt * resolution_pt_sf);
   }
 
-  fitter_driver->Set_Objects(vec_sel_jet, vec_resolution_pt, vec_btag, lepton, met, chk_matched_jets_only, index_matched_jet);
+  fitter_driver->Set_Objects(channel_name, vec_sel_jet, vec_resolution_pt, vec_btag, lepton, met, chk_matched_jets_only, index_matched_jet);
   fitter_driver->Scan();
 
   // Permutation Tree for signal study
@@ -1123,13 +1159,13 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     return;
   }
 
-  // HF Contamination
-  if (!IsDATA && run_hf_contamination_tree)
-  {
-    Make_HF_Contamination_Tree();
+  // // HF Contamination
+  // if (!IsDATA && run_hf_contamination_tree)
+  // {
+  //   Make_HF_Contamination_Tree();
 
-    return;
-  } // if(!IsDATA && run_hf_contamination_tree)
+  //   return;
+  // } // if(!IsDATA && run_hf_contamination_tree)
 
   // run_template
   if (!IsDATA && run_template)
@@ -2130,140 +2166,140 @@ void Vcb::KF_Ambiguity_Remover(const vector<Jet> &vec_sel_jet, const int index_m
 */
 //////////
 
-void Vcb::Make_HF_Contamination_Tree()
-{
-  // if(n_b_jet<3) return;
+// void Vcb::Make_HF_Contamination_Tree()
+// {
+//   // if(n_b_jet<3) return;
 
-  Results_Container results_container = fitter_driver->Get_Results();
+//   Results_Container results_container = fitter_driver->Get_Results();
 
-  // if (!fitter_driver->Check_Status())
-  //   return;
+//   // if (!fitter_driver->Check_Status())
+//   //   return;
 
-  chk_hf_contamination = false;
+//   chk_hf_contamination = false;
 
-  int index[2];
-  index[0] = results_container.best_index_w_u;
-  index[1] = results_container.best_index_w_d;
+//   int index[2];
+//   index[0] = results_container.best_index_w_u;
+//   index[1] = results_container.best_index_w_d;
 
-  for (int i = 0; i < 2; i++)
-  {
-    Jet jet = vec_sel_jet[index[i]];
+//   for (int i = 0; i < 2; i++)
+//   {
+//     Jet jet = vec_sel_jet[index[i]];
 
-    // int hf_flavour = jet.GenHFHadronMatcherFlavour();
-    int hf_origin = jet.GenHFHadronMatcherOrigin();
+//     // int hf_flavour = jet.GenHFHadronMatcherFlavour();
+//     int hf_origin = jet.GenHFHadronMatcherOrigin();
 
-    if (hf_origin == 21)
-      chk_hf_contamination = true;
-  }
+//     if (hf_origin == 21)
+//       chk_hf_contamination = true;
+//   }
 
-  // vec_bjet for easy handling
-  vector<Jet> vec_bjet;
-  for (int i = 0; i < n_sel_jet; i++)
-  {
-    if (vec_btag[i] == true)
-      vec_bjet.push_back(vec_sel_jet[i]);
-  }
+//   // vec_bjet for easy handling
+//   vector<Jet> vec_bjet;
+//   for (int i = 0; i < n_sel_jet; i++)
+//   {
+//     if (vec_btag[i] == true)
+//       vec_bjet.push_back(vec_sel_jet[i]);
+//   }
 
-  // vec_cjet for easy handling
-  vector<Jet> vec_cjet;
-  for (int i = 0; i < n_sel_jet; i++)
-  {
-    if (vec_ctag[i] == true)
-      vec_cjet.push_back(vec_sel_jet[i]);
-  }
+//   // vec_cjet for easy handling
+//   vector<Jet> vec_cjet;
+//   for (int i = 0; i < n_sel_jet; i++)
+//   {
+//     if (vec_ctag[i] == true)
+//       vec_cjet.push_back(vec_sel_jet[i]);
+//   }
 
-  best_mva_score_pre = results_container.best_mva_score;
-  del_phi_had_t_lep_t = results_container.best_del_phi_had_t_lep_t;
+//   best_mva_score_pre = results_container.best_mva_score;
+//   del_phi_had_t_lep_t = results_container.best_del_phi_had_t_lep_t;
 
-  theta_b_b = 999;
-  for (int i = 0; i < n_b_jet; i++)
-  {
-    Jet b0 = vec_bjet[i];
+//   theta_b_b = 999;
+//   for (int i = 0; i < n_b_jet; i++)
+//   {
+//     Jet b0 = vec_bjet[i];
 
-    for (int j = i + 1; j < n_b_jet; j++)
-    {
-      Jet b1 = vec_bjet[j];
+//     for (int j = i + 1; j < n_b_jet; j++)
+//     {
+//       Jet b1 = vec_bjet[j];
 
-      float theta_b_b_new = b0.Angle(b1.Vect());
+//       float theta_b_b_new = b0.Angle(b1.Vect());
 
-      if (theta_b_b_new < theta_b_b)
-        theta_b_b = theta_b_b_new;
-    }
-  }
+//       if (theta_b_b_new < theta_b_b)
+//         theta_b_b = theta_b_b_new;
+//     }
+//   }
 
-  // not useful...
-  theta_c_c = 999;
-  for (int i = 0; i < n_c_jet; i++)
-  {
-    Jet c0 = vec_cjet[i];
+//   // not useful...
+//   theta_c_c = 999;
+//   for (int i = 0; i < n_c_jet; i++)
+//   {
+//     Jet c0 = vec_cjet[i];
 
-    for (int j = i + 1; j < n_c_jet; j++)
-    {
-      Jet c1 = vec_cjet[j];
+//     for (int j = i + 1; j < n_c_jet; j++)
+//     {
+//       Jet c1 = vec_cjet[j];
 
-      float theta_c_c_new = c0.Angle(c1.Vect());
+//       float theta_c_c_new = c0.Angle(c1.Vect());
 
-      if (theta_c_c_new < theta_c_c)
-        theta_c_c = theta_c_c_new;
-    }
-  }
+//       if (theta_c_c_new < theta_c_c)
+//         theta_c_c = theta_c_c_new;
+//     }
+//   }
 
-  Jet jet_w_u = vec_sel_jet[index[0]];
-  Jet jet_w_d = vec_sel_jet[index[1]];
+//   Jet jet_w_u = vec_sel_jet[index[0]];
+//   Jet jet_w_d = vec_sel_jet[index[1]];
 
-  theta_p_had_w = results_container.best_theta_w_u_w_d * (jet_w_u + jet_w_d).P();
+//   theta_p_had_w = results_container.best_theta_w_u_w_d * (jet_w_u + jet_w_d).P();
 
-  for (int i = 0; i < 2; i++)
-  {
-    Jet jet_w_candi = vec_sel_jet[index[i]];
+//   for (int i = 0; i < 2; i++)
+//   {
+//     Jet jet_w_candi = vec_sel_jet[index[i]];
 
-    int index_closest_b = -1;
-    // int index_smallest_b = -1;
-    float theta_b = 999;
-    // float mass_b = 999;
-    for (int j = 0; j < n_b_jet; j++)
-    {
-      Jet bjet = vec_bjet[j];
+//     int index_closest_b = -1;
+//     // int index_smallest_b = -1;
+//     float theta_b = 999;
+//     // float mass_b = 999;
+//     for (int j = 0; j < n_b_jet; j++)
+//     {
+//       Jet bjet = vec_bjet[j];
 
-      // if two jets are same
-      if (Compare_Jet(jet_w_candi, bjet))
-        continue;
+//       // if two jets are same
+//       if (Compare_Jet(jet_w_candi, bjet))
+//         continue;
 
-      float theta_b_new = jet_w_candi.Angle(bjet.Vect());
-      // float mass_b_new = (jet_w_candi+bjet).M();
+//       float theta_b_new = jet_w_candi.Angle(bjet.Vect());
+//       // float mass_b_new = (jet_w_candi+bjet).M();
 
-      if (theta_b_new < theta_b)
-      {
-        index_closest_b = j;
-        theta_b = theta_b_new;
-      }
+//       if (theta_b_new < theta_b)
+//       {
+//         index_closest_b = j;
+//         theta_b = theta_b_new;
+//       }
 
-      // if(mass_b_new<mass_b) mass_b = mass_b_new;
-    } // loop over bjets
+//       // if(mass_b_new<mass_b) mass_b = mass_b_new;
+//     } // loop over bjets
 
-    if (i == 0)
-    {
-      theta_w_u_b = theta_b;
+//     if (i == 0)
+//     {
+//       theta_w_u_b = theta_b;
 
-      w_u_b_bscore = vec_bjet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
-      m_w_u_b = (jet_w_candi + vec_bjet[index_closest_b]).M();
-    }
-    else if (i == 1)
-    {
-      theta_w_d_b = theta_b;
+//       w_u_b_bscore = vec_bjet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
+//       m_w_u_b = (jet_w_candi + vec_bjet[index_closest_b]).M();
+//     }
+//     else if (i == 1)
+//     {
+//       theta_w_d_b = theta_b;
 
-      w_d_b_bscore = vec_bjet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
-      m_w_d_b = (jet_w_candi + vec_bjet[index_closest_b]).M();
-    }
-  } // loop over w candidate
+//       w_d_b_bscore = vec_bjet[index_closest_b].GetTaggerResult(JetTagging::DeepJet);
+//       m_w_d_b = (jet_w_candi + vec_bjet[index_closest_b]).M();
+//     }
+//   } // loop over w candidate
 
-  if (chk_hf_contamination)
-    hf_contamination_tree_correct->Fill();
-  else
-    hf_contamination_tree_wrong->Fill();
+//   if (chk_hf_contamination)
+//     hf_contamination_tree_correct->Fill();
+//   else
+//     hf_contamination_tree_wrong->Fill();
 
-  return;
-} // void Vcb::Make_HF_Contamination_Tree()
+//   return;
+// } // void Vcb::Make_HF_Contamination_Tree()
 
 //////////
 
@@ -2452,9 +2488,9 @@ void Vcb::Make_Permutation_Tree()
     chi2 = results.chi2;
 
     if (i == index_correct && chk_gentau_conta == false)
-      permutation_tree_correct->Fill();
+      map_permutation_tree[channel_name + "Correct"]->Fill();
     else
-      permutation_tree_wrong->Fill();
+      map_permutation_tree[channel_name + "Wrong"]->Fill();
   } // for(unsigned int i=0; i<result_container.vec_results.size(); ++i)
 
   return;
@@ -2462,7 +2498,7 @@ void Vcb::Make_Permutation_Tree()
 
 //////////
 
-void Vcb::Make_Result_Tree(const AnalyzerParameter &param)
+void Vcb::Make_Result_Tree(AnalyzerParameter &param)
 {
   bool chk_fitter_status = fitter_driver->Check_Status();
 
@@ -2617,7 +2653,7 @@ void Vcb::Make_Result_Tree(const AnalyzerParameter &param)
       pu_conta_lep_t_b = false;
   } // For MC
 
-  map_result_tree[param.syst_]->Fill();
+  map_result_tree[channel_name + param.GetSystType()]->Fill();
 
   Set_Region();
 
@@ -2814,283 +2850,293 @@ Particle Vcb::Rebalance_Met()
 
 //////////
 
-void Vcb::Set_HF_Contamination_Tree()
-{
-  hf_contamination_tree_correct = new TTree("HF_Contamination_Tree_Correct", "HF_Contamination_Tree_Correct");
-  hf_contamination_tree_correct->Branch("n_jets", &n_sel_jet);
-  hf_contamination_tree_correct->Branch("n_bjets", &n_b_jet);
-  hf_contamination_tree_correct->Branch("n_cjets", &n_c_jet);
-  hf_contamination_tree_correct->Branch("best_mva_score_pre", &best_mva_score_pre);
-  hf_contamination_tree_correct->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
-  hf_contamination_tree_correct->Branch("theta_b_b", &theta_b_b);
-  hf_contamination_tree_correct->Branch("theta_c_c", &theta_c_c);
-  hf_contamination_tree_correct->Branch("theta_p_had_w", &theta_p_had_w);
-  hf_contamination_tree_correct->Branch("theta_w_u_b", &theta_w_u_b);
-  hf_contamination_tree_correct->Branch("theta_w_d_b", &theta_w_d_b);
-  hf_contamination_tree_correct->Branch("w_u_b_bscore", &w_u_b_bscore);
-  hf_contamination_tree_correct->Branch("w_d_b_bscore", &w_d_b_bscore);
-  hf_contamination_tree_correct->Branch("m_w_u_b", &m_w_u_b);
-  hf_contamination_tree_correct->Branch("m_w_d_b", &m_w_d_b);
+// void Vcb::Set_HF_Contamination_Tree()
+// {
+//   hf_contamination_tree_correct = new TTree("HF_Contamination_Tree_Correct", "HF_Contamination_Tree_Correct");
+//   hf_contamination_tree_correct->Branch("n_jets", &n_sel_jet);
+//   hf_contamination_tree_correct->Branch("n_bjets", &n_b_jet);
+//   hf_contamination_tree_correct->Branch("n_cjets", &n_c_jet);
+//   hf_contamination_tree_correct->Branch("best_mva_score_pre", &best_mva_score_pre);
+//   hf_contamination_tree_correct->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+//   hf_contamination_tree_correct->Branch("theta_b_b", &theta_b_b);
+//   hf_contamination_tree_correct->Branch("theta_c_c", &theta_c_c);
+//   hf_contamination_tree_correct->Branch("theta_p_had_w", &theta_p_had_w);
+//   hf_contamination_tree_correct->Branch("theta_w_u_b", &theta_w_u_b);
+//   hf_contamination_tree_correct->Branch("theta_w_d_b", &theta_w_d_b);
+//   hf_contamination_tree_correct->Branch("w_u_b_bscore", &w_u_b_bscore);
+//   hf_contamination_tree_correct->Branch("w_d_b_bscore", &w_d_b_bscore);
+//   hf_contamination_tree_correct->Branch("m_w_u_b", &m_w_u_b);
+//   hf_contamination_tree_correct->Branch("m_w_d_b", &m_w_d_b);
 
-  hf_contamination_tree_wrong = new TTree("HF_Contamination_Tree_Wrong", "HF_Contamination_Tree_Wrong");
-  hf_contamination_tree_wrong->Branch("n_jets", &n_sel_jet);
-  hf_contamination_tree_wrong->Branch("n_bjets", &n_b_jet);
-  hf_contamination_tree_wrong->Branch("n_cjets", &n_c_jet);
-  hf_contamination_tree_wrong->Branch("best_mva_score_pre", &best_mva_score_pre);
-  hf_contamination_tree_wrong->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
-  hf_contamination_tree_wrong->Branch("theta_p_had_w", &theta_p_had_w);
-  hf_contamination_tree_wrong->Branch("theta_b_b", &theta_b_b);
-  hf_contamination_tree_wrong->Branch("theta_c_c", &theta_c_c);
-  hf_contamination_tree_wrong->Branch("theta_w_u_b", &theta_w_u_b);
-  hf_contamination_tree_wrong->Branch("theta_w_d_b", &theta_w_d_b);
-  hf_contamination_tree_wrong->Branch("theta_b_b", &theta_b_b);
-  hf_contamination_tree_wrong->Branch("w_u_b_bscore", &w_u_b_bscore);
-  hf_contamination_tree_wrong->Branch("w_d_b_bscore", &w_d_b_bscore);
-  hf_contamination_tree_wrong->Branch("m_w_u_b", &m_w_u_b);
-  hf_contamination_tree_wrong->Branch("m_w_d_b", &m_w_d_b);
+//   hf_contamination_tree_wrong = new TTree("HF_Contamination_Tree_Wrong", "HF_Contamination_Tree_Wrong");
+//   hf_contamination_tree_wrong->Branch("n_jets", &n_sel_jet);
+//   hf_contamination_tree_wrong->Branch("n_bjets", &n_b_jet);
+//   hf_contamination_tree_wrong->Branch("n_cjets", &n_c_jet);
+//   hf_contamination_tree_wrong->Branch("best_mva_score_pre", &best_mva_score_pre);
+//   hf_contamination_tree_wrong->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+//   hf_contamination_tree_wrong->Branch("theta_p_had_w", &theta_p_had_w);
+//   hf_contamination_tree_wrong->Branch("theta_b_b", &theta_b_b);
+//   hf_contamination_tree_wrong->Branch("theta_c_c", &theta_c_c);
+//   hf_contamination_tree_wrong->Branch("theta_w_u_b", &theta_w_u_b);
+//   hf_contamination_tree_wrong->Branch("theta_w_d_b", &theta_w_d_b);
+//   hf_contamination_tree_wrong->Branch("theta_b_b", &theta_b_b);
+//   hf_contamination_tree_wrong->Branch("w_u_b_bscore", &w_u_b_bscore);
+//   hf_contamination_tree_wrong->Branch("w_d_b_bscore", &w_d_b_bscore);
+//   hf_contamination_tree_wrong->Branch("m_w_u_b", &m_w_u_b);
+//   hf_contamination_tree_wrong->Branch("m_w_d_b", &m_w_d_b);
 
-  return;
-} // void Vcb::Set_HF_Contamination_Tree()
+//   return;
+// } // void Vcb::Set_HF_Contamination_Tree()
 
 //////////
 
 void Vcb::Set_Permutation_Tree()
 {
-  permutation_tree_correct = new TTree("Permutation_Correct", "Permutation_Correct");
-  permutation_tree_correct->Branch("weight", &weight);
-  permutation_tree_correct->Branch("n_jets", &n_sel_jet);
-  permutation_tree_correct->Branch("n_bjets", &n_b_jet);
-  permutation_tree_correct->Branch("n_cjets", &n_c_jet);
-  permutation_tree_correct->Branch("lepton_pt", &lepton_pt);
-  permutation_tree_correct->Branch("pt_ratio", &pt_ratio);
-  permutation_tree_correct->Branch("chk_gentau_conta", &chk_gentau_conta);
-  permutation_tree_correct->Branch("n_matched_jets", &n_matched_jets);
-  permutation_tree_correct->Branch("gen_neutrino_px", &gen_neutrino_px);
-  permutation_tree_correct->Branch("gen_neutrino_py", &gen_neutrino_py);
-  permutation_tree_correct->Branch("gen_neutrino_pz", &gen_neutrino_pz);
-  permutation_tree_correct->Branch("met_pt", &met_pt);
-  permutation_tree_correct->Branch("met_px", &met_px);
-  permutation_tree_correct->Branch("met_py", &met_py);
-  permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
-  permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
-  permutation_tree_correct->Branch("neutrino_pz_sol", &neutrino_pz_sol);
-  permutation_tree_correct->Branch("neutrino_pz_sol_unrebal", &neutrino_pz_sol_unrebal);
-  permutation_tree_correct->Branch("neutrino_p", &neutrino_p);
-  permutation_tree_correct->Branch("chk_real_neu_pz", &chk_real_neu_pz);
-  permutation_tree_correct->Branch("mt_gen", &mt_gen);
-  permutation_tree_correct->Branch("mt_met", &mt_met);
-  permutation_tree_correct->Branch("mt_met_rebalance", &mt_met_rebalance);
-  permutation_tree_correct->Branch("pt_had_t_b", &pt_had_t_b);
-  permutation_tree_correct->Branch("pt_w_u", &pt_w_u);
-  permutation_tree_correct->Branch("pt_w_d", &pt_w_d);
-  permutation_tree_correct->Branch("pt_lep_t_b", &pt_lep_t_b);
-  permutation_tree_correct->Branch("eta_had_t_b", &eta_had_t_b);
-  permutation_tree_correct->Branch("eta_w_u", &eta_w_u);
-  permutation_tree_correct->Branch("eta_w_d", &eta_w_d);
-  permutation_tree_correct->Branch("eta_lep_t_b", &eta_lep_t_b);
-  permutation_tree_correct->Branch("bvsc_had_t_b", &bvsc_had_t_b);
-  permutation_tree_correct->Branch("cvsb_had_t_b", &cvsb_had_t_b);
-  permutation_tree_correct->Branch("cvsl_had_t_b", &cvsl_had_t_b);
-  permutation_tree_correct->Branch("bvsc_w_u", &bvsc_w_u);
-  permutation_tree_correct->Branch("cvsb_w_u", &cvsb_w_u);
-  permutation_tree_correct->Branch("cvsl_w_u", &cvsl_w_u);
-  permutation_tree_correct->Branch("bvsc_w_d", &bvsc_w_d);
-  permutation_tree_correct->Branch("cvsb_w_d", &cvsb_w_d);
-  permutation_tree_correct->Branch("cvsl_w_d", &cvsl_w_d);
-  permutation_tree_correct->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
-  permutation_tree_correct->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
-  permutation_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
-  permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
-  permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
-  permutation_tree_correct->Branch("pt_had_w", &pt_had_w);
-  permutation_tree_correct->Branch("pt_had_t", &pt_had_t);
-  permutation_tree_correct->Branch("pt_lep_w", &pt_lep_w);
-  permutation_tree_correct->Branch("pt_lep_t", &pt_lep_t);
-  permutation_tree_correct->Branch("pt_tt", &pt_tt);
-  permutation_tree_correct->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
-  permutation_tree_correct->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
-  permutation_tree_correct->Branch("del_phi_lep_neu", &del_phi_lep_neu);
-  permutation_tree_correct->Branch("del_phi_lep_w_lep_t_b", &del_phi_lep_w_lep_t_b);
-  permutation_tree_correct->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
-  permutation_tree_correct->Branch("del_eta_w_u_w_d", &del_eta_w_u_w_d);
-  permutation_tree_correct->Branch("del_eta_had_w_had_t_b", &del_eta_had_w_had_t_b);
-  permutation_tree_correct->Branch("del_eta_lep_neu", &del_eta_lep_neu);
-  permutation_tree_correct->Branch("del_eta_lep_w_lep_t_b", &del_eta_lep_w_lep_t_b);
-  permutation_tree_correct->Branch("del_eta_had_t_lep_t", &del_eta_had_t_lep_t);
-  permutation_tree_correct->Branch("del_r_w_u_w_d", &del_r_w_u_w_d);
-  permutation_tree_correct->Branch("del_r_had_w_had_t_b", &del_r_had_w_had_t_b);
-  permutation_tree_correct->Branch("del_r_lep_neu", &del_r_lep_neu);
-  permutation_tree_correct->Branch("del_r_lep_w_lep_t_b", &del_r_lep_w_lep_t_b);
-  permutation_tree_correct->Branch("del_r_had_t_lep_t", &del_r_had_t_lep_t);
-  permutation_tree_correct->Branch("theta_w_u_w_d", &theta_w_u_w_d);
-  permutation_tree_correct->Branch("theta_had_w_had_t_b", &theta_had_w_had_t_b);
-  permutation_tree_correct->Branch("theta_lep_neu", &theta_lep_neu);
-  permutation_tree_correct->Branch("theta_lep_w_lep_t_b", &theta_lep_w_lep_t_b);
-  permutation_tree_correct->Branch("theta_had_t_lep_t", &theta_had_t_lep_t);
-  permutation_tree_correct->Branch("had_t_mass", &had_t_mass);
-  permutation_tree_correct->Branch("had_w_mass", &had_w_mass);
-  permutation_tree_correct->Branch("lep_t_mass", &lep_t_mass);
-  permutation_tree_correct->Branch("lep_t_partial_mass", &lep_t_partial_mass);
-  permutation_tree_correct->Branch("chi2_jet_had_t_b", &chi2_jet_had_t_b);
-  permutation_tree_correct->Branch("chi2_jet_w_u", &chi2_jet_w_u);
-  permutation_tree_correct->Branch("chi2_jet_w_d", &chi2_jet_w_d);
-  permutation_tree_correct->Branch("chi2_jet_lep_t_b", &chi2_jet_lep_t_b);
-  permutation_tree_correct->Branch("chi2_jet_extra", &chi2_jet_extra);
-  permutation_tree_correct->Branch("chi2_constraint_had_t", &chi2_constraint_had_t);
-  permutation_tree_correct->Branch("chi2_constraint_had_w", &chi2_constraint_had_w);
-  permutation_tree_correct->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
-  permutation_tree_correct->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
-  permutation_tree_correct->Branch("chi2", &chi2);
-  permutation_tree_correct->Branch("had_w_charge_abs", &had_w_charge_abs);
-  permutation_tree_correct->Branch("had_t_charge_abs", &had_t_charge_abs);
-  permutation_tree_correct->Branch("lep_t_charge_abs", &lep_t_charge_abs);
-  permutation_tree_correct->Branch("tt_charge", &tt_charge);
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
+  {
+    TTree *permutation_tree_correct = new TTree("Permutation_Correct", "Permutation_Correct");
+    permutation_tree_correct->SetDirectory(dir_channel[i]);
 
-  permutation_tree_wrong = new TTree("Permutation_Wrong", "Permutation_Wrong");
-  permutation_tree_wrong->Branch("weight", &weight);
-  permutation_tree_wrong->Branch("n_jets", &n_sel_jet);
-  permutation_tree_wrong->Branch("n_bjets", &n_b_jet);
-  permutation_tree_wrong->Branch("n_cjets", &n_c_jet);
-  permutation_tree_wrong->Branch("lepton_pt", &lepton_pt);
-  permutation_tree_wrong->Branch("pt_ratio", &pt_ratio);
-  permutation_tree_wrong->Branch("chk_gentau_conta", &chk_gentau_conta);
-  permutation_tree_wrong->Branch("n_matched_jets", &n_matched_jets);
-  permutation_tree_wrong->Branch("gen_neutrino_px", &gen_neutrino_px);
-  permutation_tree_wrong->Branch("gen_neutrino_py", &gen_neutrino_py);
-  permutation_tree_wrong->Branch("gen_neutrino_pz", &gen_neutrino_pz);
-  permutation_tree_wrong->Branch("met_pt", &met_pt);
-  permutation_tree_wrong->Branch("met_px", &met_px);
-  permutation_tree_wrong->Branch("met_py", &met_py);
-  permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
-  permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
-  permutation_tree_wrong->Branch("neutrino_pz_sol", &neutrino_pz_sol);
-  permutation_tree_wrong->Branch("neutrino_pz_sol_unrebal", &neutrino_pz_sol_unrebal);
-  permutation_tree_wrong->Branch("neutrino_p", &neutrino_p);
-  permutation_tree_wrong->Branch("chk_real_neu_pz", &chk_real_neu_pz);
-  permutation_tree_wrong->Branch("mt_gen", &mt_gen);
-  permutation_tree_wrong->Branch("mt_met", &mt_met);
-  permutation_tree_wrong->Branch("mt_met_rebalance", &mt_met_rebalance);
-  permutation_tree_wrong->Branch("pt_had_t_b", &pt_had_t_b);
-  permutation_tree_wrong->Branch("pt_w_u", &pt_w_u);
-  permutation_tree_wrong->Branch("pt_w_d", &pt_w_d);
-  permutation_tree_wrong->Branch("pt_lep_t_b", &pt_lep_t_b);
-  permutation_tree_wrong->Branch("eta_had_t_b", &eta_had_t_b);
-  permutation_tree_wrong->Branch("eta_w_u", &eta_w_u);
-  permutation_tree_wrong->Branch("eta_w_d", &eta_w_d);
-  permutation_tree_wrong->Branch("eta_lep_t_b", &eta_lep_t_b);
-  permutation_tree_wrong->Branch("bvsc_had_t_b", &bvsc_had_t_b);
-  permutation_tree_wrong->Branch("cvsb_had_t_b", &cvsb_had_t_b);
-  permutation_tree_wrong->Branch("cvsl_had_t_b", &cvsl_had_t_b);
-  permutation_tree_wrong->Branch("bvsc_w_u", &bvsc_w_u);
-  permutation_tree_wrong->Branch("cvsb_w_u", &cvsb_w_u);
-  permutation_tree_wrong->Branch("cvsl_w_u", &cvsl_w_u);
-  permutation_tree_wrong->Branch("bvsc_w_d", &bvsc_w_d);
-  permutation_tree_wrong->Branch("cvsb_w_d", &cvsb_w_d);
-  permutation_tree_wrong->Branch("cvsl_w_d", &cvsl_w_d);
-  permutation_tree_wrong->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
-  permutation_tree_wrong->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
-  permutation_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
-  permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
-  permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
-  permutation_tree_wrong->Branch("pt_had_w", &pt_had_w);
-  permutation_tree_wrong->Branch("pt_had_t", &pt_had_t);
-  permutation_tree_wrong->Branch("pt_lep_w", &pt_lep_w);
-  permutation_tree_wrong->Branch("pt_lep_t", &pt_lep_t);
-  permutation_tree_wrong->Branch("pt_tt", &pt_tt);
-  permutation_tree_wrong->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
-  permutation_tree_wrong->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
-  permutation_tree_wrong->Branch("del_phi_lep_neu", &del_phi_lep_neu);
-  permutation_tree_wrong->Branch("del_phi_lep_w_lep_t_b", &del_phi_lep_w_lep_t_b);
-  permutation_tree_wrong->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
-  permutation_tree_wrong->Branch("del_eta_w_u_w_d", &del_eta_w_u_w_d);
-  permutation_tree_wrong->Branch("del_eta_had_w_had_t_b", &del_eta_had_w_had_t_b);
-  permutation_tree_wrong->Branch("del_eta_lep_neu", &del_eta_lep_neu);
-  permutation_tree_wrong->Branch("del_eta_lep_w_lep_t_b", &del_eta_lep_w_lep_t_b);
-  permutation_tree_wrong->Branch("del_eta_had_t_lep_t", &del_eta_had_t_lep_t);
-  permutation_tree_wrong->Branch("del_r_w_u_w_d", &del_r_w_u_w_d);
-  permutation_tree_wrong->Branch("del_r_had_w_had_t_b", &del_r_had_w_had_t_b);
-  permutation_tree_wrong->Branch("del_r_lep_neu", &del_r_lep_neu);
-  permutation_tree_wrong->Branch("del_r_lep_w_lep_t_b", &del_r_lep_w_lep_t_b);
-  permutation_tree_wrong->Branch("del_r_had_t_lep_t", &del_r_had_t_lep_t);
-  permutation_tree_wrong->Branch("theta_w_u_w_d", &theta_w_u_w_d);
-  permutation_tree_wrong->Branch("theta_had_w_had_t_b", &theta_had_w_had_t_b);
-  permutation_tree_wrong->Branch("theta_lep_neu", &theta_lep_neu);
-  permutation_tree_wrong->Branch("theta_lep_w_lep_t_b", &theta_lep_w_lep_t_b);
-  permutation_tree_wrong->Branch("theta_had_t_lep_t", &theta_had_t_lep_t);
-  permutation_tree_wrong->Branch("had_t_mass", &had_t_mass);
-  permutation_tree_wrong->Branch("had_w_mass", &had_w_mass);
-  permutation_tree_wrong->Branch("lep_t_mass", &lep_t_mass);
-  permutation_tree_wrong->Branch("lep_t_partial_mass", &lep_t_partial_mass);
-  permutation_tree_wrong->Branch("chi2_jet_had_t_b", &chi2_jet_had_t_b);
-  permutation_tree_wrong->Branch("chi2_jet_w_u", &chi2_jet_w_u);
-  permutation_tree_wrong->Branch("chi2_jet_w_d", &chi2_jet_w_d);
-  permutation_tree_wrong->Branch("chi2_jet_lep_t_b", &chi2_jet_lep_t_b);
-  permutation_tree_wrong->Branch("chi2_jet_extra", &chi2_jet_extra);
-  permutation_tree_wrong->Branch("chi2_constraint_had_t", &chi2_constraint_had_t);
-  permutation_tree_wrong->Branch("chi2_constraint_had_w", &chi2_constraint_had_w);
-  permutation_tree_wrong->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
-  permutation_tree_wrong->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
-  permutation_tree_wrong->Branch("chi2", &chi2);
-  permutation_tree_wrong->Branch("had_w_charge_abs", &had_w_charge_abs);
-  permutation_tree_wrong->Branch("had_t_charge_abs", &had_t_charge_abs);
-  permutation_tree_wrong->Branch("lep_t_charge_abs", &lep_t_charge_abs);
-  permutation_tree_wrong->Branch("tt_charge", &tt_charge);
+    permutation_tree_correct->Branch("weight", &weight);
+    permutation_tree_correct->Branch("n_jets", &n_sel_jet);
+    permutation_tree_correct->Branch("n_bjets", &n_b_jet);
+    permutation_tree_correct->Branch("n_cjets", &n_c_jet);
+    permutation_tree_correct->Branch("lepton_pt", &lepton_pt);
+    permutation_tree_correct->Branch("pt_ratio", &pt_ratio);
+    permutation_tree_correct->Branch("chk_gentau_conta", &chk_gentau_conta);
+    permutation_tree_correct->Branch("n_matched_jets", &n_matched_jets);
+    permutation_tree_correct->Branch("gen_neutrino_px", &gen_neutrino_px);
+    permutation_tree_correct->Branch("gen_neutrino_py", &gen_neutrino_py);
+    permutation_tree_correct->Branch("gen_neutrino_pz", &gen_neutrino_pz);
+    permutation_tree_correct->Branch("met_pt", &met_pt);
+    permutation_tree_correct->Branch("met_px", &met_px);
+    permutation_tree_correct->Branch("met_py", &met_py);
+    permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
+    permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
+    permutation_tree_correct->Branch("neutrino_pz_sol", &neutrino_pz_sol);
+    permutation_tree_correct->Branch("neutrino_pz_sol_unrebal", &neutrino_pz_sol_unrebal);
+    permutation_tree_correct->Branch("neutrino_p", &neutrino_p);
+    permutation_tree_correct->Branch("chk_real_neu_pz", &chk_real_neu_pz);
+    permutation_tree_correct->Branch("mt_gen", &mt_gen);
+    permutation_tree_correct->Branch("mt_met", &mt_met);
+    permutation_tree_correct->Branch("mt_met_rebalance", &mt_met_rebalance);
+    permutation_tree_correct->Branch("pt_had_t_b", &pt_had_t_b);
+    permutation_tree_correct->Branch("pt_w_u", &pt_w_u);
+    permutation_tree_correct->Branch("pt_w_d", &pt_w_d);
+    permutation_tree_correct->Branch("pt_lep_t_b", &pt_lep_t_b);
+    permutation_tree_correct->Branch("eta_had_t_b", &eta_had_t_b);
+    permutation_tree_correct->Branch("eta_w_u", &eta_w_u);
+    permutation_tree_correct->Branch("eta_w_d", &eta_w_d);
+    permutation_tree_correct->Branch("eta_lep_t_b", &eta_lep_t_b);
+    permutation_tree_correct->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+    permutation_tree_correct->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+    permutation_tree_correct->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+    permutation_tree_correct->Branch("bvsc_w_u", &bvsc_w_u);
+    permutation_tree_correct->Branch("cvsb_w_u", &cvsb_w_u);
+    permutation_tree_correct->Branch("cvsl_w_u", &cvsl_w_u);
+    permutation_tree_correct->Branch("bvsc_w_d", &bvsc_w_d);
+    permutation_tree_correct->Branch("cvsb_w_d", &cvsb_w_d);
+    permutation_tree_correct->Branch("cvsl_w_d", &cvsl_w_d);
+    permutation_tree_correct->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+    permutation_tree_correct->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+    permutation_tree_correct->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+    permutation_tree_correct->Branch("met_rebalance_px", &met_rebalance_px);
+    permutation_tree_correct->Branch("met_rebalance_py", &met_rebalance_py);
+    permutation_tree_correct->Branch("pt_had_w", &pt_had_w);
+    permutation_tree_correct->Branch("pt_had_t", &pt_had_t);
+    permutation_tree_correct->Branch("pt_lep_w", &pt_lep_w);
+    permutation_tree_correct->Branch("pt_lep_t", &pt_lep_t);
+    permutation_tree_correct->Branch("pt_tt", &pt_tt);
+    permutation_tree_correct->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
+    permutation_tree_correct->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
+    permutation_tree_correct->Branch("del_phi_lep_neu", &del_phi_lep_neu);
+    permutation_tree_correct->Branch("del_phi_lep_w_lep_t_b", &del_phi_lep_w_lep_t_b);
+    permutation_tree_correct->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+    permutation_tree_correct->Branch("del_eta_w_u_w_d", &del_eta_w_u_w_d);
+    permutation_tree_correct->Branch("del_eta_had_w_had_t_b", &del_eta_had_w_had_t_b);
+    permutation_tree_correct->Branch("del_eta_lep_neu", &del_eta_lep_neu);
+    permutation_tree_correct->Branch("del_eta_lep_w_lep_t_b", &del_eta_lep_w_lep_t_b);
+    permutation_tree_correct->Branch("del_eta_had_t_lep_t", &del_eta_had_t_lep_t);
+    permutation_tree_correct->Branch("del_r_w_u_w_d", &del_r_w_u_w_d);
+    permutation_tree_correct->Branch("del_r_had_w_had_t_b", &del_r_had_w_had_t_b);
+    permutation_tree_correct->Branch("del_r_lep_neu", &del_r_lep_neu);
+    permutation_tree_correct->Branch("del_r_lep_w_lep_t_b", &del_r_lep_w_lep_t_b);
+    permutation_tree_correct->Branch("del_r_had_t_lep_t", &del_r_had_t_lep_t);
+    permutation_tree_correct->Branch("theta_w_u_w_d", &theta_w_u_w_d);
+    permutation_tree_correct->Branch("theta_had_w_had_t_b", &theta_had_w_had_t_b);
+    permutation_tree_correct->Branch("theta_lep_neu", &theta_lep_neu);
+    permutation_tree_correct->Branch("theta_lep_w_lep_t_b", &theta_lep_w_lep_t_b);
+    permutation_tree_correct->Branch("theta_had_t_lep_t", &theta_had_t_lep_t);
+    permutation_tree_correct->Branch("had_t_mass", &had_t_mass);
+    permutation_tree_correct->Branch("had_w_mass", &had_w_mass);
+    permutation_tree_correct->Branch("lep_t_mass", &lep_t_mass);
+    permutation_tree_correct->Branch("lep_t_partial_mass", &lep_t_partial_mass);
+    permutation_tree_correct->Branch("chi2_jet_had_t_b", &chi2_jet_had_t_b);
+    permutation_tree_correct->Branch("chi2_jet_w_u", &chi2_jet_w_u);
+    permutation_tree_correct->Branch("chi2_jet_w_d", &chi2_jet_w_d);
+    permutation_tree_correct->Branch("chi2_jet_lep_t_b", &chi2_jet_lep_t_b);
+    permutation_tree_correct->Branch("chi2_jet_extra", &chi2_jet_extra);
+    permutation_tree_correct->Branch("chi2_constraint_had_t", &chi2_constraint_had_t);
+    permutation_tree_correct->Branch("chi2_constraint_had_w", &chi2_constraint_had_w);
+    permutation_tree_correct->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
+    permutation_tree_correct->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
+    permutation_tree_correct->Branch("chi2", &chi2);
+    permutation_tree_correct->Branch("had_w_charge_abs", &had_w_charge_abs);
+    permutation_tree_correct->Branch("had_t_charge_abs", &had_t_charge_abs);
+    permutation_tree_correct->Branch("lep_t_charge_abs", &lep_t_charge_abs);
+    permutation_tree_correct->Branch("tt_charge", &tt_charge);
+
+    TTree *permutation_tree_wrong = new TTree("Permutation_Wrong", "Permutation_Wrong");
+    permutation_tree_wrong->SetDirectory(dir_channel[i]);
+
+    permutation_tree_wrong->Branch("weight", &weight);
+    permutation_tree_wrong->Branch("n_jets", &n_sel_jet);
+    permutation_tree_wrong->Branch("n_bjets", &n_b_jet);
+    permutation_tree_wrong->Branch("n_cjets", &n_c_jet);
+    permutation_tree_wrong->Branch("lepton_pt", &lepton_pt);
+    permutation_tree_wrong->Branch("pt_ratio", &pt_ratio);
+    permutation_tree_wrong->Branch("chk_gentau_conta", &chk_gentau_conta);
+    permutation_tree_wrong->Branch("n_matched_jets", &n_matched_jets);
+    permutation_tree_wrong->Branch("gen_neutrino_px", &gen_neutrino_px);
+    permutation_tree_wrong->Branch("gen_neutrino_py", &gen_neutrino_py);
+    permutation_tree_wrong->Branch("gen_neutrino_pz", &gen_neutrino_pz);
+    permutation_tree_wrong->Branch("met_pt", &met_pt);
+    permutation_tree_wrong->Branch("met_px", &met_px);
+    permutation_tree_wrong->Branch("met_py", &met_py);
+    permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
+    permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
+    permutation_tree_wrong->Branch("neutrino_pz_sol", &neutrino_pz_sol);
+    permutation_tree_wrong->Branch("neutrino_pz_sol_unrebal", &neutrino_pz_sol_unrebal);
+    permutation_tree_wrong->Branch("neutrino_p", &neutrino_p);
+    permutation_tree_wrong->Branch("chk_real_neu_pz", &chk_real_neu_pz);
+    permutation_tree_wrong->Branch("mt_gen", &mt_gen);
+    permutation_tree_wrong->Branch("mt_met", &mt_met);
+    permutation_tree_wrong->Branch("mt_met_rebalance", &mt_met_rebalance);
+    permutation_tree_wrong->Branch("pt_had_t_b", &pt_had_t_b);
+    permutation_tree_wrong->Branch("pt_w_u", &pt_w_u);
+    permutation_tree_wrong->Branch("pt_w_d", &pt_w_d);
+    permutation_tree_wrong->Branch("pt_lep_t_b", &pt_lep_t_b);
+    permutation_tree_wrong->Branch("eta_had_t_b", &eta_had_t_b);
+    permutation_tree_wrong->Branch("eta_w_u", &eta_w_u);
+    permutation_tree_wrong->Branch("eta_w_d", &eta_w_d);
+    permutation_tree_wrong->Branch("eta_lep_t_b", &eta_lep_t_b);
+    permutation_tree_wrong->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+    permutation_tree_wrong->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+    permutation_tree_wrong->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+    permutation_tree_wrong->Branch("bvsc_w_u", &bvsc_w_u);
+    permutation_tree_wrong->Branch("cvsb_w_u", &cvsb_w_u);
+    permutation_tree_wrong->Branch("cvsl_w_u", &cvsl_w_u);
+    permutation_tree_wrong->Branch("bvsc_w_d", &bvsc_w_d);
+    permutation_tree_wrong->Branch("cvsb_w_d", &cvsb_w_d);
+    permutation_tree_wrong->Branch("cvsl_w_d", &cvsl_w_d);
+    permutation_tree_wrong->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+    permutation_tree_wrong->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+    permutation_tree_wrong->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+    permutation_tree_wrong->Branch("met_rebalance_px", &met_rebalance_px);
+    permutation_tree_wrong->Branch("met_rebalance_py", &met_rebalance_py);
+    permutation_tree_wrong->Branch("pt_had_w", &pt_had_w);
+    permutation_tree_wrong->Branch("pt_had_t", &pt_had_t);
+    permutation_tree_wrong->Branch("pt_lep_w", &pt_lep_w);
+    permutation_tree_wrong->Branch("pt_lep_t", &pt_lep_t);
+    permutation_tree_wrong->Branch("pt_tt", &pt_tt);
+    permutation_tree_wrong->Branch("del_phi_w_u_w_d", &del_phi_w_u_w_d);
+    permutation_tree_wrong->Branch("del_phi_had_w_had_t_b", &del_phi_had_w_had_t_b);
+    permutation_tree_wrong->Branch("del_phi_lep_neu", &del_phi_lep_neu);
+    permutation_tree_wrong->Branch("del_phi_lep_w_lep_t_b", &del_phi_lep_w_lep_t_b);
+    permutation_tree_wrong->Branch("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+    permutation_tree_wrong->Branch("del_eta_w_u_w_d", &del_eta_w_u_w_d);
+    permutation_tree_wrong->Branch("del_eta_had_w_had_t_b", &del_eta_had_w_had_t_b);
+    permutation_tree_wrong->Branch("del_eta_lep_neu", &del_eta_lep_neu);
+    permutation_tree_wrong->Branch("del_eta_lep_w_lep_t_b", &del_eta_lep_w_lep_t_b);
+    permutation_tree_wrong->Branch("del_eta_had_t_lep_t", &del_eta_had_t_lep_t);
+    permutation_tree_wrong->Branch("del_r_w_u_w_d", &del_r_w_u_w_d);
+    permutation_tree_wrong->Branch("del_r_had_w_had_t_b", &del_r_had_w_had_t_b);
+    permutation_tree_wrong->Branch("del_r_lep_neu", &del_r_lep_neu);
+    permutation_tree_wrong->Branch("del_r_lep_w_lep_t_b", &del_r_lep_w_lep_t_b);
+    permutation_tree_wrong->Branch("del_r_had_t_lep_t", &del_r_had_t_lep_t);
+    permutation_tree_wrong->Branch("theta_w_u_w_d", &theta_w_u_w_d);
+    permutation_tree_wrong->Branch("theta_had_w_had_t_b", &theta_had_w_had_t_b);
+    permutation_tree_wrong->Branch("theta_lep_neu", &theta_lep_neu);
+    permutation_tree_wrong->Branch("theta_lep_w_lep_t_b", &theta_lep_w_lep_t_b);
+    permutation_tree_wrong->Branch("theta_had_t_lep_t", &theta_had_t_lep_t);
+    permutation_tree_wrong->Branch("had_t_mass", &had_t_mass);
+    permutation_tree_wrong->Branch("had_w_mass", &had_w_mass);
+    permutation_tree_wrong->Branch("lep_t_mass", &lep_t_mass);
+    permutation_tree_wrong->Branch("lep_t_partial_mass", &lep_t_partial_mass);
+    permutation_tree_wrong->Branch("chi2_jet_had_t_b", &chi2_jet_had_t_b);
+    permutation_tree_wrong->Branch("chi2_jet_w_u", &chi2_jet_w_u);
+    permutation_tree_wrong->Branch("chi2_jet_w_d", &chi2_jet_w_d);
+    permutation_tree_wrong->Branch("chi2_jet_lep_t_b", &chi2_jet_lep_t_b);
+    permutation_tree_wrong->Branch("chi2_jet_extra", &chi2_jet_extra);
+    permutation_tree_wrong->Branch("chi2_constraint_had_t", &chi2_constraint_had_t);
+    permutation_tree_wrong->Branch("chi2_constraint_had_w", &chi2_constraint_had_w);
+    permutation_tree_wrong->Branch("chi2_constraint_lep_t", &chi2_constraint_lep_t);
+    permutation_tree_wrong->Branch("chi2_constraint_lep_w", &chi2_constraint_lep_w);
+    permutation_tree_wrong->Branch("chi2", &chi2);
+    permutation_tree_wrong->Branch("had_w_charge_abs", &had_w_charge_abs);
+    permutation_tree_wrong->Branch("had_t_charge_abs", &had_t_charge_abs);
+    permutation_tree_wrong->Branch("lep_t_charge_abs", &lep_t_charge_abs);
+    permutation_tree_wrong->Branch("tt_charge", &tt_charge);
+
+    map_permutation_tree.insert({vec_channel[i] + "Correct", permutation_tree_correct});
+    map_permutation_tree.insert({vec_channel[i] + "Wrong", permutation_tree_wrong});
+  } // loop over channel
 
   return;
 } // void Vcb::Set_Permutation_Tree()
 
 //////////
 
-void Vcb::Set_Reader_HF_Contamination()
-{
-  reader_hf_contamination_lessthantwo = new TMVA::Reader("!Color:!Silent");
-  reader_hf_contamination_lessthantwo->AddSpectator("n_jets", &n_sel_jet);
-  reader_hf_contamination_lessthantwo->AddVariable("n_bjets", &n_b_jet_f); // strange...
-  reader_hf_contamination_lessthantwo->AddVariable("n_cjets", &n_c_jet_f);
-  reader_hf_contamination_lessthantwo->AddVariable("best_mva_score", &best_mva_score_pre);
-  reader_hf_contamination_lessthantwo->AddVariable("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
-  reader_hf_contamination_lessthantwo->AddVariable("theta_b_b", &theta_b_b);
-  reader_hf_contamination_lessthantwo->AddVariable("theta_p_had_w", &theta_p_had_w);
-  reader_hf_contamination_lessthantwo->AddVariable("theta_w_u_b", &theta_w_u_b);
-  reader_hf_contamination_lessthantwo->AddVariable("theta_w_d_b", &theta_w_d_b);
-  reader_hf_contamination_lessthantwo->AddVariable("w_u_b_bscore", &w_u_b_bscore);
-  reader_hf_contamination_lessthantwo->AddVariable("w_d_b_bscore", &w_d_b_bscore);
-  reader_hf_contamination_lessthantwo->AddVariable("m_w_u_b", &m_w_u_b);
-  reader_hf_contamination_lessthantwo->AddVariable("m_w_d_b", &m_w_d_b);
+// void Vcb::Set_Reader_HF_Contamination()
+// {
+//   reader_hf_contamination_lessthantwo = new TMVA::Reader("!Color:!Silent");
+//   reader_hf_contamination_lessthantwo->AddSpectator("n_jets", &n_sel_jet);
+//   reader_hf_contamination_lessthantwo->AddVariable("n_bjets", &n_b_jet_f); // strange...
+//   reader_hf_contamination_lessthantwo->AddVariable("n_cjets", &n_c_jet_f);
+//   reader_hf_contamination_lessthantwo->AddVariable("best_mva_score", &best_mva_score_pre);
+//   reader_hf_contamination_lessthantwo->AddVariable("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+//   reader_hf_contamination_lessthantwo->AddVariable("theta_b_b", &theta_b_b);
+//   reader_hf_contamination_lessthantwo->AddVariable("theta_p_had_w", &theta_p_had_w);
+//   reader_hf_contamination_lessthantwo->AddVariable("theta_w_u_b", &theta_w_u_b);
+//   reader_hf_contamination_lessthantwo->AddVariable("theta_w_d_b", &theta_w_d_b);
+//   reader_hf_contamination_lessthantwo->AddVariable("w_u_b_bscore", &w_u_b_bscore);
+//   reader_hf_contamination_lessthantwo->AddVariable("w_d_b_bscore", &w_d_b_bscore);
+//   reader_hf_contamination_lessthantwo->AddVariable("m_w_u_b", &m_w_u_b);
+//   reader_hf_contamination_lessthantwo->AddVariable("m_w_d_b", &m_w_d_b);
 
-  TString weight_file_base = getenv("SKFlat_WD");
-  weight_file_base += "/data/Run2UltraLegacy_v3/";
-  weight_file_base += DataEra;
-  weight_file_base += "/HF_Contamination/";
+//   TString weight_file_base = getenv("SKFlat_WD");
+//   weight_file_base += "/data/Run2UltraLegacy_v3/";
+//   weight_file_base += DataEra;
+//   weight_file_base += "/HF_Contamination/";
 
-  TString weight_file = weight_file_base + "LessThanTwo/weights/TMVAClassification_BDTG.weights.xml";
+//   TString weight_file = weight_file_base + "LessThanTwo/weights/TMVAClassification_BDTG.weights.xml";
 
-  cout << weight_file << endl;
-  reader_hf_contamination_lessthantwo->BookMVA("LessThanTwo", weight_file);
+//   cout << weight_file << endl;
+//   reader_hf_contamination_lessthantwo->BookMVA("LessThanTwo", weight_file);
 
-  reader_hf_contamination_morethantwo = new TMVA::Reader("!Color:!Silent");
-  reader_hf_contamination_morethantwo->AddSpectator("n_jets", &n_sel_jet);
-  reader_hf_contamination_morethantwo->AddVariable("n_bjets", &n_b_jet_f); // strange...
-  reader_hf_contamination_morethantwo->AddVariable("n_cjets", &n_c_jet_f);
-  reader_hf_contamination_morethantwo->AddVariable("best_mva_score", &best_mva_score_pre);
-  reader_hf_contamination_morethantwo->AddVariable("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
-  reader_hf_contamination_morethantwo->AddVariable("theta_b_b", &theta_b_b);
-  reader_hf_contamination_morethantwo->AddVariable("theta_c_c", &theta_c_c);
-  reader_hf_contamination_morethantwo->AddVariable("theta_p_had_w", &theta_p_had_w);
-  reader_hf_contamination_morethantwo->AddVariable("theta_w_u_b", &theta_w_u_b);
-  reader_hf_contamination_morethantwo->AddVariable("theta_w_d_b", &theta_w_d_b);
-  reader_hf_contamination_morethantwo->AddVariable("w_u_b_bscore", &w_u_b_bscore);
-  reader_hf_contamination_morethantwo->AddVariable("w_d_b_bscore", &w_d_b_bscore);
-  reader_hf_contamination_morethantwo->AddVariable("m_w_u_b", &m_w_u_b);
-  reader_hf_contamination_morethantwo->AddVariable("m_w_d_b", &m_w_d_b);
+//   reader_hf_contamination_morethantwo = new TMVA::Reader("!Color:!Silent");
+//   reader_hf_contamination_morethantwo->AddSpectator("n_jets", &n_sel_jet);
+//   reader_hf_contamination_morethantwo->AddVariable("n_bjets", &n_b_jet_f); // strange...
+//   reader_hf_contamination_morethantwo->AddVariable("n_cjets", &n_c_jet_f);
+//   reader_hf_contamination_morethantwo->AddVariable("best_mva_score", &best_mva_score_pre);
+//   reader_hf_contamination_morethantwo->AddVariable("del_phi_had_t_lep_t", &del_phi_had_t_lep_t);
+//   reader_hf_contamination_morethantwo->AddVariable("theta_b_b", &theta_b_b);
+//   reader_hf_contamination_morethantwo->AddVariable("theta_c_c", &theta_c_c);
+//   reader_hf_contamination_morethantwo->AddVariable("theta_p_had_w", &theta_p_had_w);
+//   reader_hf_contamination_morethantwo->AddVariable("theta_w_u_b", &theta_w_u_b);
+//   reader_hf_contamination_morethantwo->AddVariable("theta_w_d_b", &theta_w_d_b);
+//   reader_hf_contamination_morethantwo->AddVariable("w_u_b_bscore", &w_u_b_bscore);
+//   reader_hf_contamination_morethantwo->AddVariable("w_d_b_bscore", &w_d_b_bscore);
+//   reader_hf_contamination_morethantwo->AddVariable("m_w_u_b", &m_w_u_b);
+//   reader_hf_contamination_morethantwo->AddVariable("m_w_d_b", &m_w_d_b);
 
-  weight_file = weight_file_base + "MoreThanTwo/weights/TMVAClassification_BDTG.weights.xml";
+//   weight_file = weight_file_base + "MoreThanTwo/weights/TMVAClassification_BDTG.weights.xml";
 
-  cout << weight_file << endl;
-  reader_hf_contamination_morethantwo->BookMVA("MoreThanTwo", weight_file);
+//   cout << weight_file << endl;
+//   reader_hf_contamination_morethantwo->BookMVA("MoreThanTwo", weight_file);
 
-  return;
-} // void Vcb::Set_Reader_HF_Contamination()
+//   return;
+// } // void Vcb::Set_Reader_HF_Contamination()
 
 //////////
 
@@ -3256,264 +3302,265 @@ void Vcb::Set_Region()
 
 void Vcb::Set_Result_Tree()
 {
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    AnalyzerParameter::Syst syst_type = vec_syst_type.at(i);
-
-    param.syst_ = syst_type;
-    map_dir_syst.insert({param.GetSystType(), outfile->mkdir(param.GetSystType())});
-
-    TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
-    result_tree->SetDirectory(map_dir_syst[param.GetSystType()]);
-
-    if (syst_type == AnalyzerParameter::Central && run_syst)
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
     {
-      result_tree->Branch("weight_b_tag", &weight_b_tag);
-      result_tree->Branch("weight_b_tag_down_hf", &weight_b_tag_down_hf);
-      result_tree->Branch("weight_b_tag_up_hf", &weight_b_tag_up_hf);
-      result_tree->Branch("weight_b_tag_down_lf", &weight_b_tag_down_lf);
-      result_tree->Branch("weight_b_tag_up_lf", &weight_b_tag_up_lf);
-      result_tree->Branch("weight_b_tag_down_lfstats1", &weight_b_tag_down_lfstats1);
-      result_tree->Branch("weight_b_tag_up_lfstats1", &weight_b_tag_up_lfstats1);
-      result_tree->Branch("weight_b_tag_down_lfstats2", &weight_b_tag_down_lfstats2);
-      result_tree->Branch("weight_b_tag_up_lfstats2", &weight_b_tag_up_lfstats2);
-      result_tree->Branch("weight_b_tag_down_cferr1", &weight_b_tag_down_cferr1);
-      result_tree->Branch("weight_b_tag_up_cferr1", &weight_b_tag_up_cferr1);
-      result_tree->Branch("weight_b_tag_down_cferr2", &weight_b_tag_down_cferr2);
-      result_tree->Branch("weight_b_tag_up_cferr2", &weight_b_tag_up_cferr2);
-      result_tree->Branch("weight_b_tag_down_hfstats1", &weight_b_tag_down_hfstats1);
-      result_tree->Branch("weight_b_tag_up_hfstats1", &weight_b_tag_up_hfstats1);
-      result_tree->Branch("weight_b_tag_down_hfstats2", &weight_b_tag_down_hfstats2);
-      result_tree->Branch("weight_b_tag_up_hfstats2", &weight_b_tag_up_hfstats2);
-    }
-    else if (syst_type == AnalyzerParameter::JetEnDown)
-      result_tree->Branch("weight_b_tag_down_jes", &weight_b_tag_down_jes);
-    else if (syst_type == AnalyzerParameter::JetEnUp)
-      result_tree->Branch("weight_b_tag_up_jes", &weight_b_tag_up_jes);
-    else
-      result_tree->Branch("weight_b_tag", &weight_b_tag);
+      AnalyzerParameter::Syst syst_type = vec_syst_type.at(j);
+      param.syst_ = syst_type;
 
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_c_tag", &weight_c_tag);
-      result_tree->Branch("weight_c_tag_down_extrap", &weight_c_tag_down_extrap);
-      result_tree->Branch("weight_c_tag_up_extrap", &weight_c_tag_up_extrap);
-      result_tree->Branch("weight_c_tag_down_interp", &weight_c_tag_down_interp);
-      result_tree->Branch("weight_c_tag_up_interp", &weight_c_tag_up_interp);
-      result_tree->Branch("weight_c_tag_down_lhe_scale_muf", &weight_c_tag_down_lhe_scale_muf);
-      result_tree->Branch("weight_c_tag_up_lhe_scale_muf", &weight_c_tag_up_lhe_scale_muf);
-      result_tree->Branch("weight_c_tag_down_lhe_scale_mur", &weight_c_tag_down_lhe_scale_mur);
-      result_tree->Branch("weight_c_tag_up_lhe_scale_mur", &weight_c_tag_up_lhe_scale_mur);
-      result_tree->Branch("weight_c_tag_down_ps_fsr_fixed", &weight_c_tag_down_ps_fsr_fixed);
-      result_tree->Branch("weight_c_tag_up_ps_fsr_fixed", &weight_c_tag_up_ps_fsr_fixed);
-      result_tree->Branch("weight_c_tag_down_ps_isr_fixed", &weight_c_tag_down_ps_isr_fixed);
-      result_tree->Branch("weight_c_tag_up_ps_isr_fixed", &weight_c_tag_up_ps_isr_fixed);
-      result_tree->Branch("weight_c_tag_down_pu", &weight_c_tag_down_pu);
-      result_tree->Branch("weight_c_tag_up_pu", &weight_c_tag_up_pu);
-      result_tree->Branch("weight_c_tag_down_stat", &weight_c_tag_down_stat);
-      result_tree->Branch("weight_c_tag_up_stat", &weight_c_tag_up_stat);
-      result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_b", &weight_c_tag_down_xsec_brunc_dyjets_b);
-      result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_b", &weight_c_tag_up_xsec_brunc_dyjets_b);
-      result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_c", &weight_c_tag_down_xsec_brunc_dyjets_c);
-      result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_c", &weight_c_tag_up_xsec_brunc_dyjets_c);
-      result_tree->Branch("weight_c_tag_down_xsec_brunc_wjets_c", &weight_c_tag_down_xsec_brunc_wjets_c);
-      result_tree->Branch("weight_c_tag_up_xsec_brunc_wjets_c", &weight_c_tag_up_xsec_brunc_wjets_c);
-    }
-    else if (syst_type == AnalyzerParameter::JetEnDown)
-      result_tree->Branch("weight_c_tag_down_jes_total", &weight_c_tag_down_jes_total);
-    else if (syst_type == AnalyzerParameter::JetEnUp)
-      result_tree->Branch("weight_c_tag_up_jes_total", &weight_c_tag_up_jes_total);
-    else if (syst_type == AnalyzerParameter::JetResDown)
-      result_tree->Branch("weight_c_tag_down_jer", &weight_c_tag_down_jer);
-    else if (syst_type == AnalyzerParameter::JetResUp)
-      result_tree->Branch("weight_c_tag_up_jer", &weight_c_tag_up_jer);
-    else
-      result_tree->Branch("weight_c_tag", &weight_c_tag);
+      TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
+      result_tree->SetDirectory(dir_syst[i][j]);
 
-    result_tree->Branch("weight_el_id", &weight_el_id);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_el_id_down", &weight_el_id_down);
-      result_tree->Branch("weight_el_id_up", &weight_el_id_up);
-    }
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_b_tag", &weight_b_tag);
+        result_tree->Branch("weight_b_tag_down_hf", &weight_b_tag_down_hf);
+        result_tree->Branch("weight_b_tag_up_hf", &weight_b_tag_up_hf);
+        result_tree->Branch("weight_b_tag_down_lf", &weight_b_tag_down_lf);
+        result_tree->Branch("weight_b_tag_up_lf", &weight_b_tag_up_lf);
+        result_tree->Branch("weight_b_tag_down_lfstats1", &weight_b_tag_down_lfstats1);
+        result_tree->Branch("weight_b_tag_up_lfstats1", &weight_b_tag_up_lfstats1);
+        result_tree->Branch("weight_b_tag_down_lfstats2", &weight_b_tag_down_lfstats2);
+        result_tree->Branch("weight_b_tag_up_lfstats2", &weight_b_tag_up_lfstats2);
+        result_tree->Branch("weight_b_tag_down_cferr1", &weight_b_tag_down_cferr1);
+        result_tree->Branch("weight_b_tag_up_cferr1", &weight_b_tag_up_cferr1);
+        result_tree->Branch("weight_b_tag_down_cferr2", &weight_b_tag_down_cferr2);
+        result_tree->Branch("weight_b_tag_up_cferr2", &weight_b_tag_up_cferr2);
+        result_tree->Branch("weight_b_tag_down_hfstats1", &weight_b_tag_down_hfstats1);
+        result_tree->Branch("weight_b_tag_up_hfstats1", &weight_b_tag_up_hfstats1);
+        result_tree->Branch("weight_b_tag_down_hfstats2", &weight_b_tag_down_hfstats2);
+        result_tree->Branch("weight_b_tag_up_hfstats2", &weight_b_tag_up_hfstats2);
+      }
+      else if (syst_type == AnalyzerParameter::JetEnDown)
+        result_tree->Branch("weight_b_tag_down_jes", &weight_b_tag_down_jes);
+      else if (syst_type == AnalyzerParameter::JetEnUp)
+        result_tree->Branch("weight_b_tag_up_jes", &weight_b_tag_up_jes);
+      else
+        result_tree->Branch("weight_b_tag", &weight_b_tag);
 
-    result_tree->Branch("weight_el_reco", &weight_el_reco);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_el_reco_down", &weight_el_reco_down);
-      result_tree->Branch("weight_el_reco_up", &weight_el_reco_up);
-    }
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_c_tag", &weight_c_tag);
+        result_tree->Branch("weight_c_tag_down_extrap", &weight_c_tag_down_extrap);
+        result_tree->Branch("weight_c_tag_up_extrap", &weight_c_tag_up_extrap);
+        result_tree->Branch("weight_c_tag_down_interp", &weight_c_tag_down_interp);
+        result_tree->Branch("weight_c_tag_up_interp", &weight_c_tag_up_interp);
+        result_tree->Branch("weight_c_tag_down_lhe_scale_muf", &weight_c_tag_down_lhe_scale_muf);
+        result_tree->Branch("weight_c_tag_up_lhe_scale_muf", &weight_c_tag_up_lhe_scale_muf);
+        result_tree->Branch("weight_c_tag_down_lhe_scale_mur", &weight_c_tag_down_lhe_scale_mur);
+        result_tree->Branch("weight_c_tag_up_lhe_scale_mur", &weight_c_tag_up_lhe_scale_mur);
+        result_tree->Branch("weight_c_tag_down_ps_fsr_fixed", &weight_c_tag_down_ps_fsr_fixed);
+        result_tree->Branch("weight_c_tag_up_ps_fsr_fixed", &weight_c_tag_up_ps_fsr_fixed);
+        result_tree->Branch("weight_c_tag_down_ps_isr_fixed", &weight_c_tag_down_ps_isr_fixed);
+        result_tree->Branch("weight_c_tag_up_ps_isr_fixed", &weight_c_tag_up_ps_isr_fixed);
+        result_tree->Branch("weight_c_tag_down_pu", &weight_c_tag_down_pu);
+        result_tree->Branch("weight_c_tag_up_pu", &weight_c_tag_up_pu);
+        result_tree->Branch("weight_c_tag_down_stat", &weight_c_tag_down_stat);
+        result_tree->Branch("weight_c_tag_up_stat", &weight_c_tag_up_stat);
+        result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_b", &weight_c_tag_down_xsec_brunc_dyjets_b);
+        result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_b", &weight_c_tag_up_xsec_brunc_dyjets_b);
+        result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_c", &weight_c_tag_down_xsec_brunc_dyjets_c);
+        result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_c", &weight_c_tag_up_xsec_brunc_dyjets_c);
+        result_tree->Branch("weight_c_tag_down_xsec_brunc_wjets_c", &weight_c_tag_down_xsec_brunc_wjets_c);
+        result_tree->Branch("weight_c_tag_up_xsec_brunc_wjets_c", &weight_c_tag_up_xsec_brunc_wjets_c);
+      }
+      else if (syst_type == AnalyzerParameter::JetEnDown)
+        result_tree->Branch("weight_c_tag_down_jes_total", &weight_c_tag_down_jes_total);
+      else if (syst_type == AnalyzerParameter::JetEnUp)
+        result_tree->Branch("weight_c_tag_up_jes_total", &weight_c_tag_up_jes_total);
+      else if (syst_type == AnalyzerParameter::JetResDown)
+        result_tree->Branch("weight_c_tag_down_jer", &weight_c_tag_down_jer);
+      else if (syst_type == AnalyzerParameter::JetResUp)
+        result_tree->Branch("weight_c_tag_up_jer", &weight_c_tag_up_jer);
+      else
+        result_tree->Branch("weight_c_tag", &weight_c_tag);
 
-    result_tree->Branch("weight_hem_veto", &weight_hem_veto);
-    result_tree->Branch("weight_lumi", &weight_lumi);
-    result_tree->Branch("weight_mc", &weight_mc);
+      result_tree->Branch("weight_el_id", &weight_el_id);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_el_id_down", &weight_el_id_down);
+        result_tree->Branch("weight_el_id_up", &weight_el_id_up);
+      }
 
-    result_tree->Branch("weight_mu_id", &weight_mu_id);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_mu_id_down", &weight_mu_id_down);
-      result_tree->Branch("weight_mu_id_up", &weight_mu_id_up);
-    }
+      result_tree->Branch("weight_el_reco", &weight_el_reco);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_el_reco_down", &weight_el_reco_down);
+        result_tree->Branch("weight_el_reco_up", &weight_el_reco_up);
+      }
 
-    result_tree->Branch("weight_mu_iso", &weight_mu_iso);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_mu_iso_down", &weight_mu_iso_down);
-      result_tree->Branch("weight_mu_iso_up", &weight_mu_iso_up);
-    }
+      result_tree->Branch("weight_hem_veto", &weight_hem_veto);
+      result_tree->Branch("weight_lumi", &weight_lumi);
+      result_tree->Branch("weight_mc", &weight_mc);
 
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_pdf_alternative", &weight_pdf_alternative);
-      result_tree->Branch("weight_pdf_error_set", weight_pdf_error_set, "weight_pdf_error_set[100]/F");
-      result_tree->Branch("weight_pdf_as_down", &weight_pdf_as_down);
-      result_tree->Branch("weight_pdf_as_up", &weight_pdf_as_up);
-    }
+      result_tree->Branch("weight_mu_id", &weight_mu_id);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_mu_id_down", &weight_mu_id_down);
+        result_tree->Branch("weight_mu_id_up", &weight_mu_id_up);
+      }
 
-    result_tree->Branch("weight_pileup", &weight_pileup);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_pileup_down", &weight_pileup_down);
-      result_tree->Branch("weight_pileup_up", &weight_pileup_up);
-    }
+      result_tree->Branch("weight_mu_iso", &weight_mu_iso);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_mu_iso_down", &weight_mu_iso_down);
+        result_tree->Branch("weight_mu_iso_up", &weight_mu_iso_up);
+      }
 
-    result_tree->Branch("weight_prefire", &weight_prefire);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_prefire_down", &weight_prefire_down);
-      result_tree->Branch("weight_prefire_up", &weight_prefire_up);
-    }
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_pdf_alternative", &weight_pdf_alternative);
+        result_tree->Branch("weight_pdf_error_set", weight_pdf_error_set, "weight_pdf_error_set[100]/F");
+        result_tree->Branch("weight_pdf_as_down", &weight_pdf_as_down);
+        result_tree->Branch("weight_pdf_as_up", &weight_pdf_as_up);
+      }
 
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-      result_tree->Branch("weight_ps", weight_ps, "weight_ps[4]");
+      result_tree->Branch("weight_pileup", &weight_pileup);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_pileup_down", &weight_pileup_down);
+        result_tree->Branch("weight_pileup_up", &weight_pileup_up);
+      }
 
-    result_tree->Branch("weight_pujet_veto", &weight_pujet_veto);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_pujet_veto_down", &weight_pujet_veto_down);
-      result_tree->Branch("weight_pujet_veto_up", &weight_pujet_veto_up);
-    }
+      result_tree->Branch("weight_prefire", &weight_prefire);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_prefire_down", &weight_prefire_down);
+        result_tree->Branch("weight_prefire_up", &weight_prefire_up);
+      }
 
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_scale_variation_1", &weight_scale_variation_1);
-      result_tree->Branch("weight_scale_variation_2", &weight_scale_variation_2);
-      result_tree->Branch("weight_scale_variation_3", &weight_scale_variation_3);
-      result_tree->Branch("weight_scale_variation_4", &weight_scale_variation_4);
-      result_tree->Branch("weight_scale_variation_6", &weight_scale_variation_6);
-      result_tree->Branch("weight_scale_variation_8", &weight_scale_variation_8);
-    }
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+        result_tree->Branch("weight_ps", weight_ps, "weight_ps[4]");
 
-    result_tree->Branch("weight_sl_trig", &weight_sl_trig);
-    if (syst_type == AnalyzerParameter::Central && run_syst)
-    {
-      result_tree->Branch("weight_sl_trig_down", &weight_sl_trig_down);
-      result_tree->Branch("weight_sl_trig_up", &weight_sl_trig_up);
-    }
+      result_tree->Branch("weight_pujet_veto", &weight_pujet_veto);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_pujet_veto_down", &weight_pujet_veto_down);
+        result_tree->Branch("weight_pujet_veto_up", &weight_pujet_veto_up);
+      }
 
-    result_tree->Branch("weight_top_pt", &weight_top_pt);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_scale_variation_1", &weight_scale_variation_1);
+        result_tree->Branch("weight_scale_variation_2", &weight_scale_variation_2);
+        result_tree->Branch("weight_scale_variation_3", &weight_scale_variation_3);
+        result_tree->Branch("weight_scale_variation_4", &weight_scale_variation_4);
+        result_tree->Branch("weight_scale_variation_6", &weight_scale_variation_6);
+        result_tree->Branch("weight_scale_variation_8", &weight_scale_variation_8);
+      }
 
-    result_tree->Branch("n_vertex", &nPV);
+      result_tree->Branch("weight_sl_trig", &weight_sl_trig);
+      if (syst_type == AnalyzerParameter::Central && run_syst)
+      {
+        result_tree->Branch("weight_sl_trig_down", &weight_sl_trig_down);
+        result_tree->Branch("weight_sl_trig_up", &weight_sl_trig_up);
+      }
 
-    result_tree->Branch("lepton_pt", &lepton_pt);
-    result_tree->Branch("lepton_pt_uncorr", &lepton_pt_uncorr);
-    result_tree->Branch("lepton_eta", &lepton_eta);
-    result_tree->Branch("lepton_rel_iso", &lepton_rel_iso);
+      result_tree->Branch("weight_top_pt", &weight_top_pt);
 
-    result_tree->Branch("n_jets", &n_sel_jet);
-    result_tree->Branch("n_bjets", &n_b_jet);
-    result_tree->Branch("n_cjets", &n_c_jet);
+      result_tree->Branch("n_vertex", &nPV);
 
-    result_tree->Branch("pt_leading_jet", &pt_leading_jet);
-    result_tree->Branch("pt_subleading_jet", &pt_subleading_jet);
+      result_tree->Branch("lepton_pt", &lepton_pt);
+      result_tree->Branch("lepton_pt_uncorr", &lepton_pt_uncorr);
+      result_tree->Branch("lepton_eta", &lepton_eta);
+      result_tree->Branch("lepton_rel_iso", &lepton_rel_iso);
 
-    result_tree->Branch("eta_leading_jet", &eta_leading_jet);
-    result_tree->Branch("eta_subleading_jet", &eta_subleading_jet);
+      result_tree->Branch("n_jets", &n_sel_jet);
+      result_tree->Branch("n_bjets", &n_b_jet);
+      result_tree->Branch("n_cjets", &n_c_jet);
 
-    result_tree->Branch("bvsc_leading_jet", &bvsc_leading_jet);
-    result_tree->Branch("cvsb_leading_jet", &cvsb_leading_jet);
-    result_tree->Branch("cvsl_leading_jet", &cvsl_leading_jet);
+      result_tree->Branch("pt_leading_jet", &pt_leading_jet);
+      result_tree->Branch("pt_subleading_jet", &pt_subleading_jet);
 
-    result_tree->Branch("bvsc_subleading_jet", &bvsc_subleading_jet);
-    result_tree->Branch("cvsb_subleading_jet", &cvsb_subleading_jet);
-    result_tree->Branch("cvsl_subleading_jet", &cvsl_subleading_jet);
+      result_tree->Branch("eta_leading_jet", &eta_leading_jet);
+      result_tree->Branch("eta_subleading_jet", &eta_subleading_jet);
 
-    result_tree->Branch("met_pt", &met_pt);
-    result_tree->Branch("met_phi", &met_phi);
+      result_tree->Branch("bvsc_leading_jet", &bvsc_leading_jet);
+      result_tree->Branch("cvsb_leading_jet", &cvsb_leading_jet);
+      result_tree->Branch("cvsl_leading_jet", &cvsl_leading_jet);
 
-    result_tree->Branch("best_mva_score_pre", &best_mva_score_pre);
-    result_tree->Branch("best_mva_score", &best_mva_score);
-    result_tree->Branch("best_chi2", &best_chi2);
-    result_tree->Branch("ht", &ht);
-    result_tree->Branch("mt", &mt);
-    result_tree->Branch("mva_hf_score", &mva_hf_score);
+      result_tree->Branch("bvsc_subleading_jet", &bvsc_subleading_jet);
+      result_tree->Branch("cvsb_subleading_jet", &cvsb_subleading_jet);
+      result_tree->Branch("cvsl_subleading_jet", &cvsl_subleading_jet);
 
-    result_tree->Branch("bvsc_had_t_b", &bvsc_had_t_b);
-    result_tree->Branch("cvsb_had_t_b", &cvsb_had_t_b);
-    result_tree->Branch("cvsl_had_t_b", &cvsl_had_t_b);
-    result_tree->Branch("bvsc_w_u", &bvsc_w_u);
-    result_tree->Branch("cvsb_w_u", &cvsb_w_u);
-    result_tree->Branch("cvsl_w_u", &cvsl_w_u);
-    result_tree->Branch("bvsc_w_d", &bvsc_w_d);
-    result_tree->Branch("cvsb_w_d", &cvsb_w_d);
-    result_tree->Branch("cvsl_w_d", &cvsl_w_d);
-    result_tree->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
-    result_tree->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
-    result_tree->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
+      result_tree->Branch("met_pt", &met_pt);
+      result_tree->Branch("met_phi", &met_phi);
 
-    result_tree->Branch("pt_had_t_b", &pt_had_t_b);
-    result_tree->Branch("pt_w_u", &pt_w_u);
-    result_tree->Branch("pt_w_d", &pt_w_d);
-    result_tree->Branch("pt_lep_t_b", &pt_lep_t_b);
+      result_tree->Branch("best_mva_score_pre", &best_mva_score_pre);
+      result_tree->Branch("best_mva_score", &best_mva_score);
+      result_tree->Branch("best_chi2", &best_chi2);
+      result_tree->Branch("ht", &ht);
+      result_tree->Branch("mt", &mt);
+      result_tree->Branch("mva_hf_score", &mva_hf_score);
 
-    result_tree->Branch("pt_raw_had_t_b", &pt_raw_had_t_b);
-    result_tree->Branch("pt_raw_w_u", &pt_raw_w_u);
-    result_tree->Branch("pt_raw_w_d", &pt_raw_w_d);
-    result_tree->Branch("pt_raw_lep_t_b", &pt_raw_lep_t_b);
+      result_tree->Branch("bvsc_had_t_b", &bvsc_had_t_b);
+      result_tree->Branch("cvsb_had_t_b", &cvsb_had_t_b);
+      result_tree->Branch("cvsl_had_t_b", &cvsl_had_t_b);
+      result_tree->Branch("bvsc_w_u", &bvsc_w_u);
+      result_tree->Branch("cvsb_w_u", &cvsb_w_u);
+      result_tree->Branch("cvsl_w_u", &cvsl_w_u);
+      result_tree->Branch("bvsc_w_d", &bvsc_w_d);
+      result_tree->Branch("cvsb_w_d", &cvsb_w_d);
+      result_tree->Branch("cvsl_w_d", &cvsl_w_d);
+      result_tree->Branch("bvsc_lep_t_b", &bvsc_lep_t_b);
+      result_tree->Branch("cvsb_lep_t_b", &cvsb_lep_t_b);
+      result_tree->Branch("cvsl_lep_t_b", &cvsl_lep_t_b);
 
-    result_tree->Branch("eta_had_t_b", &eta_had_t_b);
-    result_tree->Branch("eta_w_u", &eta_w_u);
-    result_tree->Branch("eta_w_d", &eta_w_d);
-    result_tree->Branch("eta_lep_t_b", &eta_lep_t_b);
+      result_tree->Branch("pt_had_t_b", &pt_had_t_b);
+      result_tree->Branch("pt_w_u", &pt_w_u);
+      result_tree->Branch("pt_w_d", &pt_w_d);
+      result_tree->Branch("pt_lep_t_b", &pt_lep_t_b);
 
-    result_tree->Branch("pt_had_w", &pt_had_w);
-    result_tree->Branch("pt_had_t", &pt_had_t);
-    result_tree->Branch("pt_lep_w", &pt_lep_w);
-    result_tree->Branch("pt_lep_t", &pt_lep_t);
-    result_tree->Branch("pt_tt", &pt_tt);
+      result_tree->Branch("pt_raw_had_t_b", &pt_raw_had_t_b);
+      result_tree->Branch("pt_raw_w_u", &pt_raw_w_u);
+      result_tree->Branch("pt_raw_w_d", &pt_raw_w_d);
+      result_tree->Branch("pt_raw_lep_t_b", &pt_raw_lep_t_b);
 
-    result_tree->Branch("m_had_t", &m_had_t);
-    result_tree->Branch("m_had_w", &m_had_w);
-    result_tree->Branch("m_lep_t", &m_lep_t);
-    result_tree->Branch("m_lep_w", &m_lep_w);
+      result_tree->Branch("eta_had_t_b", &eta_had_t_b);
+      result_tree->Branch("eta_w_u", &eta_w_u);
+      result_tree->Branch("eta_w_d", &eta_w_d);
+      result_tree->Branch("eta_lep_t_b", &eta_lep_t_b);
 
-    result_tree->Branch("m_w_u", &m_w_u);
-    result_tree->Branch("m_w_d", &m_w_d);
+      result_tree->Branch("pt_had_w", &pt_had_w);
+      result_tree->Branch("pt_had_t", &pt_had_t);
+      result_tree->Branch("pt_lep_w", &pt_lep_w);
+      result_tree->Branch("pt_lep_t", &pt_lep_t);
+      result_tree->Branch("pt_tt", &pt_tt);
 
-    result_tree->Branch("swapped_mva", &swapped_mva);
+      result_tree->Branch("m_had_t", &m_had_t);
+      result_tree->Branch("m_had_w", &m_had_w);
+      result_tree->Branch("m_lep_t", &m_lep_t);
+      result_tree->Branch("m_lep_w", &m_lep_w);
 
-    // For MC
-    result_tree->Branch("decay_mode", &decay_mode);
-    result_tree->Branch("chk_reco_correct", &chk_reco_correct);
-    result_tree->Branch("chk_included", &chk_included);
-    result_tree->Branch("chk_gentau_conta", &chk_gentau_conta);
-    result_tree->Branch("chk_hf_contamination", &chk_hf_contamination);
+      result_tree->Branch("m_w_u", &m_w_u);
+      result_tree->Branch("m_w_d", &m_w_d);
 
-    result_tree->Branch("pu_conta_had_t_b", &pu_conta_had_t_b);
-    result_tree->Branch("pu_conta_w_u", &pu_conta_w_u);
-    result_tree->Branch("pu_conta_w_d", &pu_conta_w_d);
-    result_tree->Branch("pu_conta_lep_t_b", &pu_conta_lep_t_b);
+      result_tree->Branch("swapped_mva", &swapped_mva);
 
-    result_tree->Branch("swapped_truth", &swapped_truth);
+      // For MC
+      result_tree->Branch("decay_mode", &decay_mode);
+      result_tree->Branch("chk_reco_correct", &chk_reco_correct);
+      result_tree->Branch("chk_included", &chk_included);
+      result_tree->Branch("chk_gentau_conta", &chk_gentau_conta);
+      result_tree->Branch("chk_hf_contamination", &chk_hf_contamination);
 
-    result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
-    result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+      result_tree->Branch("pu_conta_had_t_b", &pu_conta_had_t_b);
+      result_tree->Branch("pu_conta_w_u", &pu_conta_w_u);
+      result_tree->Branch("pu_conta_w_d", &pu_conta_w_d);
+      result_tree->Branch("pu_conta_lep_t_b", &pu_conta_lep_t_b);
 
-    result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
-    result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
+      result_tree->Branch("swapped_truth", &swapped_truth);
 
-    map_result_tree.insert({syst_type, result_tree});
-  }
+      result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
+      result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+
+      result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
+      result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
+
+      map_result_tree.insert({vec_channel[i] + param.GetSystType(), result_tree});
+    } // loop over syst
+  } // loop over channel
 
   return;
 } // void Vcb::Set_Result_Tree()
