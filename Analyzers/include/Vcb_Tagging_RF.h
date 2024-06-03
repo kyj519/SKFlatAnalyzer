@@ -30,7 +30,13 @@ protected:
 
   bool run_mu_ch;
   bool run_el_ch;
+  TString channel_name;
+
   bool run_debug;
+
+  vector<TString> vec_channel;
+  TDirectory **dir_channel; // channel
+  TDirectory ***dir_syst;   // channel, syst
 
   vector<TString> vec_mu_id;
   vector<TString> vec_mu_id_sf_key;
@@ -44,10 +50,6 @@ protected:
   vector<TString> vec_el_trig;
   TString el_trig;
   float el_trig_safe_pt_cut;
-
-  vector<TString> vec_sl_trig; // single lepton
-  TString sl_trig;
-  float sl_trig_safe_pt_cut;
 
   vector<JetTagging::Parameters> vec_jet_tagging_para;
 
@@ -190,7 +192,7 @@ protected:
 
   float sf_sl_trig;
 
-  map<AnalyzerParameter::Syst, TTree *> map_result_tree;
+  map<TString, TTree *> map_result_tree;
 
   float Calculate_HT(const vector<Jet> &jet);
   void Clear();

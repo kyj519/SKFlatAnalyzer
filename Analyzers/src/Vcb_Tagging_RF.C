@@ -10,12 +10,15 @@ Vcb_Tagging_RF::Vcb_Tagging_RF()
 
 Vcb_Tagging_RF::~Vcb_Tagging_RF()
 {
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    param.syst_ = vec_syst_type.at(i);
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+    {
+      param.syst_ = vec_syst_type.at(j);
 
-    outfile->cd(param.GetSystType());
-    map_result_tree[param.syst_]->Write();
+      dir_syst[i][j]->cd();
+      map_result_tree[vec_channel[i] + param.GetSystType()]->Write();
+    }
   }
 } // Vcb_Tagging_RF::~Vcb_Tagging_RF()
 
@@ -23,17 +26,17 @@ Vcb_Tagging_RF::~Vcb_Tagging_RF()
 
 void Vcb_Tagging_RF::initializeAnalyzer()
 {
-  run_mu_ch = HasFlag("RunMu");
-  cout << "[Vcb_Tagging_RF::initializeAnalyzer] RunMu = " << run_mu_ch << endl;
+  // run_mu_ch = HasFlag("RunMu");
+  // cout << "[Vcb_Tagging_RF::initializeAnalyzer] RunMu = " << run_mu_ch << endl;
 
-  run_el_ch = HasFlag("RunEl");
-  cout << "[Vcb_Tagging_RF::initializeAnalyzer] RunEl = " << run_el_ch << endl;
+  // run_el_ch = HasFlag("RunEl");
+  // cout << "[Vcb_Tagging_RF::initializeAnalyzer] RunEl = " << run_el_ch << endl;
 
-  if (run_mu_ch == run_el_ch)
-  {
-    cout << "One of RunMu or RunEl should be set." << endl;
-    exit(1);
-  }
+  // if (run_mu_ch == run_el_ch)
+  // {
+  //   cout << "One of RunMu or RunEl should be set." << endl;
+  //   exit(1);
+  // }
 
   run_debug = HasFlag("RunDebug");
   cout << "[Vcb_Tagging_RF::initializeAnalyzer] RunDebug = " << run_debug << endl;
@@ -41,64 +44,48 @@ void Vcb_Tagging_RF::initializeAnalyzer()
   // set sigle lepton trigger
   if (DataYear == 2016)
   {
-    if (run_mu_ch)
-    {
-      vec_mu_trig.push_back("HLT_IsoMu24_v");
-      sl_trig = "IsoMu24";
-      sl_trig_safe_pt_cut = 26.;
-    }
-    else if (run_el_ch)
-    {
-      vec_el_trig.push_back("HLT_Ele27_WPTight_Gsf_v");
-      sl_trig = "Ele27";
-      sl_trig_safe_pt_cut = 30.;
-    }
-  } // if (DataYear == 2016)
+    vec_mu_trig.push_back("HLT_IsoMu24_v");
+    mu_trig = "IsoMu24";
+    mu_trig_safe_pt_cut = 26.;
+
+    vec_el_trig.push_back("HLT_Ele27_WPTight_Gsf_v");
+    el_trig = "Ele27";
+    el_trig_safe_pt_cut = 30.;
+  }
   else if (DataYear == 2017)
   {
-    if (run_mu_ch)
-    {
-      vec_mu_trig.push_back("HLT_IsoMu27_v");
-      sl_trig = "IsoMu27";
-      sl_trig_safe_pt_cut = 30.;
-    }
-    else if (run_el_ch)
-    {
-      // vec_sl_trig.push_back("HLT_Ele35_WPTight_Gsf_v");
-      // sl_trig = "Ele35";
-      // sl_trig_safe_pt_cut = 37.;
+    vec_mu_trig.push_back("HLT_IsoMu27_v");
+    mu_trig = "IsoMu27";
+    mu_trig_safe_pt_cut = 30.;
 
-      vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_L1DoubleEG_");
-      sl_trig = "Ele32";
-      sl_trig_safe_pt_cut = 35.;
-    }
+    // vec_el_trig.push_back("HLT_Ele35_WPTight_Gsf_v");
+    // el_trig = "Ele35";
+    // el_trig_safe_pt_cut = 37.;
+
+    vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_L1DoubleEG_");
+    el_trig = "Ele32";
+    el_trig_safe_pt_cut = 35.;
   } // else if (DataYear == 2017)
   else if (DataYear == 2018)
   {
-    if (run_mu_ch)
-    {
-      vec_mu_trig.push_back("HLT_IsoMu24_v");
-      sl_trig = "IsoMu24";
-      sl_trig_safe_pt_cut = 26.;
-    }
-    else if (run_el_ch)
-    {
-      vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_v");
-      sl_trig = "Ele32";
-      sl_trig_safe_pt_cut = 35.;
-    }
+    vec_mu_trig.push_back("HLT_IsoMu24_v");
+    mu_trig = "IsoMu24";
+    mu_trig_safe_pt_cut = 26.;
+
+    vec_el_trig.push_back("HLT_Ele32_WPTight_Gsf_v");
+    el_trig = "Ele32";
+    el_trig_safe_pt_cut = 35.;
   } // else if (DataYear == 2018)
   else
     std::runtime_error("No trigger configuration for year");
 
   for (auto &trigger_name : vec_mu_trig)
-    vec_sl_trig.push_back(trigger_name);
-  for (auto &trigger_name : vec_el_trig)
-    vec_sl_trig.push_back(trigger_name);
+    cout << "[Vcb::initializeAnalyzer] Single Muon Trigger Name = " << trigger_name << endl;
+  cout << "[Vcb::initializeAnalyzer] Single Muon Trigger Safe Pt Cut = " << mu_trig_safe_pt_cut << endl;
 
-  for (auto &trigger_name : vec_sl_trig)
-    cout << "[Vcb::initializeAnalyzer] Single Lepton Trigger Name = " << trigger_name << endl;
-  cout << "[Vcb::initializeAnalyzer] Single Lepton Trigger Safe Pt Cut = " << sl_trig_safe_pt_cut << endl;
+  for (auto &trigger_name : vec_el_trig)
+    cout << "[Vcb::initializeAnalyzer] Single Electron Trigger Name = " << trigger_name << endl;
+  cout << "[Vcb::initializeAnalyzer] Single Electron Trigger Safe Pt Cut = " << el_trig_safe_pt_cut << endl;
 
   // Jet Tagging Parameters
   if (run_debug)
@@ -113,6 +100,8 @@ void Vcb_Tagging_RF::initializeAnalyzer()
   }
   mcCorr->SetJetTaggingParameters(vec_jet_tagging_para);
 
+  vec_channel = {"Mu", "El"};
+
   if (MCSample.Contains("mtop17") || MCSample.Contains("CP5") || MCSample.Contains("hdamp"))
     vec_syst_type = {AnalyzerParameter::Central};
   else
@@ -123,11 +112,20 @@ void Vcb_Tagging_RF::initializeAnalyzer()
                      AnalyzerParameter::JetResUp};
 
   // to make output dir
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  dir_channel = new TDirectory *[vec_channel.size()];
+  dir_syst = new TDirectory **[vec_channel.size()];
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    param.syst_ = vec_syst_type.at(i);
-    FillHist(param.GetSystType() + "/Dummy", 0, weight, 1, 0, 1);
-  }
+    dir_channel[i] = outfile->mkdir(vec_channel[i]);
+    dir_syst[i] = new TDirectory *[vec_syst_type.size()];
+
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+    {
+      param.syst_ = vec_syst_type.at(j);
+
+      dir_syst[i][j] = dir_channel[i]->mkdir(param.GetSystType());
+    } // loop over syst
+  } // loop over channel
 
   Set_Result_Tree();
 
@@ -151,39 +149,52 @@ void Vcb_Tagging_RF::executeEvent()
   vec_electron = GetAllElectrons();
   vec_jet = GetAllJets();
 
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    param.Clear();
+    run_mu_ch = false;
+    run_el_ch = false;
 
-    // param.Muon_Tight_ID = "POGTightWithTightIso";
-    param.Muon_Tight_ID = "POGTight";
-    param.Muon_Loose_ID = "POGLoose";
+    if (i == 0)
+      run_mu_ch = true;
+    else if (i == 1)
+      run_el_ch = true;
 
-    param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
-    param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
+    channel_name = vec_channel[i];
 
-    // param.Electron_Tight_ID = "passTightID";
-    // param.Electron_Loose_ID = "passLooseID";
-    // param.Electron_Tight_ID = "passMVAID_iso_WP80";
-    // param.Electron_Loose_ID = "passMVAID_iso_WP90";
-    param.Electron_Tight_ID = "passMVAID_noIso_WP80";
-    param.Electron_Loose_ID = "passMVAID_noIso_WP90";
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
+    {
+      param.Clear();
 
-    param.Jet_ID = "tight";
-    param.PUJet_Veto_ID = "LoosePileupJetVeto";
+      // param.Muon_Tight_ID = "POGTightWithTightIso";
+      param.Muon_Tight_ID = "POGTight";
+      param.Muon_Loose_ID = "POGLoose";
 
-    param.syst_ = vec_syst_type.at(i);
+      param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
+      param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
 
-    param.Name = param.GetSystType();
+      // param.Electron_Tight_ID = "passTightID";
+      // param.Electron_Loose_ID = "passLooseID";
+      // param.Electron_Tight_ID = "passMVAID_iso_WP80";
+      // param.Electron_Loose_ID = "passMVAID_iso_WP90";
+      param.Electron_Tight_ID = "passMVAID_noIso_WP80";
+      param.Electron_Loose_ID = "passMVAID_noIso_WP90";
 
-    vec_gen_hf_flavour.clear();
-    vec_gen_hf_origin.clear();
+      param.Jet_ID = "tight";
+      param.PUJet_Veto_ID = "LoosePileupJetVeto";
 
-    vec_sel_gen_hf_flavour.clear();
-    vec_sel_gen_hf_origin.clear();
+      param.syst_ = vec_syst_type.at(j);
 
-    executeEventFromParameter(param);
-  }
+      param.Name = param.GetSystType();
+
+      vec_gen_hf_flavour.clear();
+      vec_gen_hf_origin.clear();
+
+      vec_sel_gen_hf_flavour.clear();
+      vec_sel_gen_hf_origin.clear();
+
+      executeEventFromParameter(param);
+    } // loop over syst
+  } // loop over channel
 
   return;
 } // void Vcb_Tagging_RF::executeEvent()
@@ -310,8 +321,8 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   /////////////////
 
   // for lepton
-  vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, sl_trig_safe_pt_cut, MUON_ETA);
-  vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, sl_trig_safe_pt_cut, ELECTRON_ETA);
+  vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, mu_trig_safe_pt_cut, MUON_ETA);
+  vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, el_trig_safe_pt_cut, ELECTRON_ETA);
 
   // for lepton veto
   vector<Muon> vec_muon_veto = SelectMuons(vec_this_muon, param.Muon_Loose_ID, MUON_PT_VETO, MUON_ETA);
@@ -358,11 +369,11 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   {
     // SF for muon trigger effi
     if (run_mu_ch)
-      sf_sl_trig = mcCorr->MuonTrigger_SF("POGTight", sl_trig, vec_sel_muon, 0);
+      sf_sl_trig = mcCorr->MuonTrigger_SF("POGTight", mu_trig, vec_sel_muon, 0);
 
     // SF for electron trigger effi
     else if (run_el_ch)
-      sf_sl_trig = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, sl_trig, vec_sel_electron, 0);
+      sf_sl_trig = mcCorr->ElectronTrigger_SF(param.Electron_Tight_ID, el_trig, vec_sel_electron, 0);
 
     weight *= sf_sl_trig;
   }
@@ -400,8 +411,16 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
   lepton_eta = lepton.Eta();
   lepton_rel_iso = lepton.RelIso();
 
-  if (lepton_pt <= sl_trig_safe_pt_cut)
-    return;
+  if (run_mu_ch)
+  {
+    if (lepton_pt <= mu_trig_safe_pt_cut)
+      return;
+  }
+  else if (run_el_ch)
+  {
+    if (lepton_pt <= el_trig_safe_pt_cut)
+      return;
+  }
 
   if (!IsData)
   {
@@ -615,7 +634,7 @@ void Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
 
   ht = Calculate_HT(vec_sel_jet);
 
-  map_result_tree[param.syst_]->Fill();
+  map_result_tree[channel_name + param.GetSystType()]->Fill();
 
   return;
 } // Vcb_Tagging_RF::executeEventFromParameter(AnalyzerParameter param)
@@ -699,150 +718,155 @@ Particle Vcb_Tagging_RF::Rebalance_Met()
 
 void Vcb_Tagging_RF::Set_Result_Tree()
 {
-  for (unsigned int i = 0; i < vec_syst_type.size(); i++)
+  for (unsigned int i = 0; i < vec_channel.size(); i++)
   {
-    AnalyzerParameter::Syst syst_type = vec_syst_type.at(i);
-
-    TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
-
-    result_tree->Branch("sf_mu_id", &sf_mu_id);
-    result_tree->Branch("sf_mu_iso", &sf_mu_iso);
-    result_tree->Branch("sf_mu_trig", &sf_mu_trig);
-
-    result_tree->Branch("sf_el_id", &sf_el_id);
-    result_tree->Branch("sf_el_reco", &sf_el_reco);
-
-    result_tree->Branch("sf_sl_trig", &sf_sl_trig);
-
-    if (syst_type == AnalyzerParameter::Central)
+    for (unsigned int j = 0; j < vec_syst_type.size(); j++)
     {
-      result_tree->Branch("weight_b_tag", &weight_b_tag);
-      result_tree->Branch("weight_b_tag_down_hf", &weight_b_tag_down_hf);
-      result_tree->Branch("weight_b_tag_up_hf", &weight_b_tag_up_hf);
-      result_tree->Branch("weight_b_tag_down_lf", &weight_b_tag_down_lf);
-      result_tree->Branch("weight_b_tag_up_lf", &weight_b_tag_up_lf);
-      result_tree->Branch("weight_b_tag_down_lfstats1", &weight_b_tag_down_lfstats1);
-      result_tree->Branch("weight_b_tag_up_lfstats1", &weight_b_tag_up_lfstats1);
-      result_tree->Branch("weight_b_tag_down_lfstats2", &weight_b_tag_down_lfstats2);
-      result_tree->Branch("weight_b_tag_up_lfstats2", &weight_b_tag_up_lfstats2);
-      result_tree->Branch("weight_b_tag_down_cferr1", &weight_b_tag_down_cferr1);
-      result_tree->Branch("weight_b_tag_up_cferr1", &weight_b_tag_up_cferr1);
-      result_tree->Branch("weight_b_tag_down_cferr2", &weight_b_tag_down_cferr2);
-      result_tree->Branch("weight_b_tag_up_cferr2", &weight_b_tag_up_cferr2);
-      result_tree->Branch("weight_b_tag_down_hfstats1", &weight_b_tag_down_hfstats1);
-      result_tree->Branch("weight_b_tag_up_hfstats1", &weight_b_tag_up_hfstats1);
-      result_tree->Branch("weight_b_tag_down_hfstats2", &weight_b_tag_down_hfstats2);
-      result_tree->Branch("weight_b_tag_up_hfstats2", &weight_b_tag_up_hfstats2);
-    }
-    else if (syst_type == AnalyzerParameter::JetEnDown)
-      result_tree->Branch("weight_b_tag_down_jes", &weight_b_tag_down_jes);
-    else if (syst_type == AnalyzerParameter::JetEnUp)
-      result_tree->Branch("weight_b_tag_up_jes", &weight_b_tag_up_jes);
-    else
-      result_tree->Branch("weight_b_tag", &weight_b_tag);
+      AnalyzerParameter::Syst syst_type = vec_syst_type.at(j);
+      param.syst_ = syst_type;
 
-    if (syst_type == AnalyzerParameter::Central)
-    {
-      result_tree->Branch("weight_c_tag", &weight_c_tag);
-      result_tree->Branch("weight_c_tag_down_extrap", &weight_c_tag_down_extrap);
-      result_tree->Branch("weight_c_tag_up_extrap", &weight_c_tag_up_extrap);
-      result_tree->Branch("weight_c_tag_down_interp", &weight_c_tag_down_interp);
-      result_tree->Branch("weight_c_tag_up_interp", &weight_c_tag_up_interp);
-      result_tree->Branch("weight_c_tag_down_lhe_scale_muf", &weight_c_tag_down_lhe_scale_muf);
-      result_tree->Branch("weight_c_tag_up_lhe_scale_muf", &weight_c_tag_up_lhe_scale_muf);
-      result_tree->Branch("weight_c_tag_down_lhe_scale_mur", &weight_c_tag_down_lhe_scale_mur);
-      result_tree->Branch("weight_c_tag_up_lhe_scale_mur", &weight_c_tag_up_lhe_scale_mur);
-      result_tree->Branch("weight_c_tag_down_ps_fsr_fixed", &weight_c_tag_down_ps_fsr_fixed);
-      result_tree->Branch("weight_c_tag_up_ps_fsr_fixed", &weight_c_tag_up_ps_fsr_fixed);
-      result_tree->Branch("weight_c_tag_down_ps_isr_fixed", &weight_c_tag_down_ps_isr_fixed);
-      result_tree->Branch("weight_c_tag_up_ps_isr_fixed", &weight_c_tag_up_ps_isr_fixed);
-      result_tree->Branch("weight_c_tag_down_pu", &weight_c_tag_down_pu);
-      result_tree->Branch("weight_c_tag_up_pu", &weight_c_tag_up_pu);
-      result_tree->Branch("weight_c_tag_down_stat", &weight_c_tag_down_stat);
-      result_tree->Branch("weight_c_tag_up_stat", &weight_c_tag_up_stat);
-      result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_b", &weight_c_tag_down_xsec_brunc_dyjets_b);
-      result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_b", &weight_c_tag_up_xsec_brunc_dyjets_b);
-      result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_c", &weight_c_tag_down_xsec_brunc_dyjets_c);
-      result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_c", &weight_c_tag_up_xsec_brunc_dyjets_c);
-      result_tree->Branch("weight_c_tag_down_xsec_brunc_wjets_c", &weight_c_tag_down_xsec_brunc_wjets_c);
-      result_tree->Branch("weight_c_tag_up_xsec_brunc_wjets_c", &weight_c_tag_up_xsec_brunc_wjets_c);
-    }
-    else if (syst_type == AnalyzerParameter::JetEnDown)
-      result_tree->Branch("weight_c_tag_down_jes_total", &weight_c_tag_down_jes_total);
-    else if (syst_type == AnalyzerParameter::JetEnUp)
-      result_tree->Branch("weight_c_tag_up_jes_total", &weight_c_tag_up_jes_total);
-    else if (syst_type == AnalyzerParameter::JetResDown)
-      result_tree->Branch("weight_c_tag_down_jer", &weight_c_tag_down_jer);
-    else if (syst_type == AnalyzerParameter::JetResUp)
-      result_tree->Branch("weight_c_tag_up_jer", &weight_c_tag_up_jer);
-    else
-      result_tree->Branch("weight_c_tag", &weight_c_tag);
+      TTree *result_tree = new TTree("Result_Tree", "Result_Tree");
+      result_tree->SetDirectory(dir_syst[i][j]);
 
-    result_tree->Branch("weight_hem_veto", &weight_hem_veto);
-    result_tree->Branch("weight_lumi", &weight_lumi);
-    result_tree->Branch("weight_mc", &weight_mc);
+      result_tree->Branch("sf_mu_id", &sf_mu_id);
+      result_tree->Branch("sf_mu_iso", &sf_mu_iso);
+      result_tree->Branch("sf_mu_trig", &sf_mu_trig);
 
-    result_tree->Branch("weight_pileup", &weight_pileup);
-    if (syst_type == AnalyzerParameter::Central)
-    {
-      result_tree->Branch("weight_pileup_down", &weight_pileup_down);
-      result_tree->Branch("weight_pileup_up", &weight_pileup_up);
-    }
+      result_tree->Branch("sf_el_id", &sf_el_id);
+      result_tree->Branch("sf_el_reco", &sf_el_reco);
 
-    if (syst_type == AnalyzerParameter::Central)
-      result_tree->Branch("weight_ps", weight_ps, "weight_ps[4]");
+      result_tree->Branch("sf_sl_trig", &sf_sl_trig);
 
-    if (syst_type == AnalyzerParameter::Central)
-    {
-      result_tree->Branch("weight_scale_variation_1", &weight_scale_variation_1);
-      result_tree->Branch("weight_scale_variation_2", &weight_scale_variation_2);
-      result_tree->Branch("weight_scale_variation_3", &weight_scale_variation_3);
-      result_tree->Branch("weight_scale_variation_4", &weight_scale_variation_4);
-      result_tree->Branch("weight_scale_variation_6", &weight_scale_variation_6);
-      result_tree->Branch("weight_scale_variation_8", &weight_scale_variation_8);
-    }
+      if (syst_type == AnalyzerParameter::Central)
+      {
+        result_tree->Branch("weight_b_tag", &weight_b_tag);
+        result_tree->Branch("weight_b_tag_down_hf", &weight_b_tag_down_hf);
+        result_tree->Branch("weight_b_tag_up_hf", &weight_b_tag_up_hf);
+        result_tree->Branch("weight_b_tag_down_lf", &weight_b_tag_down_lf);
+        result_tree->Branch("weight_b_tag_up_lf", &weight_b_tag_up_lf);
+        result_tree->Branch("weight_b_tag_down_lfstats1", &weight_b_tag_down_lfstats1);
+        result_tree->Branch("weight_b_tag_up_lfstats1", &weight_b_tag_up_lfstats1);
+        result_tree->Branch("weight_b_tag_down_lfstats2", &weight_b_tag_down_lfstats2);
+        result_tree->Branch("weight_b_tag_up_lfstats2", &weight_b_tag_up_lfstats2);
+        result_tree->Branch("weight_b_tag_down_cferr1", &weight_b_tag_down_cferr1);
+        result_tree->Branch("weight_b_tag_up_cferr1", &weight_b_tag_up_cferr1);
+        result_tree->Branch("weight_b_tag_down_cferr2", &weight_b_tag_down_cferr2);
+        result_tree->Branch("weight_b_tag_up_cferr2", &weight_b_tag_up_cferr2);
+        result_tree->Branch("weight_b_tag_down_hfstats1", &weight_b_tag_down_hfstats1);
+        result_tree->Branch("weight_b_tag_up_hfstats1", &weight_b_tag_up_hfstats1);
+        result_tree->Branch("weight_b_tag_down_hfstats2", &weight_b_tag_down_hfstats2);
+        result_tree->Branch("weight_b_tag_up_hfstats2", &weight_b_tag_up_hfstats2);
+      }
+      else if (syst_type == AnalyzerParameter::JetEnDown)
+        result_tree->Branch("weight_b_tag_down_jes", &weight_b_tag_down_jes);
+      else if (syst_type == AnalyzerParameter::JetEnUp)
+        result_tree->Branch("weight_b_tag_up_jes", &weight_b_tag_up_jes);
+      else
+        result_tree->Branch("weight_b_tag", &weight_b_tag);
 
-    result_tree->Branch("weight_prefire", &weight_prefire);
-    result_tree->Branch("weight_pujet_veto", &weight_pujet_veto);
-    result_tree->Branch("weight_top_pt", &weight_top_pt);
+      if (syst_type == AnalyzerParameter::Central)
+      {
+        result_tree->Branch("weight_c_tag", &weight_c_tag);
+        result_tree->Branch("weight_c_tag_down_extrap", &weight_c_tag_down_extrap);
+        result_tree->Branch("weight_c_tag_up_extrap", &weight_c_tag_up_extrap);
+        result_tree->Branch("weight_c_tag_down_interp", &weight_c_tag_down_interp);
+        result_tree->Branch("weight_c_tag_up_interp", &weight_c_tag_up_interp);
+        result_tree->Branch("weight_c_tag_down_lhe_scale_muf", &weight_c_tag_down_lhe_scale_muf);
+        result_tree->Branch("weight_c_tag_up_lhe_scale_muf", &weight_c_tag_up_lhe_scale_muf);
+        result_tree->Branch("weight_c_tag_down_lhe_scale_mur", &weight_c_tag_down_lhe_scale_mur);
+        result_tree->Branch("weight_c_tag_up_lhe_scale_mur", &weight_c_tag_up_lhe_scale_mur);
+        result_tree->Branch("weight_c_tag_down_ps_fsr_fixed", &weight_c_tag_down_ps_fsr_fixed);
+        result_tree->Branch("weight_c_tag_up_ps_fsr_fixed", &weight_c_tag_up_ps_fsr_fixed);
+        result_tree->Branch("weight_c_tag_down_ps_isr_fixed", &weight_c_tag_down_ps_isr_fixed);
+        result_tree->Branch("weight_c_tag_up_ps_isr_fixed", &weight_c_tag_up_ps_isr_fixed);
+        result_tree->Branch("weight_c_tag_down_pu", &weight_c_tag_down_pu);
+        result_tree->Branch("weight_c_tag_up_pu", &weight_c_tag_up_pu);
+        result_tree->Branch("weight_c_tag_down_stat", &weight_c_tag_down_stat);
+        result_tree->Branch("weight_c_tag_up_stat", &weight_c_tag_up_stat);
+        result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_b", &weight_c_tag_down_xsec_brunc_dyjets_b);
+        result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_b", &weight_c_tag_up_xsec_brunc_dyjets_b);
+        result_tree->Branch("weight_c_tag_down_xsec_brunc_dyjets_c", &weight_c_tag_down_xsec_brunc_dyjets_c);
+        result_tree->Branch("weight_c_tag_up_xsec_brunc_dyjets_c", &weight_c_tag_up_xsec_brunc_dyjets_c);
+        result_tree->Branch("weight_c_tag_down_xsec_brunc_wjets_c", &weight_c_tag_down_xsec_brunc_wjets_c);
+        result_tree->Branch("weight_c_tag_up_xsec_brunc_wjets_c", &weight_c_tag_up_xsec_brunc_wjets_c);
+      }
+      else if (syst_type == AnalyzerParameter::JetEnDown)
+        result_tree->Branch("weight_c_tag_down_jes_total", &weight_c_tag_down_jes_total);
+      else if (syst_type == AnalyzerParameter::JetEnUp)
+        result_tree->Branch("weight_c_tag_up_jes_total", &weight_c_tag_up_jes_total);
+      else if (syst_type == AnalyzerParameter::JetResDown)
+        result_tree->Branch("weight_c_tag_down_jer", &weight_c_tag_down_jer);
+      else if (syst_type == AnalyzerParameter::JetResUp)
+        result_tree->Branch("weight_c_tag_up_jer", &weight_c_tag_up_jer);
+      else
+        result_tree->Branch("weight_c_tag", &weight_c_tag);
 
-    result_tree->Branch("n_vertex", &nPV);
+      result_tree->Branch("weight_hem_veto", &weight_hem_veto);
+      result_tree->Branch("weight_lumi", &weight_lumi);
+      result_tree->Branch("weight_mc", &weight_mc);
 
-    result_tree->Branch("lepton_pt", &lepton_pt);
-    result_tree->Branch("lepton_eta", &lepton_eta);
-    result_tree->Branch("lepton_pt_uncorr", &lepton_pt_uncorr);
-    result_tree->Branch("lepton_rel_iso", &lepton_rel_iso);
+      result_tree->Branch("weight_pileup", &weight_pileup);
+      if (syst_type == AnalyzerParameter::Central)
+      {
+        result_tree->Branch("weight_pileup_down", &weight_pileup_down);
+        result_tree->Branch("weight_pileup_up", &weight_pileup_up);
+      }
 
-    result_tree->Branch("n_jets", &n_sel_jet);
-    result_tree->Branch("n_bjets", &n_b_jet);
-    result_tree->Branch("n_cjets", &n_c_jet);
+      if (syst_type == AnalyzerParameter::Central)
+        result_tree->Branch("weight_ps", weight_ps, "weight_ps[4]");
 
-    result_tree->Branch("ht", &ht);
+      if (syst_type == AnalyzerParameter::Central)
+      {
+        result_tree->Branch("weight_scale_variation_1", &weight_scale_variation_1);
+        result_tree->Branch("weight_scale_variation_2", &weight_scale_variation_2);
+        result_tree->Branch("weight_scale_variation_3", &weight_scale_variation_3);
+        result_tree->Branch("weight_scale_variation_4", &weight_scale_variation_4);
+        result_tree->Branch("weight_scale_variation_6", &weight_scale_variation_6);
+        result_tree->Branch("weight_scale_variation_8", &weight_scale_variation_8);
+      }
 
-    result_tree->Branch("leading_jet_bvsc", &leading_jet_bvsc);
-    result_tree->Branch("leading_jet_cvsb", &leading_jet_cvsb);
-    result_tree->Branch("leading_jet_cvsl", &leading_jet_cvsl);
-    result_tree->Branch("leading_jet_eta", &leading_jet_eta);
-    result_tree->Branch("leading_jet_pt", &leading_jet_pt);
+      result_tree->Branch("weight_prefire", &weight_prefire);
+      result_tree->Branch("weight_pujet_veto", &weight_pujet_veto);
+      result_tree->Branch("weight_top_pt", &weight_top_pt);
 
-    result_tree->Branch("subleading_jet_bvsc", &subleading_jet_bvsc);
-    result_tree->Branch("subleading_jet_cvsb", &subleading_jet_cvsb);
-    result_tree->Branch("subleading_jet_cvsl", &subleading_jet_cvsl);
-    result_tree->Branch("subleading_jet_eta", &subleading_jet_eta);
-    result_tree->Branch("subleading_jet_pt", &subleading_jet_pt);
+      result_tree->Branch("n_vertex", &nPV);
 
-    result_tree->Branch("met_pt", &met_pt);
+      result_tree->Branch("lepton_pt", &lepton_pt);
+      result_tree->Branch("lepton_eta", &lepton_eta);
+      result_tree->Branch("lepton_pt_uncorr", &lepton_pt_uncorr);
+      result_tree->Branch("lepton_rel_iso", &lepton_rel_iso);
 
-    result_tree->Branch("decay_mode", &decay_mode);
+      result_tree->Branch("n_jets", &n_sel_jet);
+      result_tree->Branch("n_bjets", &n_b_jet);
+      result_tree->Branch("n_cjets", &n_c_jet);
 
-    result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
-    result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+      result_tree->Branch("ht", &ht);
 
-    result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
-    result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
+      result_tree->Branch("leading_jet_bvsc", &leading_jet_bvsc);
+      result_tree->Branch("leading_jet_cvsb", &leading_jet_cvsb);
+      result_tree->Branch("leading_jet_cvsl", &leading_jet_cvsl);
+      result_tree->Branch("leading_jet_eta", &leading_jet_eta);
+      result_tree->Branch("leading_jet_pt", &leading_jet_pt);
 
-    map_result_tree.insert({syst_type, result_tree});
-  }
+      result_tree->Branch("subleading_jet_bvsc", &subleading_jet_bvsc);
+      result_tree->Branch("subleading_jet_cvsb", &subleading_jet_cvsb);
+      result_tree->Branch("subleading_jet_cvsl", &subleading_jet_cvsl);
+      result_tree->Branch("subleading_jet_eta", &subleading_jet_eta);
+      result_tree->Branch("subleading_jet_pt", &subleading_jet_pt);
+
+      result_tree->Branch("met_pt", &met_pt);
+
+      result_tree->Branch("decay_mode", &decay_mode);
+
+      result_tree->Branch("Gen_HF_Flavour", &vec_gen_hf_flavour);
+      result_tree->Branch("Gen_HF_Origin", &vec_gen_hf_origin);
+
+      result_tree->Branch("Sel_Gen_HF_Flavour", &vec_sel_gen_hf_flavour);
+      result_tree->Branch("Sel_Gen_HF_Origin", &vec_sel_gen_hf_origin);
+
+      map_result_tree.insert({vec_channel[i] + param.GetSystType(), result_tree});
+    } // loop over syst
+  } // loop over channel
 
   return;
 } // void Vcb_Tagging_RF::Set_Result_Tree()
