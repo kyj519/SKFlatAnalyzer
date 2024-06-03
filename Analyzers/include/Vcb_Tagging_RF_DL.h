@@ -66,10 +66,6 @@ protected:
   TString el_trig;
   float el_trig_safe_pt_cut;
 
-  vector<TString> vec_sl_trig; // single lepton
-  TString sl_trig;
-  float sl_trig_safe_pt_cut;
-
   vector<JetTagging::Parameters> vec_jet_tagging_para;
 
   AnalyzerParameter param;

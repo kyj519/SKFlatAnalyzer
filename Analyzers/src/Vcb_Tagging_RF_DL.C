@@ -93,13 +93,11 @@ void Vcb_Tagging_RF_DL::initializeAnalyzer()
     std::runtime_error("No trigger configuration for year");
 
   for (auto &trigger_name : vec_mu_trig)
-    vec_sl_trig.push_back(trigger_name);
-  for (auto &trigger_name : vec_el_trig)
-    vec_sl_trig.push_back(trigger_name);
-
-  for (auto &trigger_name : vec_sl_trig)
-    cout << "[Vcb::initializeAnalyzer] Single Lepton Trigger Name = " << trigger_name << endl;
+    cout << "[Vcb::initializeAnalyzer] Single Muon Trigger Name = " << trigger_name << endl;
   cout << "[Vcb::initializeAnalyzer] Single Muon Trigger Safe Pt Cut = " << mu_trig_safe_pt_cut << endl;
+
+  for (auto &trigger_name : vec_el_trig)
+    cout << "[Vcb::initializeAnalyzer] Single Electron Trigger Name = " << trigger_name << endl;
   cout << "[Vcb::initializeAnalyzer] Single Electron Trigger Safe Pt Cut = " << el_trig_safe_pt_cut << endl;
 
   // Jet Tagging Parameters
@@ -197,7 +195,7 @@ void Vcb_Tagging_RF_DL::executeEvent()
       // param.Electron_Loose_ID = "passMVAID_iso_WP90";
       param.Electron_Tight_ID = "passMVAID_noIso_WP80";
       param.Electron_Loose_ID = "passMVAID_noIso_WP90";
-      
+
       // param.Electron_ID_SF_Key = "ID_SF_passTightID";
 
       param.Jet_ID = "tight";
@@ -345,8 +343,8 @@ void Vcb_Tagging_RF_DL::executeEventFromParameter(AnalyzerParameter param)
   /////////////////
 
   // for lepton
-  vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, sl_trig_safe_pt_cut, MUON_ETA);
-  vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, sl_trig_safe_pt_cut, ELECTRON_ETA);
+  vector<Muon> vec_sel_muon = SelectMuons(vec_this_muon, param.Muon_Tight_ID, mu_trig_safe_pt_cut, MUON_ETA);
+  vector<Electron> vec_sel_electron = SelectElectrons(vec_this_electron, param.Electron_Tight_ID, el_trig_safe_pt_cut, ELECTRON_ETA);
 
   vec_sel_muon = Select_Muons_Iso(vec_sel_muon);
   vec_sel_electron = Select_Electrons_Iso(vec_sel_electron);
