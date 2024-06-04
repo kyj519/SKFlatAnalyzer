@@ -536,7 +536,7 @@ void Vcb_DL::executeEventFromParameter(AnalyzerParameter param)
   }
   else if (run_ee)
   {
-    if (vec_sel_muon.size() != 0 || vec_sel_electron.size() != 2 || vec_electron_veto.size() != 2)
+    if (vec_muon_veto.size() != 0 || vec_sel_electron.size() != 2 || vec_electron_veto.size() != 2)
       return;
 
     lepton[0] = vec_sel_electron[0];

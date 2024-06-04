@@ -36,7 +36,6 @@ protected:
   
   bool run_syst;
 
-
   vector<TString> vec_channel;
   TDirectory **dir_channel; // channel
   TDirectory ***dir_syst;   // channel, syst
