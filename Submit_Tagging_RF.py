@@ -7,16 +7,14 @@ import os
 
 parser = argparse.ArgumentParser(description='SKFlat -a Vcb Command')
 parser.add_argument('-e', dest='era', default="2018")
-parser.add_argument('-data', action='store_true', default="")
-parser.add_argument('-mc', action='store_true', default="")
-parser.add_argument('-ch', dest='channel', default="")
+parser.add_argument('-nmanx', dest='nmax', default="400")
 args = parser.parse_args()
 
 if args.era=="2016a": args.era="2016preVFP"
 if args.era=="2016b": args.era="2016postVFP"
 
 # key:[njob for SkimTree, njob Vcb Analyzer]
-data_list = {"SingleMuon":[300,100], "EGamma":[300,50]}
+
 mc_list = {
     "TTLJ_WtoCB_powheg":[40,10],
     "TTLJ_powheg":[300,200], 
@@ -29,6 +27,8 @@ mc_list = {
     "SingleTop_tW_top_NoFullyHad":[100,20], 
     "DYJets_MG":[50,50], 
     "WJets_MG":[50,50],
+    "DYJets":[50,50],
+    "WJets_Sherpa":[50,50],
     "QCD_bEnriched_HT100to200": [10,20],
     "QCD_bEnriched_HT200to300": [10,20],
     "QCD_bEnriched_HT300to500": [10,15],
@@ -62,20 +62,10 @@ mc_list = {
 
 
 ## Vcb_Tagging_RF
-# data
-if args.data == True:
-    data  = "SingleMuon"
+# mc
+for mc in mc_list:
+    operation =  f"nohup SKFlat.py -a Vcb_Tagging_RF -i {mc} -n {mc_list[mc][1]} -e {args.era} --nmax {args.nmax} &"
         
-    operation = f"nohup SKFlat.py -a Vcb_Tagging_RF -i {data} -n {data_list[data][1]} -e {args.era} --userflag RunMu --reduction 100 &"
-      
     print(operation)
     os.system(operation)
-    
-# mc
-if args.mc == True:
-    for mc in mc_list:
-        operation =  f"nohup SKFlat.py -a Vcb_Tagging_RF -i {mc} -n {mc_list[mc][1]} -e {args.era} --userflag Run{args.channel} &"
-        
-        print(operation)
-        os.system(operation)
     
