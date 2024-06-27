@@ -244,6 +244,15 @@ void Vcb::initializeAnalyzer()
     pdfReweight->SetNewPDFAlphaS(LHAPDFHandler_New.PDFAlphaSDown, LHAPDFHandler_New.PDFAlphaSUp);
   }
 
+  //set JES breakdown
+  if(run_syst){
+      string year = to_string(GetYear());
+      JECSources = {"Absolute", "BBEC1", "EC2", "FlavorQCD", "HF", "RelativeBal"};
+      JECSources_byYear = {"Absolute", "BBEC1", "EC2", "HF", "RelativeSample"};
+      for(auto jec_source : JECSources_byYear) JECSources.push_back(jec_source+"_"+year);
+      for(auto jec_source : JECSources) SetupJECUncertainty(jec_source, "AK4PFchs");
+  }
+
   vec_channel = {"Mu", "El"};
 
   if (!IsDATA && run_syst)
@@ -254,7 +263,56 @@ void Vcb::initializeAnalyzer()
                      AnalyzerParameter::JetResDown,
                      AnalyzerParameter::JetResUp,
                      AnalyzerParameter::UnclusteredEnergyDown,
-                     AnalyzerParameter::UnclusteredEnergyUp};
+                     AnalyzerParameter::UnclusteredEnergyUp,
+                      AnalyzerParameter::JetEnAbsoluteUp,
+                      AnalyzerParameter::JetEnAbsoluteDown,
+                      AnalyzerParameter::JetEnBBEC1Up,
+                      AnalyzerParameter::JetEnBBEC1Down,
+                      AnalyzerParameter::JetEnEC2Up,
+                      AnalyzerParameter::JetEnEC2Down,
+                      AnalyzerParameter::JetEnFlavorQCDUp,
+                      AnalyzerParameter::JetEnFlavorQCDDown,
+                      AnalyzerParameter::JetEnHFUp,
+                      AnalyzerParameter::JetEnHFDown,
+                      AnalyzerParameter::JetEnRelativeBalUp,
+                      AnalyzerParameter::JetEnRelativeBalDown 
+                     };
+    if(to_string(GetYear())=="2018"){
+      vec_syst_type.push_back(AnalyzerParameter::JetEnAbsolute2018Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnAbsolute2018Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnBBEC12018Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnBBEC12018Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnEC22018Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnEC22018Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnHF2018Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnHF2018Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnRelativeSample2018Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnRelativeSample2018Down);
+    }
+    else if(to_string(GetYear())=="2017"){
+      vec_syst_type.push_back(AnalyzerParameter::JetEnAbsolute2017Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnAbsolute2017Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnBBEC12017Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnBBEC12017Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnEC22017Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnEC22017Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnHF2017Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnHF2017Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnRelativeSample2017Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnRelativeSample2017Down);
+    }
+    else if(to_string(GetYear())=="2016"){
+      vec_syst_type.push_back(AnalyzerParameter::JetEnAbsolute2016Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnAbsolute2016Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnBBEC12016Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnBBEC12016Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnEC22016Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnEC22016Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnHF2016Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnHF2016Down);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnRelativeSample2016Up);
+      vec_syst_type.push_back(AnalyzerParameter::JetEnRelativeSample2016Down);
+    }
     // if (run_el_ch)
     // {
     //   vec_syst_type.push_back(AnalyzerParameter::ElectronEnDown);
@@ -529,6 +587,241 @@ void Vcb::executeEventFromParameter(AnalyzerParameter param)
     vec_this_jet = ScaleJets(vec_jet, +1);
     met = Rebalance_Met();
   }
+  //JES breakdown....
+  /*    JetEnAbsoluteUp, JetEnAbsoluteDown,
+    JetEnBBEC1Up, JetEnBBEC1Down,
+    JetEnEC2Up, JetEnEC2Down,
+    JetEnFlavorQCDUp, JetEnFlavorQCDDown,
+    JetEnHFUp, JetEnHFDown,
+    JetEnRelativeBalUp, JetEnRelativeBalDown,
+    JetEnAbsolute2018Up, JetEnAbsolute2018Down,
+    JetEnBBEC12018Up, JetEnBBEC12018Down,
+    JetEnEC22018Up, JetEnEC22018Down,
+    JetEnHF2018Up, JetEnHF2018Down,
+    JetEnRelativeSample2018Up, JetEnRelativeSample2018Down,
+    JetEnAbsolute2017Up, JetEnAbsolute2017Down,
+    JetEnBBEC12017Up, JetEnBBEC12017Down,
+    JetEnEC22017Up, JetEnEC22017Down,
+    JetEnHF2017Up, JetEnHF2017Down,
+    JetEnRelativeSample2017Up, JetEnRelativeSample2017Down,
+    JetEnAbsolute2016Up, JetEnAbsolute2016Down,
+    JetEnBBEC12016Up, JetEnBBEC12016Down,
+    JetEnEC22016Up, JetEnEC22016Down,
+    JetEnHF2016Up, JetEnHF2016Down,
+    JetEnRelativeSample2016Up, JetEnRelativeSample2016Down*/
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsoluteUp)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "Absolute");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsoluteDown)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "Absolute");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC1Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "BBEC1");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC1Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "BBEC1");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC2Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "EC2");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC2Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "EC2");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnFlavorQCDUp)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "FlavorQCD");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnFlavorQCDDown)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "FlavorQCD");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHFUp)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "HF");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHFDown)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "HF");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeBalUp)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "RelativeBal");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeBalDown)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "RelativeBal");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsolute2018Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "Absolute_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsolute2018Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "Absolute_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC12018Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "BBEC1_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC12018Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "BBEC1_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC22018Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "EC2_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC22018Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "EC2_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHF2018Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "HF_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHF2018Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "HF_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeSample2018Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "RelativeSample_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeSample2018Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "RelativeSample_2018");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsolute2017Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "Absolute_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsolute2017Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "Absolute_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC12017Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "BBEC1_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC12017Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "BBEC1_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC22017Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "EC2_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC22017Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "EC2_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHF2017Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "HF_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHF2017Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "HF_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeSample2017Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "RelativeSample_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeSample2017Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "RelativeSample_2017");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsolute2016Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "Absolute_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnAbsolute2016Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "Absolute_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC12016Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "BBEC1_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnBBEC12016Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "BBEC1_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC22016Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "EC2_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnEC22016Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "EC2_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHF2016Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "HF_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnHF2016Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "HF_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeSample2016Up)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, 1, "RelativeSample_2016");
+    met = Rebalance_Met();
+  }
+  else if (param.syst_ == AnalyzerParameter::JetEnRelativeSample2016Down)
+  {
+    vec_this_jet = ScaleJetsIndividualSource(vec_jet, -1, "RelativeSample_2016");
+    met = Rebalance_Met();
+  }
+
+  
+  
 
   if (param.syst_ == AnalyzerParameter::JetResDown)
   {
@@ -1843,10 +2136,10 @@ int Vcb::Gen_Match_W(const vector<Jet> &vec_jet, const vector<Gen> &vec_gen, con
     }
   }
 
-  // if input sample is not TT, so both of W couldn't be found
+  // if input sample is not TT, so both of W couldn"t be found
   if (index_last_w == -999 || index_last_aw == -999)
   {
-    // if(run_debug) cout << "Can't find both of W" << endl;
+    // if(run_debug) cout << "Can"t find both of W" << endl;
     return -999;
   }
 

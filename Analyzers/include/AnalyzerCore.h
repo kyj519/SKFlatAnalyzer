@@ -65,6 +65,13 @@ public:
 
   Event GetEvent();
 
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK4CHSJECUncMap;
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK4PUPPIJECUncMap;
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK8CHSJECUncMap;
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK8PUPPIJECUncMap;
+  vector<TString> JECSources;
+  vector<TString> JECSources_byYear;
+
   std::vector<Electron> GetAllElectrons();
   std::vector<Electron> GetElectrons(TString id, double ptmin, double fetamax, bool vetoHEM = false);
 
@@ -119,6 +126,7 @@ public:
   std::vector<Muon> ScaleMuons(const std::vector<Muon> &muons, int sys);
 
   std::vector<Jet> ScaleJets(const std::vector<Jet> &jets, int sys);
+  std::vector<Jet> ScaleJetsIndividualSource(const std::vector<Jet>& jets, int sys, TString source);
   std::vector<Jet> SmearJets(const std::vector<Jet> &jets, int sys);
 
   std::vector<FatJet> ScaleFatJets(const std::vector<FatJet> &jets, int sys);
@@ -218,6 +226,11 @@ public:
   int GetPrElType_InSameSCRange_Public(int TruthIdx, const std::vector<Gen> &TruthColl);
   bool IsSignalPID(int pid);
   bool FindHEMElectron(Electron electron);
+
+  float GetJECUncertainty(TString source, TString JetType,  float eta, float pt, int sys);
+  void  SetupJECUncertainty(TString source , TString JetType="AK4PFchs");
+
+
 
   int Get_W_Decay_Mode(const vector<Gen> &vec_gen);
 

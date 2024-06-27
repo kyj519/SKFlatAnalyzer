@@ -33,6 +33,8 @@ class AnalyzerParameter
   TString Jet_ID, FatJet_ID, PUJet_Veto_ID;
   
   //syst which affect selection
+  //JES Breakdown List:       JECSources = {"Absolute", "BBEC1", "EC2", "FlavorQCD", "HF", "RelativeBal"}
+  //JES Year Dependent List:  JECSources = {"Absolute", "BBEC1", "EC2", "HF", "RelativeSample"};
   enum Syst
   {
     Central,
@@ -42,7 +44,28 @@ class AnalyzerParameter
     ElectronResUp, ElectronResDown, 
     ElectronEnUp, ElectronEnDown, 
     UnclusteredEnergyUp, UnclusteredEnergyDown,
-    NSyst
+    NSyst,
+    JetEnAbsoluteUp, JetEnAbsoluteDown,
+    JetEnBBEC1Up, JetEnBBEC1Down,
+    JetEnEC2Up, JetEnEC2Down,
+    JetEnFlavorQCDUp, JetEnFlavorQCDDown,
+    JetEnHFUp, JetEnHFDown,
+    JetEnRelativeBalUp, JetEnRelativeBalDown,
+    JetEnAbsolute2018Up, JetEnAbsolute2018Down,
+    JetEnBBEC12018Up, JetEnBBEC12018Down,
+    JetEnEC22018Up, JetEnEC22018Down,
+    JetEnHF2018Up, JetEnHF2018Down,
+    JetEnRelativeSample2018Up, JetEnRelativeSample2018Down,
+    JetEnAbsolute2017Up, JetEnAbsolute2017Down,
+    JetEnBBEC12017Up, JetEnBBEC12017Down,
+    JetEnEC22017Up, JetEnEC22017Down,
+    JetEnHF2017Up, JetEnHF2017Down,
+    JetEnRelativeSample2017Up, JetEnRelativeSample2017Down,
+    JetEnAbsolute2016Up, JetEnAbsolute2016Down,
+    JetEnBBEC12016Up, JetEnBBEC12016Down,
+    JetEnEC22016Up, JetEnEC22016Down,
+    JetEnHF2016Up, JetEnHF2016Down,
+    JetEnRelativeSample2016Up, JetEnRelativeSample2016Down
   };
   Syst syst_;
   
